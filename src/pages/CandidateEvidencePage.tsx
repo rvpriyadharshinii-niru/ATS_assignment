@@ -123,6 +123,8 @@ export function CandidateEvidencePage() {
   const holdCandidates = useAppStore((state) => state.holdCandidates)
   const rejectCandidates = useAppStore((state) => state.rejectCandidates)
   const activityLog = useAppStore((state) => state.activityLog)
+  const pushToast = useAppStore((state) => state.pushToast)
+  const undoLastMutation = useAppStore((state) => state.undoLastMutation)
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
   const [activeTab, setActiveTab] = useState<DetailTab>('evidence')
 
@@ -419,6 +421,7 @@ export function CandidateEvidencePage() {
           onConfirm={() => {
             advanceCandidates([candidate.id], upcomingStage)
             setOpenDialog(null)
+            pushToast(`${candidate.name} moved to ${upcomingStage}.`, { actionLabel: 'Undo', onAction: undoLastMutation })
           }}
         />
       )}
@@ -433,6 +436,7 @@ export function CandidateEvidencePage() {
         onConfirm={() => {
           holdCandidates([candidate.id])
           setOpenDialog(null)
+          pushToast(`${candidate.name} placed on hold.`)
         }}
       />
 
@@ -447,6 +451,7 @@ export function CandidateEvidencePage() {
         onConfirm={() => {
           rejectCandidates([candidate.id])
           setOpenDialog(null)
+          pushToast(`${candidate.name} rejected.`)
         }}
       />
 

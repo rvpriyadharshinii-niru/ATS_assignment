@@ -14,6 +14,8 @@ export function CandidateActionsMenu({ candidate }: { candidate: Candidate }) {
   const advanceCandidates = useAppStore((state) => state.advanceCandidates)
   const holdCandidates = useAppStore((state) => state.holdCandidates)
   const rejectCandidates = useAppStore((state) => state.rejectCandidates)
+  const pushToast = useAppStore((state) => state.pushToast)
+  const undoLastMutation = useAppStore((state) => state.undoLastMutation)
   const upcoming = nextStage(candidate.stage)
 
   if (candidate.rejected) return null
@@ -96,6 +98,7 @@ export function CandidateActionsMenu({ candidate }: { candidate: Candidate }) {
           onConfirm={() => {
             advanceCandidates([candidate.id], upcoming)
             setDialog(null)
+            pushToast(`${candidate.name} moved to ${upcoming}.`, { actionLabel: 'Undo', onAction: undoLastMutation })
           }}
         />
       )}
@@ -110,6 +113,7 @@ export function CandidateActionsMenu({ candidate }: { candidate: Candidate }) {
         onConfirm={() => {
           holdCandidates([candidate.id])
           setDialog(null)
+          pushToast(`${candidate.name} placed on hold.`)
         }}
       />
 
@@ -125,6 +129,7 @@ export function CandidateActionsMenu({ candidate }: { candidate: Candidate }) {
         onConfirm={() => {
           rejectCandidates([candidate.id])
           setDialog(null)
+          pushToast(`${candidate.name} rejected.`)
         }}
       />
     </div>

@@ -7,6 +7,7 @@ import type { Candidate } from '../../types/domain'
 
 function EmailComposeForm({ candidate, onOpenChange }: { candidate: Candidate; onOpenChange: (open: boolean) => void }) {
   const sendEmail = useAppStore((state) => state.sendEmail)
+  const pushToast = useAppStore((state) => state.pushToast)
   const defaults = buildDefaultEmail(candidate)
   const [subject, setSubject] = useState(defaults.subject)
   const [body, setBody] = useState(defaults.body)
@@ -64,6 +65,7 @@ function EmailComposeForm({ candidate, onOpenChange }: { candidate: Candidate; o
           onClick={() => {
             sendEmail(candidate.id, subject, body)
             onOpenChange(false)
+            pushToast(`Email sent to ${candidate.name}.`)
           }}
           className="rounded-lg bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >

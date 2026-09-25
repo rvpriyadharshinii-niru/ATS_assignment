@@ -68,7 +68,7 @@ export function Sidebar() {
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[image:var(--gradient-brand_wash)] text-sm font-semibold text-background shadow-sm">
           H
         </span>
-        <span className="text-sm font-semibold text-palette-neutral-900">Hiring Workspace</span>
+        <span className="text-sm font-semibold text-palette-neutral-900">HireFlow</span>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 pb-4" aria-label="Primary">

@@ -81,8 +81,8 @@ export function CandidatesTable({
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-xs">
       <table className="w-full min-w-[860px] border-collapse text-sm">
-        <thead>
-          <tr className="border-b border-border bg-palette-brand-100/50">
+        <thead className="sticky top-0 z-10">
+          <tr className="border-b border-border bg-palette-brand-100">
             <th className="w-10 px-3 py-2.5">
               <input
                 type="checkbox"

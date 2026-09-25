@@ -8,11 +8,39 @@ import { homeInsights } from '../data/insights'
 import { usePipelineStages } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
 
+const highPriorityRoles = openings.filter((opening) => opening.priority === 'High').length
+const highPriorityAttention = openings.filter((opening) => opening.priority === 'High').reduce((sum, opening) => sum + opening.needsAttention, 0)
+const newThisWeek = openings.reduce((sum, opening) => sum + (opening.newSinceLastReview ?? 0), 0)
+
 const METRICS = [
-  { label: 'Active Roles', value: globalMetrics.activeRoles, icon: Briefcase, tint: 'bg-palette-neutral-150 text-palette-neutral-600' },
-  { label: 'Candidates', value: globalMetrics.totalCandidates, icon: Users, tint: 'bg-palette-info-150 text-palette-info-600' },
-  { label: 'Need Attention', value: globalMetrics.needAttention, icon: CircleAlert, tint: 'bg-palette-warning-150 text-palette-warning-600' },
-  { label: 'Interviews This Week', value: globalMetrics.interviewsThisWeek, icon: Calendar, tint: 'bg-palette-brand-100 text-palette-brand-600' },
+  {
+    label: 'Active Roles',
+    value: globalMetrics.activeRoles,
+    icon: Briefcase,
+    tint: 'bg-palette-neutral-150 text-palette-neutral-600',
+    secondary: highPriorityRoles > 0 ? `${highPriorityRoles} high priority` : undefined,
+  },
+  {
+    label: 'Candidates',
+    value: globalMetrics.totalCandidates,
+    icon: Users,
+    tint: 'bg-palette-info-150 text-palette-info-600',
+    secondary: newThisWeek > 0 ? `${newThisWeek} new this week` : undefined,
+  },
+  {
+    label: 'Need Attention',
+    value: globalMetrics.needAttention,
+    icon: CircleAlert,
+    tint: 'bg-palette-warning-150 text-palette-warning-600',
+    secondary: highPriorityAttention > 0 ? `${highPriorityAttention} high priority` : undefined,
+  },
+  {
+    label: 'Interviews This Week',
+    value: globalMetrics.interviewsThisWeek,
+    icon: Calendar,
+    tint: 'bg-palette-brand-100 text-palette-brand-600',
+    secondary: '2 waiting on your feedback',
+  },
 ]
 
 const UPCOMING = [
@@ -45,6 +73,7 @@ export function HomePage() {
             <div className="min-w-0">
               <p className="text-2xl font-semibold text-palette-neutral-900">{metric.value}</p>
               <p className="truncate text-xs text-muted-foreground">{metric.label}</p>
+              {metric.secondary && <p className="mt-0.5 truncate text-[11px] text-palette-neutral-400">{metric.secondary}</p>}
             </div>
           </div>
         ))}

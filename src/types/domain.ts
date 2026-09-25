@@ -124,6 +124,7 @@ export type CandidateFilter =
   | { id: string; label: string; source: FilterSource; kind: 'stage'; stage: CandidateStage }
   | { id: string; label: string; source: FilterSource; kind: 'recommendation'; recommendation: RecommendationLabel }
   | { id: string; label: string; source: FilterSource; kind: 'experience'; minExperienceYears: number }
+  | { id: string; label: string; source: FilterSource; kind: 'waitingDays'; minDays: number }
   | { id: string; label: string; source: FilterSource; kind: 'location'; location: string }
   | { id: string; label: string; source: FilterSource; kind: 'candidateSource'; candidateSource: CandidateSource }
   /** In Interview and stalled waiting on someone's feedback — what "What's blocking this role? / Show them" highlights. */

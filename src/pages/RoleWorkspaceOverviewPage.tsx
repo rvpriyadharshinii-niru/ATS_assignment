@@ -1,4 +1,5 @@
-import { Activity, CircleAlert, SlidersHorizontal, Sparkles, Users } from 'lucide-react'
+import { Activity, CheckCircle2, CircleAlert, Flag, Inbox, MessageSquare, SlidersHorizontal, Sparkles, UserCheck, Users } from 'lucide-react'
+import type { ComponentType } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getCandidate, recommendedCandidateIds } from '../data/candidates'
 import { getCriteria } from '../data/criteria'
@@ -25,6 +26,15 @@ const STAGE_TINT: Record<CandidateStage, string> = {
   Interview: 'bg-palette-warning-100',
   Final: 'bg-palette-plum-100/60',
   Offer: 'bg-palette-success-100',
+}
+
+const STAGE_ICON: Record<CandidateStage, ComponentType<{ className?: string; 'aria-hidden'?: boolean }>> = {
+  Applied: Inbox,
+  'AI Screened': Sparkles,
+  'HM Review': UserCheck,
+  Interview: MessageSquare,
+  Final: Flag,
+  Offer: CheckCircle2,
 }
 
 function relativeTime(timestamp: number): string {
@@ -62,20 +72,33 @@ export function RoleWorkspaceOverviewPage() {
   const poolIds = new Set(pool.map((candidate) => candidate.id))
   const recentActivity = activityLog.filter((event) => poolIds.has(event.candidateId)).slice(0, 5)
 
+  const waitingOnFeedback = pool.filter((candidate) => candidate.stage === 'Interview' && candidate.waitingOn && !candidate.rejected).length
+  const awaitingDecision = pool.filter((candidate) => candidate.stage === 'Final' && !candidate.rejected && !candidate.selected).length
+  const stageSecondary: Partial<Record<CandidateStage, string>> = {
+    Interview: waitingOnFeedback > 0 ? `${waitingOnFeedback} waiting for feedback` : undefined,
+    Final: awaitingDecision > 0 ? `${awaitingDecision} awaiting decision` : undefined,
+  }
+
   return (
     <div className="space-y-5 p-6">
       {stages.length > 0 && (
         <div className="grid grid-cols-6 gap-3">
-          {stages.map((stage) => (
-            <Link
-              key={stage.stage}
-              to={stage.stage === 'Interview' ? `/openings/${id}/interviews` : `/openings/${id}/pipeline`}
-              className={cn('rounded-xl border border-border p-3.5 text-center shadow-xs transition-colors hover:border-palette-brand-250', STAGE_TINT[stage.stage])}
-            >
-              <p className="text-xl font-semibold text-palette-neutral-900">{stage.count}</p>
-              <p className={cn('mt-0.5 truncate text-xs font-semibold uppercase tracking-wide', STAGE_TEXT[stage.stage])}>{stage.stage}</p>
-            </Link>
-          ))}
+          {stages.map((stage) => {
+            const Icon = STAGE_ICON[stage.stage]
+            const secondary = stageSecondary[stage.stage]
+            return (
+              <Link
+                key={stage.stage}
+                to={stage.stage === 'Interview' ? `/openings/${id}/interviews` : `/openings/${id}/pipeline`}
+                className={cn('rounded-xl border border-border p-3.5 text-center shadow-xs transition-colors hover:border-palette-brand-250', STAGE_TINT[stage.stage])}
+              >
+                <Icon className={cn('mx-auto h-4 w-4', STAGE_TEXT[stage.stage])} aria-hidden />
+                <p className="mt-1 text-xl font-semibold text-palette-neutral-900">{stage.count}</p>
+                <p className={cn('mt-0.5 truncate text-xs font-semibold uppercase tracking-wide', STAGE_TEXT[stage.stage])}>{stage.stage}</p>
+                <p className="mt-1 h-3.5 truncate text-[11px] text-muted-foreground">{secondary}</p>
+              </Link>
+            )
+          })}
         </div>
       )}
 

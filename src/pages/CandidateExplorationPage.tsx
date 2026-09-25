@@ -51,6 +51,7 @@ export function CandidateExplorationPage() {
   const holdCandidates = useAppStore((state) => state.holdCandidates)
   const rejectCandidates = useAppStore((state) => state.rejectCandidates)
   const openCopilot = useAppStore((state) => state.openCopilot)
+  const pushToast = useAppStore((state) => state.pushToast)
   const pool = useEffectiveCandidatesForOpening(opening?.hasDetailedData ? (opening.id as OpeningId) : undefined)
   const [recommendedOnly, setRecommendedOnly] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
@@ -113,6 +114,7 @@ export function CandidateExplorationPage() {
   function handleExport(scope: 'all' | 'selected') {
     const rows = scope === 'selected' ? selectedCandidates : visibleCandidates
     downloadTextFile(`${opening!.title.toLowerCase().replace(/\s+/g, '-')}-candidates.csv`, candidatesToCsv(rows))
+    pushToast(`${rows.length} candidate${rows.length === 1 ? '' : 's'} exported.`)
   }
 
   return (
@@ -313,9 +315,11 @@ export function CandidateExplorationPage() {
         consequences={['Flag them as on hold', 'Keep their current stage unchanged']}
         confirmLabel="Confirm hold"
         onConfirm={() => {
+          const count = selectedIds.length
           holdCandidates(selectedIds)
           setHoldDialogOpen(false)
           setSelectedIds([])
+          pushToast(`${count} candidate${count > 1 ? 's' : ''} placed on hold.`)
         }}
       />
 
@@ -328,9 +332,11 @@ export function CandidateExplorationPage() {
         confirmLabel="Confirm rejection"
         tone="destructive"
         onConfirm={() => {
+          const count = selectedIds.length
           rejectCandidates(selectedIds)
           setRejectDialogOpen(false)
           setSelectedIds([])
+          pushToast(`${count} candidate${count > 1 ? 's' : ''} rejected.`)
         }}
       />
 

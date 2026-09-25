@@ -23,6 +23,7 @@ function AddCriterionDialog({
   existingKeys: Set<CriterionKey>
 }) {
   const addCriterion = useAppStore((state) => state.addCriterion)
+  const pushToast = useAppStore((state) => state.pushToast)
   const available = AVAILABLE_CRITERIA_CATALOG.filter((entry) => !existingKeys.has(entry.key))
   const [selectedKey, setSelectedKey] = useState<CriterionKey | ''>('')
 
@@ -63,7 +64,10 @@ function AddCriterionDialog({
             disabled={!selectedKey}
             onClick={() => {
               const criterion = AVAILABLE_CRITERIA_CATALOG.find((entry) => entry.key === selectedKey)
-              if (criterion) addCriterion(openingId, criterion)
+              if (criterion) {
+                addCriterion(openingId, criterion)
+                pushToast(`${criterion.name} added to hiring criteria.`)
+              }
               setSelectedKey('')
               onOpenChange(false)
             }}
@@ -116,6 +120,7 @@ export function HiringCriteriaPage() {
   const filters = useAppStore((state) => state.filters)
   const setCriterionPriority = useAppStore((state) => state.setCriterionPriority)
   const removeCriterion = useAppStore((state) => state.removeCriterion)
+  const pushToast = useAppStore((state) => state.pushToast)
   const criteria = useCriteria(opening?.id as OpeningId)
   const [addOpen, setAddOpen] = useState(false)
   const [removeKey, setRemoveKey] = useState<CriterionKey | null>(null)
@@ -172,7 +177,10 @@ export function HiringCriteriaPage() {
                   <div className="flex shrink-0 items-center gap-1.5">
                     <select
                       value={criterion.priority}
-                      onChange={(event) => setCriterionPriority(id, criterion.key, event.target.value as CriterionPriority)}
+                      onChange={(event) => {
+                        setCriterionPriority(id, criterion.key, event.target.value as CriterionPriority)
+                        pushToast('Criterion priority updated.')
+                      }}
                       aria-label={`${criterion.name} priority`}
                       className="rounded-full border border-palette-neutral-250 bg-palette-neutral-150 px-2.5 py-1 text-xs font-medium text-palette-neutral-600 focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40"
                     >
@@ -223,7 +231,11 @@ export function HiringCriteriaPage() {
         confirmLabel="Confirm & remove"
         tone="destructive"
         onConfirm={() => {
-          if (removeKey) removeCriterion(id, removeKey)
+          if (removeKey) {
+            const name = removeTarget?.name
+            removeCriterion(id, removeKey)
+            if (name) pushToast(`${name} removed from hiring criteria.`)
+          }
           setRemoveKey(null)
         }}
       />

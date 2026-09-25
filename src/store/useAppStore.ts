@@ -39,11 +39,30 @@ export interface NewCandidateInput {
   notes?: string
 }
 
+export interface ToastMessage {
+  id: string
+  message: string
+  actionLabel?: string
+  onAction?: () => void
+}
+
+interface UndoSnapshot {
+  candidateIds: string[]
+  previousOverrides: Record<string, CandidateOverride | undefined>
+}
+
+/** Where docked Copilot was expanded from — lets the full workspace offer "← Back to X" and re-dock into the exact same context. */
+export interface CopilotExpandedFrom {
+  path: string
+  label: string
+}
+
 interface AppState {
   selectedOpeningId: OpeningId | null
   selectedCandidateId: string | null
   filters: CandidateFilter[]
   copilotExpanded: boolean
+  copilotExpandedFrom: CopilotExpandedFrom | null
 
   /** Every Copilot thread, contextual panel and full workspace alike — two views of the same conversation set. */
   conversations: Record<string, CopilotConversation>
@@ -57,6 +76,9 @@ interface AppState {
   activityLog: ActivityEvent[]
   /** Bumped on every criteria mutation so components reading getCriteria() re-render — the criteria lists themselves are mutated in place in data/criteria.ts. */
   criteriaVersion: number
+  toasts: ToastMessage[]
+  /** The most recent undoable stage change — only Advance (from the manual UI) offers Undo. */
+  lastUndo: UndoSnapshot | null
 
   setSelectedOpening: (openingId: OpeningId | null) => void
   setSelectedCandidate: (candidateId: string | null, openingId: OpeningId | null) => void
@@ -68,6 +90,10 @@ interface AppState {
   openCopilot: () => void
   closeCopilot: () => void
   toggleCopilot: () => void
+  /** Called when Copilot is expanded from a docked/contextual context — records where "← Back" should return to. */
+  setCopilotExpandedFrom: (info: CopilotExpandedFrom | null) => void
+  /** Returns to the originating page and re-docks Copilot with the same conversation. */
+  returnToCopilotOrigin: (navigate: (path: string) => void) => void
   /** `ignorePageContext: true` is used by the standalone workspace, which is cross-role by default rather than scoped to whatever page Priya last browsed. */
   submitCopilotMessage: (query: string, options?: { ignorePageContext?: boolean }) => void
   startNewConversation: () => void
@@ -83,6 +109,9 @@ interface AppState {
   setCriterionPriority: (openingId: OpeningId, criterionKey: CriterionKey, priority: CriterionPriority) => void
   addCriterion: (openingId: OpeningId, criterion: HiringCriterion) => void
   removeCriterion: (openingId: OpeningId, criterionKey: CriterionKey) => void
+  pushToast: (message: string, options?: { actionLabel?: string; onAction?: () => void }) => void
+  dismissToast: (id: string) => void
+  undoLastMutation: () => void
 
   resolveCopilotTurn: (turnId: string, result: CopilotResult) => void
   confirmPendingAction: (turnId: string, action: PendingAction) => void
@@ -125,6 +154,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedCandidateId: null,
   filters: [],
   copilotExpanded: false,
+  copilotExpandedFrom: null,
   conversations: seedConversationsById,
   conversationOrder: seedConversationOrder,
   activeConversationId: null,
@@ -132,6 +162,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   sentEmails: [],
   activityLog: [],
   criteriaVersion: 0,
+  toasts: [],
+  lastUndo: null,
 
   setSelectedOpening: (openingId) =>
     set((state) => {
@@ -162,9 +194,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   openCopilot: () => set({ copilotExpanded: true }),
   closeCopilot: () => set({ copilotExpanded: false }),
   toggleCopilot: () => set((state) => ({ copilotExpanded: !state.copilotExpanded })),
+  setCopilotExpandedFrom: (info) => set({ copilotExpandedFrom: info }),
+  returnToCopilotOrigin: (navigate) => {
+    const origin = get().copilotExpandedFrom
+    if (!origin) return
+    navigate(origin.path)
+    set({ copilotExpanded: true, copilotExpandedFrom: null })
+  },
 
-  startNewConversation: () => set({ activeConversationId: null }),
-  selectConversation: (conversationId) => set({ activeConversationId: conversationId }),
+  // Expanding into a different, or a fresh, conversation breaks the link back to whatever page
+  // launched the one being expanded — the "← Back" affordance only makes sense for that exact thread.
+  startNewConversation: () => set({ activeConversationId: null, copilotExpandedFrom: null }),
+  selectConversation: (conversationId) => set({ activeConversationId: conversationId, copilotExpandedFrom: null }),
 
   submitCopilotMessage: (query, options) => {
     const state = get()
@@ -240,6 +281,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   advanceCandidates: (candidateIds, toStage) => {
+    // Captured before mutation for two reasons: the undo snapshot needs the prior override, and the
+    // activity log needs the candidate's current EFFECTIVE stage (base + override), not the static
+    // seed stage — otherwise a second move in the same session would log the wrong "from" stage.
+    const previousOverrides: Record<string, CandidateOverride | undefined> = {}
+    const fromStages: Record<string, CandidateStage | undefined> = {}
+    for (const id of candidateIds) {
+      const state = get()
+      previousOverrides[id] = state.candidateOverrides[id]
+      const base = getCandidate(id)
+      fromStages[id] = base ? applyCandidateOverride(base, state.candidateOverrides[id]).stage : undefined
+    }
+
     set((state) => {
       const overrides = { ...state.candidateOverrides }
       for (const id of candidateIds) {
@@ -259,8 +312,9 @@ export const useAppStore = create<AppState>((set, get) => ({
       }
       return { candidateOverrides: overrides }
     })
+    set({ lastUndo: { candidateIds, previousOverrides } })
     for (const id of candidateIds) {
-      const fromStage = getCandidate(id)?.stage
+      const fromStage = fromStages[id]
       get().logActivity(id, fromStage && fromStage !== toStage ? `Moved ${fromStage} → ${toStage}` : `Stage set to ${toStage}`)
     }
   },
@@ -312,6 +366,29 @@ export const useAppStore = create<AppState>((set, get) => ({
     set((state) => ({
       activityLog: [{ id: `act-${Date.now()}-${Math.round(Math.random() * 1e5)}`, candidateId, timestamp: Date.now(), message }, ...state.activityLog],
     })),
+
+  pushToast: (message, options) => {
+    const id = `toast-${Date.now()}-${Math.round(Math.random() * 1e5)}`
+    set((state) => ({ toasts: [...state.toasts, { id, message, actionLabel: options?.actionLabel, onAction: options?.onAction }] }))
+    setTimeout(() => get().dismissToast(id), 5000)
+  },
+
+  dismissToast: (id) => set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) })),
+
+  undoLastMutation: () => {
+    const snapshot = get().lastUndo
+    if (!snapshot) return
+    set((state) => {
+      const overrides = { ...state.candidateOverrides }
+      for (const id of snapshot.candidateIds) {
+        const previous = snapshot.previousOverrides[id]
+        if (previous === undefined) delete overrides[id]
+        else overrides[id] = previous
+      }
+      return { candidateOverrides: overrides, lastUndo: null }
+    })
+    for (const id of snapshot.candidateIds) get().logActivity(id, 'Move undone')
+  },
 
   addCandidate: (input) => {
     const id = slugifyCandidateId(input.name)

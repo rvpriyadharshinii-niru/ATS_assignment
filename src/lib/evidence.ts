@@ -28,6 +28,7 @@ export function candidateMatchesFilter(candidate: Candidate, filter: CandidateFi
   if (filter.kind === 'stage') return candidate.stage === filter.stage
   if (filter.kind === 'recommendation') return candidate.recommendation === filter.recommendation
   if (filter.kind === 'experience') return (candidate.experienceYears ?? -1) >= filter.minExperienceYears
+  if (filter.kind === 'waitingDays') return (candidate.waitingDays ?? 0) >= filter.minDays
   if (filter.kind === 'location') return candidate.location === filter.location
   if (filter.kind === 'candidateSource') return candidate.source === filter.candidateSource
   return candidate.stage === 'Interview' && !!candidate.waitingOn

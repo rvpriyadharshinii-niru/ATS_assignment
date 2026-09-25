@@ -68,6 +68,8 @@ const GLOBAL_ATTENTION_PATTERN = /what needs my attention|needs my attention tod
 const AND_SPLIT_PATTERN = /\s+and\s+/i
 const MAKE_PATTERN = /\bmake\b/i
 const PRIORITY_WORD_PATTERN = /\b(high|medium)\b/i
+const WAITING_DAYS_PATTERN = /waiting.*?(?:more than|over|at least|>\s*)?\s*(\d+)\+?\s*days?/i
+const SELECT_SHOW_PATTERN = /^(select|show)\b/i
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -582,6 +584,38 @@ function handleShowRecent(context: CopilotContext): CopilotResult | undefined {
   }
 }
 
+/** "Show candidates waiting more than N days" — filters/highlights Pipeline by days stalled in Interview, mirroring the manual Experience filter. */
+function handleWaitingDaysFilter(input: string, context: CopilotContext): CopilotResult | undefined {
+  const match = WAITING_DAYS_PATTERN.exec(input)
+  if (!match) return undefined
+  const minDays = Number(match[1])
+  if (!Number.isFinite(minDays)) return undefined
+  if (!context.openingId) {
+    return { kind: 'clarify', message: 'Which opening should I apply that to? Select a role and ask again.' }
+  }
+  const pool = context.candidates.filter(
+    (candidate) => candidate.openingId === context.openingId && candidate.stage === 'Interview' && !candidate.rejected && (candidate.waitingDays ?? 0) >= minDays,
+  )
+  if (pool.length === 0) {
+    return { kind: 'text', message: `No candidates are currently waiting ${minDays}+ days for feedback.` }
+  }
+  return {
+    kind: 'candidateList',
+    message: `${pool.length} candidate${pool.length > 1 ? 's are' : ' is'} waiting ${minDays}+ days for feedback:`,
+    candidateIds: pool.map((candidate) => candidate.id),
+    appliedFilter: { id: `ai-waiting-days-${minDays}`, label: `Waiting ${minDays}+ days`, source: 'ai', kind: 'waitingDays', minDays },
+    navTo: { label: 'Open pipeline', path: `/openings/${context.openingId}/pipeline` },
+  }
+}
+
+/** "Select Ananya" / "Show Ananya" — a bare name after select/show jumps straight to that candidate's review, same as "Review Ananya". */
+function handleSelectOrShowName(input: string, context: CopilotContext): CopilotResult | undefined {
+  if (!SELECT_SHOW_PATTERN.test(input) || SHOW_THEM_PATTERN.test(input)) return undefined
+  const named = matchCandidatesByName(input, context)
+  if (named.length !== 1) return undefined
+  return handleCandidateReview(named[0])
+}
+
 function handleWaitingFeedback(context: CopilotContext): CopilotResult {
   const openingId = context.openingId ?? 'senior-product-designer'
   const pool = context.candidates.filter(
@@ -641,6 +675,10 @@ export function runCopilotQuery(rawInput: string, context: CopilotContext): Copi
   if (HOLD_PATTERN.test(input)) return handleHold(input, effectiveContext)
   if (EMAIL_PATTERN.test(input)) return handleEmail(input, effectiveContext)
 
+  // "Select Ananya" / "Show Ananya" — a bare candidate name jumps straight to their review, same as "Review Ananya".
+  const selectShowResult = handleSelectOrShowName(input, effectiveContext)
+  if (selectShowResult) return selectShowResult
+
   // "Review …" (interviews, finalist(s), a named candidate, or a role's candidates) stays inside the
   // conversation — it takes priority over the plainer list-style handlers below.
   if (REVIEW_PATTERN.test(input)) {
@@ -655,6 +693,9 @@ export function runCopilotQuery(rawInput: string, context: CopilotContext): Copi
     const showResult = handleShowRecent(effectiveContext)
     if (showResult) return showResult
   }
+
+  const waitingDaysResult = handleWaitingDaysFilter(input, effectiveContext)
+  if (waitingDaysResult) return waitingDaysResult
 
   if (BLOCKING_PATTERN.test(input)) return handleBlocking(effectiveContext)
   if (WAITING_FEEDBACK_PATTERN.test(input)) return handleWaitingFeedback(effectiveContext)

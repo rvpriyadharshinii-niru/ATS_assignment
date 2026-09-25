@@ -1,6 +1,6 @@
 import { Maximize2, Sparkles, X } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { getCandidate } from '../../data/candidates'
 import { useCopilotScope } from '../../copilot/useCopilotScope'
 import { useActiveConversationTurns } from '../../store/copilotSelectors'
@@ -23,6 +23,7 @@ function useSuggestions(): string[] {
 
 export function CopilotPanel() {
   const closeCopilot = useAppStore((state) => state.closeCopilot)
+  const setCopilotExpandedFrom = useAppStore((state) => state.setCopilotExpandedFrom)
   const submitCopilotMessage = useAppStore((state) => state.submitCopilotMessage)
   const turns = useActiveConversationTurns()
   const { label } = useCopilotScope()
@@ -30,6 +31,7 @@ export function CopilotPanel() {
   const [draft, setDraft] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
+  const { pathname } = useLocation()
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
@@ -44,6 +46,9 @@ export function CopilotPanel() {
   }
 
   function handleExpand() {
+    // Remember exactly where this conversation was docked so the full workspace can offer
+    // "← Back to X" and re-dock into this same product context, not just a generic close.
+    setCopilotExpandedFrom({ path: pathname, label })
     closeCopilot()
     navigate('/copilot')
   }

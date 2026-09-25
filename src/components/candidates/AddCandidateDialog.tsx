@@ -22,6 +22,7 @@ const inputClass =
 
 export function AddCandidateDialog({ open, onOpenChange, openingId, openingTitle }: { open: boolean; onOpenChange: (open: boolean) => void; openingId: OpeningId; openingTitle: string }) {
   const addCandidate = useAppStore((state) => state.addCandidate)
+  const pushToast = useAppStore((state) => state.pushToast)
   const navigate = useNavigate()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
@@ -60,6 +61,7 @@ export function AddCandidateDialog({ open, onOpenChange, openingId, openingTitle
     })
     reset()
     onOpenChange(false)
+    pushToast('Candidate added.')
     navigate(`/candidates/${candidate.id}`)
   }
 

@@ -38,6 +38,7 @@ function parseCsv(text: string): { headers: string[]; rows: string[][] } {
 
 export function ImportCsvDialog({ open, onOpenChange, openingId, openingTitle }: { open: boolean; onOpenChange: (open: boolean) => void; openingId: OpeningId; openingTitle: string }) {
   const addCandidate = useAppStore((state) => state.addCandidate)
+  const pushToast = useAppStore((state) => state.pushToast)
   const [step, setStep] = useState<Step>('upload')
   const [fileName, setFileName] = useState<string | null>(null)
   const [headers, setHeaders] = useState<string[]>([])
@@ -110,6 +111,7 @@ export function ImportCsvDialog({ open, onOpenChange, openingId, openingTitle }:
       })
     }
     setImportedCount(importable.length)
+    pushToast(`${importable.length} candidate${importable.length === 1 ? '' : 's'} imported.`)
   }
 
   return (

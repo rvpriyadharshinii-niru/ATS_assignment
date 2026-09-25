@@ -3,6 +3,7 @@ import { useAppStore } from '../../store/useAppStore'
 import { CopilotLauncher } from '../copilot/CopilotLauncher'
 import { CopilotPanel } from '../copilot/CopilotPanel'
 import { Sidebar } from './Sidebar'
+import { ToastStack } from './ToastStack'
 
 export function AppShell() {
   const copilotExpanded = useAppStore((state) => state.copilotExpanded)
@@ -30,6 +31,7 @@ export function AppShell() {
       </div>
       {/* The standalone workspace IS the Copilot UI here — no floating launcher/panel duplicate. */}
       {!isCopilotWorkspace && !copilotExpanded && <CopilotLauncher />}
+      <ToastStack />
     </div>
   )
 }

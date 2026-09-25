@@ -7,6 +7,8 @@ const STAGES: CandidateStage[] = ['Applied', 'AI Screened', 'HM Review', 'Interv
 
 export function BulkMoveStageDialog({ open, onOpenChange, candidates }: { open: boolean; onOpenChange: (open: boolean) => void; candidates: Candidate[] }) {
   const advanceCandidates = useAppStore((state) => state.advanceCandidates)
+  const pushToast = useAppStore((state) => state.pushToast)
+  const undoLastMutation = useAppStore((state) => state.undoLastMutation)
   const [target, setTarget] = useState<CandidateStage>('Interview')
 
   return (
@@ -55,6 +57,10 @@ export function BulkMoveStageDialog({ open, onOpenChange, candidates }: { open: 
                   target,
                 )
                 onOpenChange(false)
+                pushToast(`${candidates.length} candidate${candidates.length > 1 ? 's' : ''} moved to ${target}.`, {
+                  actionLabel: 'Undo',
+                  onAction: undoLastMutation,
+                })
               }}
               className="rounded-lg bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
