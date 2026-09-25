@@ -1,0 +1,82 @@
+/*
+ * Product brand layer — overrides the Fuzzy Prism starter's violet/serif
+ * identity with the locked palette: primary purple #642FCD, soft lavender
+ * #DCCCF7, accent plum #8D2E6E. Loaded after fuzzy-prism.css; only the
+ * tokens listed here are overridden — neutral/success/warning/danger/info
+ * palettes, radii and shadows are inherited unchanged.
+ */
+
+@layer base {
+  :root {
+    /* Primary purple ramp, anchored at 500 = #642FCD (given exact value). */
+    --palette-brand-100: #f3eefb;
+    --palette-brand-150: #dcccf7; /* soft lavender — given exact value */
+    --palette-brand-200: #d4c5f2;
+    --palette-brand-250: #bea8eb;
+    --palette-brand-300: #a687e3;
+    --palette-brand-350: #8d65dc;
+    --palette-brand-400: #7848d5;
+    --palette-brand-450: #6d3ad2;
+    --palette-brand-500: #642fcd; /* primary purple — given exact value */
+    --palette-brand-550: #592ab7;
+    --palette-brand-600: #4d249e;
+    --palette-brand-650: #411e85;
+    --palette-brand-700: #371a70;
+    --palette-brand-750: #2d155b;
+    --palette-brand-800: #24114b;
+    --palette-brand-850: #1c0d3a;
+    --palette-brand-900: #140a29;
+
+    /* Accent plum ramp, anchored at 500 = #8D2E6E (given exact value). */
+    --palette-plum-100: #f9ecf4;
+    --palette-plum-150: #f2d9ea;
+    --palette-plum-200: #eabedb;
+    --palette-plum-250: #e09fcb;
+    --palette-plum-300: #d47cb8;
+    --palette-plum-350: #c95aa5;
+    --palette-plum-400: #c03f96;
+    --palette-plum-450: #a53681;
+    --palette-plum-500: #8d2e6e; /* accent plum — given exact value */
+    --palette-plum-550: #7b2860;
+    --palette-plum-600: #682251;
+    --palette-plum-650: #581d45;
+    --palette-plum-700: #491839;
+    --palette-plum-750: #3e1430;
+    --palette-plum-800: #321027;
+    --palette-plum-850: #260d1e;
+    --palette-plum-900: #1b0915;
+
+    /* Semantic remap: purple identity + Inter, neutral surfaces otherwise. */
+    --primary: var(--palette-brand-500);
+    --primary-foreground: #ffffff;
+    --accent: var(--palette-brand-100);
+    --accent-foreground: var(--palette-brand-700);
+    --ring: var(--palette-brand-500);
+    --border: var(--palette-neutral-200);
+    --gradient-brand_wash: linear-gradient(135deg, var(--palette-brand-500) 0%, var(--palette-plum-500) 100%);
+
+    --font-sans: "Inter", system-ui, sans-serif;
+    --font-display: "Inter", system-ui, sans-serif;
+    --font-mono: ui-monospace, "SFMono-Regular", Menlo, monospace;
+  }
+}
+
+@theme inline {
+  --color-palette-plum-100: var(--palette-plum-100);
+  --color-palette-plum-150: var(--palette-plum-150);
+  --color-palette-plum-200: var(--palette-plum-200);
+  --color-palette-plum-250: var(--palette-plum-250);
+  --color-palette-plum-300: var(--palette-plum-300);
+  --color-palette-plum-350: var(--palette-plum-350);
+  --color-palette-plum-400: var(--palette-plum-400);
+  --color-palette-plum-450: var(--palette-plum-450);
+  --color-palette-plum-500: var(--palette-plum-500);
+  --color-palette-plum-550: var(--palette-plum-550);
+  --color-palette-plum-600: var(--palette-plum-600);
+  --color-palette-plum-650: var(--palette-plum-650);
+  --color-palette-plum-700: var(--palette-plum-700);
+  --color-palette-plum-750: var(--palette-plum-750);
+  --color-palette-plum-800: var(--palette-plum-800);
+  --color-palette-plum-850: var(--palette-plum-850);
+  --color-palette-plum-900: var(--palette-plum-900);
+}

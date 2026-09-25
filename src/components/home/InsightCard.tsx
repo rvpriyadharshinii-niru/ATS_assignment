@@ -5,9 +5,9 @@ export function InsightCard({ insight }: { insight: HomeInsight }) {
   return (
     <div className="flex items-center justify-between gap-6 border-b border-border py-4 last:border-b-0">
       <div className="min-w-0">
-        <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-palette-brand-600">{insight.openingTitle}</p>
+        <p className="text-xs font-medium text-palette-brand-600">{insight.openingTitle}</p>
         <h3 className="mt-1 text-[15px] font-semibold text-palette-neutral-900">{insight.headline}</h3>
-        <p className="font-sans mt-1 max-w-xl text-sm leading-relaxed text-muted-foreground">{insight.detail}</p>
+        <p className="mt-1 max-w-xl text-sm leading-relaxed text-muted-foreground">{insight.detail}</p>
       </div>
       {insight.action && (
         <Link

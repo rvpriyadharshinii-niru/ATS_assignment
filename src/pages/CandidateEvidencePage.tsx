@@ -20,8 +20,10 @@ export function CandidateEvidencePage() {
 
   if (!candidate) {
     return (
-      <div className="rounded-xl border border-border bg-card p-8 text-center">
-        <p className="text-sm text-muted-foreground">This candidate record is not available in the prototype.</p>
+      <div className="p-8">
+        <div className="rounded-xl border border-border bg-card p-8 text-center">
+          <p className="text-sm text-muted-foreground">This candidate record is not available in the prototype.</p>
+        </div>
       </div>
     )
   }
@@ -31,9 +33,9 @@ export function CandidateEvidencePage() {
   const hasUncertainty = candidate.evidence.some((evidence) => isUncertainStrength(evidence.strength))
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 p-8">
       <Link
-        to={`/openings/${candidate.openingId}`}
+        to={`/openings/${candidate.openingId}/candidates`}
         className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-palette-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
@@ -49,9 +51,7 @@ export function CandidateEvidencePage() {
               {candidate.experienceYears} yrs experience · {candidate.location}
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-muted px-3 py-1 font-mono text-[10px] uppercase tracking-[0.04em] text-muted-foreground">
-            {candidate.stage}
-          </span>
+          <span className="shrink-0 rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">{candidate.stage}</span>
         </div>
 
         <div className="mt-5 flex flex-wrap items-center gap-3">
@@ -60,11 +60,11 @@ export function CandidateEvidencePage() {
             <span className="text-sm font-medium text-palette-neutral-700">{candidate.prioritiesSupported} / 5 priorities supported</span>
           )}
           {candidate.screeningScore !== undefined && (
-            <span className="font-mono text-[11px] text-palette-neutral-400">AI Screening Score: {candidate.screeningScore}</span>
+            <span className="text-sm text-palette-neutral-400">AI Screening Score: {candidate.screeningScore}</span>
           )}
         </div>
 
-        {candidate.summary && <p className="font-sans mt-3 text-sm leading-relaxed text-foreground">{candidate.summary}</p>}
+        {candidate.summary && <p className="mt-3 text-sm leading-relaxed text-foreground">{candidate.summary}</p>}
       </div>
 
       <div className="rounded-xl border border-border bg-card p-6">

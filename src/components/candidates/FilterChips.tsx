@@ -43,7 +43,7 @@ export function FilterChips() {
     <div className="flex flex-wrap items-center gap-3">
       {aiFilters.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.06em] text-primary">
+          <span className="inline-flex items-center gap-1 text-xs font-semibold text-primary">
             <Sparkles className="h-3 w-3" aria-hidden="true" />
             AI applied
           </span>

@@ -29,7 +29,7 @@ function StrengthBadge({ strength }: { strength: EvidenceStrength }) {
   return (
     <span
       className={cn(
-        'inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.04em] ring-1 ring-inset',
+        'inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset',
         STRENGTH_TONE[strength],
       )}
     >
@@ -56,15 +56,13 @@ export function CriterionRow({ criterion, evidence, compact = false }: Criterion
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm font-semibold text-palette-neutral-900">
             {criterion.name}
-            <span className="ml-1.5 font-mono text-[10px] font-normal uppercase tracking-[0.04em] text-palette-neutral-400">
-              {criterion.priority}
-            </span>
+            <span className="ml-1.5 text-xs font-normal text-palette-neutral-400">{criterion.priority}</span>
           </span>
           <StrengthBadge strength={strength} />
         </div>
         {!compact && evidence?.detail && (
           <>
-            <p className="font-sans mt-1.5 max-w-2xl text-sm leading-relaxed text-foreground">{evidence.detail}</p>
+            <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-foreground">{evidence.detail}</p>
             <button
               type="button"
               onClick={() => setSourceOpen((current) => !current)}
@@ -73,9 +71,7 @@ export function CriterionRow({ criterion, evidence, compact = false }: Criterion
               {sourceOpen ? 'Hide source' : 'View source →'}
             </button>
             {sourceOpen && (
-              <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.04em] text-palette-neutral-400">
-                Sourced from resume, application and screening information
-              </p>
+              <p className="mt-1 text-xs text-palette-neutral-400">Sourced from resume, application and screening information</p>
             )}
           </>
         )}

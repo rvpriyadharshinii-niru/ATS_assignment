@@ -44,7 +44,7 @@ export function CopilotPanel() {
           </span>
           <div className="min-w-0">
             <p className="text-sm font-semibold text-palette-neutral-900">Copilot</p>
-            <p className="truncate font-mono text-[10px] uppercase tracking-[0.04em] text-primary">{label}</p>
+            <p className="truncate text-xs font-medium text-primary">{label}</p>
           </div>
         </div>
         <button
@@ -60,7 +60,7 @@ export function CopilotPanel() {
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {history.length === 0 ? (
           <div>
-            <p className="font-sans text-sm leading-relaxed text-muted-foreground">
+            <p className="text-sm leading-relaxed text-muted-foreground">
               Ask about candidates, evidence or recommendations for {label}.
             </p>
             {suggestions.length > 0 && (

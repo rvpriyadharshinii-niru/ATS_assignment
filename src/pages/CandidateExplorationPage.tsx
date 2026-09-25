@@ -1,5 +1,5 @@
 import { Search } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { CandidateCard } from '../components/candidates/CandidateCard'
 import { FilterChips } from '../components/candidates/FilterChips'
@@ -21,7 +21,6 @@ function sortCandidates(list: Candidate[], sortKey: SortKey): Candidate[] {
 export function CandidateExplorationPage() {
   const { openingId } = useParams<{ openingId: string }>()
   const opening = getOpening(openingId)
-  const setSelectedOpening = useAppStore((state) => state.setSelectedOpening)
   const filters = useAppStore((state) => state.filters)
   const clearFilters = useAppStore((state) => state.clearFilters)
   const [showAll, setShowAll] = useState(false)
@@ -29,14 +28,12 @@ export function CandidateExplorationPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('recommended')
 
-  useEffect(() => {
-    if (opening) setSelectedOpening(opening.id)
-  }, [opening, setSelectedOpening])
-
   if (!opening || !opening.hasDetailedData) {
     return (
-      <div className="rounded-xl border border-border bg-card p-8 text-center">
-        <p className="text-sm text-muted-foreground">Candidate records for this opening aren&rsquo;t available yet.</p>
+      <div className="p-8">
+        <div className="rounded-xl border border-border bg-card p-8 text-center">
+          <p className="text-sm text-muted-foreground">Candidate records for this opening aren&rsquo;t available yet.</p>
+        </div>
       </div>
     )
   }
@@ -57,33 +54,28 @@ export function CandidateExplorationPage() {
   const visibleCandidates = sortCandidates(searched, sortKey)
 
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-xl font-semibold tracking-tight text-palette-neutral-900">{opening.title}</h1>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
-          <span>{opening.totalCandidates} total candidates</span>
-          <span className="text-palette-neutral-300">·</span>
-          <span>Evaluating against {criteria.length} configured criteria</span>
-          <button
-            type="button"
-            onClick={() => setCriteriaOpen((current) => !current)}
-            className="font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-          >
-            {criteriaOpen ? 'Hide criteria' : 'View criteria'}
-          </button>
-        </div>
-        {criteriaOpen && (
-          <div className="mt-2 rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground">
-            {criteria.map((criterion, index) => (
-              <span key={criterion.key}>
-                {criterion.name}
-                <span className="text-muted-foreground"> ({criterion.priority})</span>
-                {index < criteria.length - 1 && <span className="text-palette-neutral-300"> · </span>}
-              </span>
-            ))}
-          </div>
-        )}
+    <div className="space-y-5 p-8">
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-muted-foreground">
+        <span>Evaluating against {criteria.length} configured criteria</span>
+        <button
+          type="button"
+          onClick={() => setCriteriaOpen((current) => !current)}
+          className="font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {criteriaOpen ? 'Hide criteria' : 'View criteria'}
+        </button>
       </div>
+      {criteriaOpen && (
+        <div className="rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground">
+          {criteria.map((criterion, index) => (
+            <span key={criterion.key}>
+              {criterion.name}
+              <span className="text-muted-foreground"> ({criterion.priority})</span>
+              {index < criteria.length - 1 && <span className="text-palette-neutral-300"> · </span>}
+            </span>
+          ))}
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-1 flex-wrap items-center gap-3">
@@ -127,7 +119,7 @@ export function CandidateExplorationPage() {
       {visibleCandidates.length === 0 ? (
         <div className="rounded-xl border border-border bg-card p-8 text-center">
           <p className="text-sm font-medium text-palette-neutral-700">No candidates match the current view</p>
-          <p className="font-sans mt-1 text-sm text-muted-foreground">Try a different search term, or relax the applied filters.</p>
+          <p className="mt-1 text-sm text-muted-foreground">Try a different search term, or relax the applied filters.</p>
           {hasFilters && (
             <button
               type="button"

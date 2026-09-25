@@ -21,21 +21,19 @@ export function CandidateCard({ candidate }: { candidate: Candidate }) {
           <RecommendationBadge label={candidate.recommendation} />
         </div>
         <p className="mt-1 truncate text-sm text-muted-foreground">{metaParts.join(' · ')}</p>
-        <p className="font-sans mt-1.5 text-sm text-foreground">
+        <p className="mt-1.5 text-sm text-foreground">
           {candidate.prioritiesSupported !== undefined ? (
-            <span className="font-display font-medium text-palette-neutral-700">{candidate.prioritiesSupported} / 5 priorities supported</span>
+            <span className="font-medium text-palette-neutral-700">{candidate.prioritiesSupported} / 5 priorities supported</span>
           ) : (
             candidate.notableGap
           )}
           {candidate.screeningScore !== undefined && (
-            <span className="font-mono text-[11px] text-palette-neutral-400"> · AI Screening Score: {candidate.screeningScore}</span>
+            <span className="text-palette-neutral-400"> · AI Screening Score: {candidate.screeningScore}</span>
           )}
         </p>
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        <span className="rounded-full bg-muted px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.04em] text-muted-foreground">
-          {candidate.stage}
-        </span>
+        <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">{candidate.stage}</span>
         <ChevronRight className="h-4 w-4 text-palette-neutral-300 transition-colors group-hover:text-palette-neutral-500" aria-hidden="true" />
       </div>
     </Link>

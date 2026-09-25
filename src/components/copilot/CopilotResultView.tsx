@@ -31,11 +31,11 @@ function FollowUpSuggestions({ result }: { result: CopilotResult }) {
 
 export function CopilotResultView({ result }: { result: CopilotResult }) {
   if (result.kind === 'text') {
-    return <p className="font-sans text-sm leading-relaxed text-foreground">{result.message}</p>
+    return <p className="text-sm leading-relaxed text-foreground">{result.message}</p>
   }
 
   if (result.kind === 'clarify') {
-    return <p className="font-sans text-sm leading-relaxed italic text-muted-foreground">{result.message}</p>
+    return <p className="text-sm leading-relaxed italic text-muted-foreground">{result.message}</p>
   }
 
   if (result.kind === 'evidence') {
@@ -44,7 +44,7 @@ export function CopilotResultView({ result }: { result: CopilotResult }) {
     const criteria = getCriteria(candidate.openingId)
     return (
       <div>
-        <p className="font-sans text-sm leading-relaxed text-foreground">{result.message}</p>
+        <p className="text-sm leading-relaxed text-foreground">{result.message}</p>
         <div className="mt-3 rounded-lg border border-border bg-muted p-3.5">
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-semibold text-palette-neutral-900">{candidate.name}</span>
@@ -69,7 +69,7 @@ export function CopilotResultView({ result }: { result: CopilotResult }) {
 
   return (
     <div>
-      <p className="font-sans text-sm leading-relaxed text-foreground">{result.message}</p>
+      <p className="text-sm leading-relaxed text-foreground">{result.message}</p>
       <div className="mt-3 space-y-2">
         {matchedCandidates.map((candidate) => (
           <CandidateCard key={candidate.id} candidate={candidate} />

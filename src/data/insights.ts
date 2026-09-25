@@ -17,7 +17,7 @@ export const homeInsights: HomeInsight[] = [
     openingId: 'senior-product-designer',
     openingTitle: 'Senior Product Designer',
     detail: '12 new candidates have completed screening. Three have strong supporting evidence against the configured role criteria.',
-    action: { label: 'Review 3', to: '/openings/senior-product-designer' },
+    action: { label: 'Review 3', to: '/openings/senior-product-designer/candidates' },
   },
   {
     id: 'spd-feedback-waiting',

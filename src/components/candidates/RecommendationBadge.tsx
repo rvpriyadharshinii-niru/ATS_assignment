@@ -11,7 +11,7 @@ const TONE: Record<RecommendationLabel, string> = {
 
 export function RecommendationBadge({ label }: { label: RecommendationLabel }) {
   return (
-    <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.04em]', TONE[label])}>
+    <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium', TONE[label])}>
       {label}
     </span>
   )
