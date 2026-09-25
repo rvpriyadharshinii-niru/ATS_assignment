@@ -1,15 +1,38 @@
+import { ArrowRight } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { getFollowUpSuggestions } from '../../copilot/engine'
 import { getCandidate } from '../../data/candidates'
 import { getCriteria } from '../../data/criteria'
 import { useAllEffectiveCandidates } from '../../store/candidateSelectors'
 import { useAppStore } from '../../store/useAppStore'
+import type { CandidateFilter } from '../../types/domain'
 import type { CopilotResult } from '../../types/copilot'
 import { CandidateCard } from '../candidates/CandidateCard'
 import { ComparisonView } from '../candidates/ComparisonView'
 import { CriterionEvidenceList } from '../candidates/CriterionEvidence'
 import { RecommendationBadge } from '../candidates/RecommendationBadge'
+
+function NavToAction({ navTo, filter }: { navTo: { label: string; path: string }; filter?: CandidateFilter }) {
+  const navigate = useNavigate()
+  const addFilter = useAppStore((state) => state.addFilter)
+  const closeCopilot = useAppStore((state) => state.closeCopilot)
+
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        if (filter) addFilter(filter)
+        navigate(navTo.path)
+        closeCopilot()
+      }}
+      className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      {navTo.label}
+      <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+    </button>
+  )
+}
 
 function FollowUpSuggestions({ result }: { result: CopilotResult }) {
   const submitCopilotMessage = useAppStore((state) => state.submitCopilotMessage)
@@ -158,6 +181,7 @@ function PipelineDiagnosisCard({ result }: { result: Extract<CopilotResult, { ki
           </ul>
         </div>
       )}
+      {result.navTo && <NavToAction navTo={result.navTo} />}
       <FollowUpSuggestions result={result} />
     </div>
   )
@@ -183,7 +207,7 @@ export function CopilotResultView({ turnId, result }: { turnId: string; result: 
         {acted.length > 0 && (
           <div className="mt-3 space-y-2">
             {acted.map((candidate) => (
-              <CandidateCard key={candidate.id} candidate={candidate} />
+              <CandidateCard key={candidate.id} candidate={candidate} variant="board" />
             ))}
           </div>
         )}
@@ -243,9 +267,10 @@ export function CopilotResultView({ turnId, result }: { turnId: string; result: 
       <p className="text-sm leading-relaxed text-foreground">{result.message}</p>
       <div className="mt-3 space-y-2">
         {matchedCandidates.map((candidate) => (
-          <CandidateCard key={candidate.id} candidate={candidate} />
+          <CandidateCard key={candidate.id} candidate={candidate} variant="board" />
         ))}
       </div>
+      {result.navTo && <NavToAction navTo={result.navTo} filter={result.appliedFilter} />}
       <FollowUpSuggestions result={result} />
     </div>
   )

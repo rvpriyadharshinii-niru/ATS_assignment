@@ -1,4 +1,4 @@
-import { Bell, Briefcase, Calendar, Home, Settings, Sparkles, SlidersHorizontal, Users, Workflow } from 'lucide-react'
+import { Bell, Briefcase, Home, Settings, Sparkles, Users } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { cn } from '../../lib/cn'
 import { useAppStore } from '../../store/useAppStore'
@@ -11,25 +11,14 @@ function isOpeningsRoot(pathname: string) {
 function isCandidatesRoute(pathname: string) {
   return pathname.endsWith('/candidates') || /^\/candidates\/[^/]+$/.test(pathname)
 }
-function isPipelineRoute(pathname: string) {
-  return pathname.endsWith('/pipeline')
-}
-function isInterviewsRoute(pathname: string) {
-  return pathname.endsWith('/interviews')
-}
-function isCriteriaRoute(pathname: string) {
-  return pathname.endsWith('/criteria')
-}
 
 const MAIN_ITEMS = [
   { to: '/', label: 'Home', icon: Home, isActive: (p: string) => p === '/' },
   { to: '/openings', label: 'My Openings', icon: Briefcase, isActive: isOpeningsRoot },
   { to: `/openings/${PRIMARY_OPENING}/candidates`, label: 'Candidates', icon: Users, isActive: isCandidatesRoute },
-  { to: `/openings/${PRIMARY_OPENING}/pipeline`, label: 'Pipeline', icon: Workflow, isActive: isPipelineRoute },
-  { to: `/openings/${PRIMARY_OPENING}/interviews`, label: 'Interviews', icon: Calendar, isActive: isInterviewsRoute },
 ]
 
-const UTILITY_ITEMS = [{ to: '/notifications', label: 'Notifications', icon: Bell, isActive: (p: string) => p === '/notifications' }]
+const ACTIVITY_ITEMS = [{ to: '/notifications', label: 'Notifications', icon: Bell, isActive: (p: string) => p === '/notifications' }]
 
 function NavRow({
   to,
@@ -46,11 +35,11 @@ function NavRow({
 }) {
   const className = cn(
     'relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-    active ? 'bg-palette-brand-100 text-palette-brand-700' : 'text-palette-neutral-600 hover:bg-muted hover:text-palette-neutral-900',
+    active ? 'bg-palette-brand-150 text-palette-brand-700 font-semibold' : 'text-palette-neutral-600 hover:bg-muted hover:text-palette-neutral-900',
   )
   const content = (
     <>
-      {active && <span className="absolute -left-3 top-1/2 h-4 w-[3px] -translate-y-1/2 rounded-full bg-primary" aria-hidden="true" />}
+      {active && <span className="absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary" aria-hidden="true" />}
       <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
       <span className="truncate">{label}</span>
     </>
@@ -97,17 +86,11 @@ export function Sidebar() {
         <SectionLabel>Intelligence</SectionLabel>
         <div className="ml-3 space-y-0.5">
           <NavRow label="Copilot" Icon={Sparkles} active={false} onClick={openCopilot} />
-          <NavRow
-            to={`/openings/${PRIMARY_OPENING}/criteria`}
-            label="Hiring Criteria"
-            Icon={SlidersHorizontal}
-            active={isCriteriaRoute(pathname)}
-          />
         </div>
 
-        <SectionLabel>Utility</SectionLabel>
+        <SectionLabel>Activity</SectionLabel>
         <div className="ml-3 space-y-0.5">
-          {UTILITY_ITEMS.map((item) => (
+          {ACTIVITY_ITEMS.map((item) => (
             <NavRow key={item.label} to={item.to} label={item.label} Icon={item.icon} active={item.isActive(pathname)} />
           ))}
         </div>

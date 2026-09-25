@@ -1,6 +1,6 @@
 import { getCriteria, getCriterionName } from '../data/criteria'
 import { getOpening } from '../data/openings'
-import { recommendedCandidateIds } from '../data/candidates'
+import { getCandidate, recommendedCandidateIds } from '../data/candidates'
 import { buildComparisonSummary } from '../lib/comparison'
 import { advanceConsequences } from '../lib/stage'
 import type { Candidate, CandidateStage, CriterionKey } from '../types/domain'
@@ -112,6 +112,7 @@ function handleWhoShouldIReview(context: CopilotContext): CopilotResult {
     kind: 'candidateList',
     message: 'Based on the configured criteria, these candidates currently have the strongest supporting evidence:',
     candidateIds: recommended.map((candidate) => candidate.id),
+    navTo: { label: 'Open candidates', path: `/openings/${context.openingId}/candidates` },
   }
 }
 
@@ -150,6 +151,7 @@ function handleLensChange(input: string, context: CopilotContext): CopilotResult
       criterionKey: matchedKeyword.key,
       minStrength: 'Strong',
     },
+    navTo: { label: 'Open candidates', path: `/openings/${context.openingId}/candidates` },
   }
 }
 
@@ -262,7 +264,12 @@ function handleFinalists(context: CopilotContext): CopilotResult {
   if (pool.length === 0) {
     return { kind: 'clarify', message: 'No candidates are currently in Final for this role.' }
   }
-  return { kind: 'candidateList', message: 'Currently in Final:', candidateIds: pool.map((candidate) => candidate.id) }
+  return {
+    kind: 'candidateList',
+    message: 'Currently in Final:',
+    candidateIds: pool.map((candidate) => candidate.id),
+    navTo: { label: 'View pipeline', path: `/openings/${context.openingId}/pipeline` },
+  }
 }
 
 function handleWhoInStage(input: string, context: CopilotContext): CopilotResult | undefined {
@@ -276,7 +283,12 @@ function handleWhoInStage(input: string, context: CopilotContext): CopilotResult
   if (pool.length === 0) {
     return { kind: 'clarify', message: `No candidates are currently in ${stage}.` }
   }
-  return { kind: 'candidateList', message: `Currently in ${stage}:`, candidateIds: pool.map((candidate) => candidate.id) }
+  return {
+    kind: 'candidateList',
+    message: `Currently in ${stage}:`,
+    candidateIds: pool.map((candidate) => candidate.id),
+    navTo: { label: 'View pipeline', path: `/openings/${context.openingId}/pipeline` },
+  }
 }
 
 function handleBlocking(context: CopilotContext): CopilotResult {
@@ -299,6 +311,7 @@ function handleBlocking(context: CopilotContext): CopilotResult {
     message: `${waitingOnYou.length + waitingOnOthers.length} of ${interviewCandidates.length} candidates in Interview have been waiting for feedback for several days.`,
     waitingOnYou: waitingOnYou.map((candidate) => ({ candidateId: candidate.id, days: candidate.waitingDays ?? 0 })),
     waitingOnOthers: waitingOnOthers.map((candidate) => ({ candidateId: candidate.id, days: candidate.waitingDays ?? 0 })),
+    navTo: { label: 'View pipeline', path: `/openings/${context.openingId}/pipeline` },
   }
 }
 
@@ -312,7 +325,12 @@ function handleWaitingFeedback(context: CopilotContext): CopilotResult {
   if (pool.length === 0) {
     return { kind: 'text', message: 'No one is currently waiting for feedback.' }
   }
-  return { kind: 'candidateList', message: 'Waiting for feedback:', candidateIds: pool.map((candidate) => candidate.id) }
+  return {
+    kind: 'candidateList',
+    message: 'Waiting for feedback:',
+    candidateIds: pool.map((candidate) => candidate.id),
+    navTo: { label: 'View pipeline', path: `/openings/${context.openingId}/pipeline` },
+  }
 }
 
 function handleFallback(): CopilotResult {
@@ -352,7 +370,13 @@ export function runCopilotQuery(rawInput: string, context: CopilotContext): Copi
 
 /** Follow-up prompts surfaced under a turn's result — always drawn from the supported intent set. */
 export function getFollowUpSuggestions(result: CopilotResult): string[] {
-  if (result.kind === 'evidence') return ['Show candidates strongest in design systems']
+  if (result.kind === 'evidence') {
+    const candidate = getCandidate(result.candidateId)
+    const otherId = candidate ? recommendedCandidateIds.find((id) => id !== candidate.id) : undefined
+    const other = otherId ? getCandidate(otherId) : undefined
+    const suggestions = candidate && other ? [`Compare ${candidate.name.split(' ')[0]} and ${other.name.split(' ')[0]}`] : []
+    return [...suggestions, 'Show candidates strongest in design systems']
+  }
   if (result.kind === 'candidateList') {
     if (result.appliedFilter?.criterionKey === 'designSystems') return ['Prioritize AI product experience']
     if (result.appliedFilter?.criterionKey === 'aiProductExperience') return ['Show candidates strongest in design systems']

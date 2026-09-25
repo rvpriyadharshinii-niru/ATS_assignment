@@ -46,13 +46,13 @@ interface CriterionRowProps {
 }
 
 export function CriterionRow({ criterion, evidence, compact = false }: CriterionRowProps) {
-  const [sourceOpen, setSourceOpen] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const strength = evidence?.strength ?? 'Not available'
 
   return (
     <div className="flex gap-3">
       <span className={cn('w-[3px] shrink-0 self-stretch rounded-full', STRENGTH_BAR_TONE[strength])} aria-hidden="true" />
-      <div className={cn('min-w-0 flex-1 py-3', compact && 'py-1.5')}>
+      <div className={cn('min-w-0 flex-1 py-2.5', compact && 'py-1.5')}>
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm font-semibold text-palette-neutral-900">
             {criterion.name}
@@ -62,17 +62,21 @@ export function CriterionRow({ criterion, evidence, compact = false }: Criterion
         </div>
         {!compact && evidence?.detail && (
           <>
-            <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-foreground">{evidence.detail}</p>
             <button
               type="button"
-              onClick={() => setSourceOpen((current) => !current)}
-              className="mt-1.5 text-xs font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={() => setExpanded((current) => !current)}
+              className="mt-1 flex w-full max-w-2xl items-start gap-1 text-left text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              {sourceOpen ? 'Hide source' : 'View source →'}
+              <span className={cn('leading-relaxed', !expanded && 'truncate')}>{evidence.detail}</span>
             </button>
-            {sourceOpen && (
-              <p className="mt-1 text-xs text-palette-neutral-400">Sourced from resume, application and screening information</p>
-            )}
+            <button
+              type="button"
+              onClick={() => setExpanded((current) => !current)}
+              className="mt-1 text-xs font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {expanded ? 'Show less' : 'Show details & source'}
+            </button>
+            {expanded && <p className="mt-1 text-xs text-palette-neutral-400">Sourced from resume, application and screening information</p>}
           </>
         )}
       </div>

@@ -1,5 +1,5 @@
 import { Sparkles, X } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { getCandidate } from '../../data/candidates'
 import { useCopilotScope } from '../../copilot/useCopilotScope'
 import { useAppStore } from '../../store/useAppStore'
@@ -26,6 +26,11 @@ export function CopilotPanel() {
   const { label } = useCopilotScope()
   const suggestions = useSuggestions()
   const [draft, setDraft] = useState('')
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
+  }, [history.length])
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -37,9 +42,9 @@ export function CopilotPanel() {
 
   return (
     <div className="fixed bottom-6 right-6 top-6 z-50 flex w-[440px] max-w-[calc(100vw-3rem)] flex-col rounded-xl border border-border bg-card shadow-xl">
-      <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-3.5">
+      <header className="flex items-center justify-between gap-2 rounded-t-xl border-b border-border bg-palette-brand-100/40 px-4 py-3.5">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[image:var(--gradient-brand_wash)] text-background">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[image:var(--gradient-brand_wash)] text-background shadow-sm">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
           </span>
           <div className="min-w-0">
@@ -51,18 +56,16 @@ export function CopilotPanel() {
           type="button"
           onClick={closeCopilot}
           aria-label="Close Copilot"
-          className="rounded-md p-1.5 text-palette-neutral-400 hover:bg-muted hover:text-palette-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="rounded-md p-1.5 text-palette-neutral-400 hover:bg-background hover:text-palette-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
       </header>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
         {history.length === 0 ? (
           <div>
-            <p className="text-sm leading-relaxed text-muted-foreground">
-              Ask about candidates, evidence or recommendations for {label}.
-            </p>
+            <p className="text-sm leading-relaxed text-muted-foreground">Ask about candidates, evidence or recommendations for {label}.</p>
             {suggestions.length > 0 && (
               <div className="mt-3 flex flex-col items-start gap-2">
                 {suggestions.map((suggestion) => (
@@ -79,12 +82,19 @@ export function CopilotPanel() {
             )}
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {history.map((turn) => (
-              <div key={turn.id}>
-                <p className="border-l-2 border-palette-brand-300 pl-2.5 text-sm text-muted-foreground">{turn.query}</p>
-                <div className="mt-2.5">
-                  <CopilotResultView turnId={turn.id} result={turn.result} />
+              <div key={turn.id} className="space-y-2.5">
+                <div className="flex justify-end">
+                  <p className="max-w-[85%] rounded-2xl rounded-tr-sm bg-palette-brand-600 px-3.5 py-2 text-sm text-white">{turn.query}</p>
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-palette-brand-100 text-primary">
+                    <Sparkles className="h-3 w-3" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0 max-w-[85%] rounded-2xl rounded-tl-sm bg-palette-neutral-100/60 px-3.5 py-2.5">
+                    <CopilotResultView turnId={turn.id} result={turn.result} />
+                  </div>
                 </div>
               </div>
             ))}
@@ -104,7 +114,7 @@ export function CopilotPanel() {
           />
           <button
             type="submit"
-            className="rounded-lg bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             disabled={draft.trim().length === 0}
           >
             Ask

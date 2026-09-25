@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { buildStatusNote } from '../../lib/candidateStatus'
 import { cn } from '../../lib/cn'
 import type { Candidate } from '../../types/domain'
+import { CandidateActionsMenu } from './CandidateActionsMenu'
 import { RecommendationBadge } from './RecommendationBadge'
 
 function StatusTags({ candidate }: { candidate: Candidate }) {
@@ -32,25 +33,46 @@ export function CandidateCard({ candidate, variant = 'row' }: CandidateCardProps
   const statusNote = buildStatusNote(candidate)
 
   if (variant === 'board') {
+    const feedbackNeeded = candidate.waitingOn === 'priya'
     return (
-      <Link
-        to={`/candidates/${candidate.id}`}
+      <div
         className={cn(
-          'block rounded-lg border border-border bg-background px-3 py-2.5 transition-colors hover:border-palette-neutral-300 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          'rounded-lg border border-border bg-card px-3 py-2.5 shadow-xs transition-colors hover:border-palette-neutral-300',
           candidate.rejected && 'opacity-60',
+          feedbackNeeded && 'border-palette-warning-300',
         )}
       >
-        <div className="flex items-start justify-between gap-2">
-          <h4 className="truncate text-sm font-semibold text-palette-neutral-900">{candidate.name}</h4>
-          <ChevronRight className="h-3.5 w-3.5 shrink-0 text-palette-neutral-300" aria-hidden="true" />
+        <div className="flex items-start justify-between gap-1">
+          <Link
+            to={`/candidates/${candidate.id}`}
+            className="truncate text-sm font-semibold text-palette-neutral-900 hover:text-primary focus-visible:outline-none focus-visible:underline"
+          >
+            {candidate.name}
+          </Link>
+          <CandidateActionsMenu candidate={candidate} />
         </div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+        <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
           {candidate.recommendation && <RecommendationBadge label={candidate.recommendation} />}
-          <StatusTags candidate={candidate} />
+          {candidate.prioritiesSupported !== undefined && <span>{candidate.prioritiesSupported}/5</span>}
         </div>
-        {statusNote && <p className="mt-1.5 text-xs font-medium text-palette-neutral-500">{statusNote}</p>}
-        {candidate.screeningScore !== undefined && <p className="mt-1 text-xs text-palette-neutral-400">AI Screening Score: {candidate.screeningScore}</p>}
-      </Link>
+        <p className="mt-1 text-xs text-palette-neutral-500">
+          {candidate.stage}
+          {candidate.updatedLabel && ` · ${candidate.updatedLabel}`}
+        </p>
+        {(candidate.hold || candidate.rejected || candidate.selected) && (
+          <div className="mt-1 flex flex-wrap gap-1">
+            <StatusTags candidate={candidate} />
+          </div>
+        )}
+        {statusNote && (
+          <p className={cn('mt-1 text-xs', feedbackNeeded ? 'font-medium text-palette-warning-700' : 'text-palette-neutral-500')}>{statusNote}</p>
+        )}
+        {feedbackNeeded && (
+          <span className="mt-1.5 inline-flex items-center rounded-full bg-palette-warning-150 px-2 py-0.5 text-[11px] font-semibold text-palette-warning-700">
+            Feedback needed
+          </span>
+        )}
+      </div>
     )
   }
 

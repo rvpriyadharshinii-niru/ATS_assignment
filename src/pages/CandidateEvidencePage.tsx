@@ -87,7 +87,6 @@ export function CandidateEvidencePage() {
         </div>
 
         {statusNote && <p className="mt-3 text-sm font-medium text-palette-neutral-600">{statusNote}</p>}
-        {candidate.summary && <p className="mt-3 text-sm leading-relaxed text-foreground">{candidate.summary}</p>}
 
         {!candidate.rejected && (
           <div className="mt-5 flex flex-wrap items-center gap-2 border-t border-border pt-4">
@@ -119,6 +118,13 @@ export function CandidateEvidencePage() {
           </div>
         )}
       </div>
+
+      {candidate.summary && (
+        <div className="rounded-xl border border-border bg-palette-brand-100/30 p-5 shadow-xs">
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-primary">AI assessment</h2>
+          <p className="mt-1.5 text-sm leading-relaxed text-foreground">{candidate.summary}</p>
+        </div>
+      )}
 
       <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
         <h2 className="text-sm font-semibold text-palette-neutral-900">Criteria &amp; evidence</h2>

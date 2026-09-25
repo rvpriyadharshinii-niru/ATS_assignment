@@ -26,12 +26,27 @@ export type CopilotResult =
   | { kind: 'text'; message: string }
   | { kind: 'clarify'; message: string }
   | { kind: 'evidence'; message: string; candidateId: string }
-  | { kind: 'candidateList'; message: string; candidateIds: string[]; appliedFilter?: CandidateFilter }
+  | {
+      kind: 'candidateList'
+      message: string
+      candidateIds: string[]
+      /** A lens candidates were matched against — applied to the Candidates page only when navTo is opened, never automatically. */
+      appliedFilter?: CandidateFilter
+      /** Explicit "open in workspace" destination — structured results stay inside Copilot until this is clicked. */
+      navTo?: { label: string; path: string }
+    }
   | { kind: 'comparison'; message: string; candidateIds: string[] }
   | { kind: 'confirm'; title: string; lines: string[]; consequences: string[]; confirmLabel: string; action: PendingAction }
   | { kind: 'actionComplete'; message: string; candidateIds?: string[] }
   | { kind: 'emailDraft'; candidateId: string; to: string; subject: string; body: string }
-  | { kind: 'pipelineDiagnosis'; headline: string; message: string; waitingOnYou: WaitingCandidate[]; waitingOnOthers: WaitingCandidate[] }
+  | {
+      kind: 'pipelineDiagnosis'
+      headline: string
+      message: string
+      waitingOnYou: WaitingCandidate[]
+      waitingOnOthers: WaitingCandidate[]
+      navTo?: { label: string; path: string }
+    }
 
 export interface CopilotTurn {
   id: string

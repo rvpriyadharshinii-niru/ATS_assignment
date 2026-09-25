@@ -104,10 +104,10 @@ export const useAppStore = create<AppState>((set, get) => ({
       filters: state.filters,
       candidates: effectiveCandidates,
     }
+    // Structured results (candidate lists, pipeline insight) render inside Copilot only.
+    // The background workspace is never mutated or navigated until Priya explicitly
+    // clicks the result's "Open candidates" / "View pipeline" action.
     const result = runCopilotQuery(query, context)
-    if (result.kind === 'candidateList' && result.appliedFilter) {
-      get().addFilter(result.appliedFilter)
-    }
     const turn: CopilotTurn = { id: `${Date.now()}-${state.copilotHistory.length}`, query, result }
     set((current) => ({ copilotHistory: [...current.copilotHistory, turn], copilotExpanded: true }))
   },

@@ -78,6 +78,8 @@ export interface Candidate {
   interviewStatus?: string
   waitingOn?: WaitingOn
   waitingDays?: number
+  /** Relative "last activity" label for the Candidates table, e.g. "Today", "2d". */
+  updatedLabel?: string
 }
 
 /** Fields Priya's actions (manual or Copilot) can override on top of the base candidate record. */

@@ -2,10 +2,29 @@ import { useParams } from 'react-router-dom'
 import { CandidateCard } from '../components/candidates/CandidateCard'
 import { getOpening } from '../data/openings'
 import { STAGE_BASELINE_OTHER } from '../data/pipeline'
+import { cn } from '../lib/cn'
 import { useEffectiveCandidatesForOpening, usePipelineStages } from '../store/candidateSelectors'
 import type { CandidateStage, OpeningId } from '../types/domain'
 
 const STAGES: CandidateStage[] = ['Applied', 'AI Screened', 'HM Review', 'Interview', 'Final', 'Offer']
+
+const COLUMN_TINT: Record<CandidateStage, string> = {
+  Applied: 'bg-palette-neutral-100/50',
+  'AI Screened': 'bg-palette-info-100/50',
+  'HM Review': 'bg-palette-brand-100/50',
+  Interview: 'bg-palette-warning-100/50',
+  Final: 'bg-palette-plum-100/40',
+  Offer: 'bg-palette-success-100/50',
+}
+
+const COLUMN_HEADER_TEXT: Record<CandidateStage, string> = {
+  Applied: 'text-palette-neutral-700',
+  'AI Screened': 'text-palette-info-700',
+  'HM Review': 'text-palette-brand-700',
+  Interview: 'text-palette-warning-700',
+  Final: 'text-palette-plum-700',
+  Offer: 'text-palette-success-700',
+}
 
 export function PipelinePage() {
   const { openingId } = useParams<{ openingId: string }>()
@@ -28,14 +47,7 @@ export function PipelinePage() {
   const active = candidates.filter((candidate) => !candidate.rejected)
 
   return (
-    <div className="space-y-6 p-8">
-      <div>
-        <h2 className="text-sm font-semibold text-palette-neutral-900">Pipeline board</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Applied → AI Screened → HM Review → Interview → Final → Offer. Tracked candidates move through this board as their stage changes.
-        </p>
-      </div>
-
+    <div className="p-8">
       <div className="flex gap-4 overflow-x-auto pb-2">
         {STAGES.map((stage) => {
           const count = stageCounts.find((entry) => entry.stage === stage)?.count ?? 0
@@ -43,26 +55,21 @@ export function PipelinePage() {
           const otherCount = STAGE_BASELINE_OTHER[stage]
 
           return (
-            <div key={stage} className="w-[260px] shrink-0 rounded-xl border border-border bg-card shadow-xs">
-              <div className="border-b border-border px-4 py-3">
-                <p className="text-xs font-medium text-muted-foreground">{stage}</p>
-                <p className="mt-0.5 text-xl font-semibold text-palette-neutral-900">{count}</p>
+            <div key={stage} className={cn('w-[280px] shrink-0 rounded-xl', COLUMN_TINT[stage])}>
+              <div className="flex items-baseline justify-between px-3 py-3">
+                <p className={cn('text-xs font-semibold uppercase tracking-wide', COLUMN_HEADER_TEXT[stage])}>{stage}</p>
+                <p className="text-lg font-semibold text-palette-neutral-900">{count}</p>
               </div>
-              <div className="max-h-[540px] space-y-2 overflow-y-auto p-3">
-                {named.length === 0 && otherCount === 0 && <p className="px-1 py-2 text-xs text-muted-foreground">No candidates in this stage.</p>}
+              <div className="max-h-[560px] space-y-2 overflow-y-auto px-3 pb-3">
                 {named.map((candidate) => (
                   <CandidateCard key={candidate.id} candidate={candidate} variant="board" />
                 ))}
-                {otherCount > 0 && <p className="px-1 pt-1 text-xs text-muted-foreground">+{otherCount} more not tracked individually in this prototype</p>}
+                {otherCount > 0 && <p className="px-1 pt-1 text-xs text-palette-neutral-400">+{otherCount} more</p>}
+                {named.length === 0 && otherCount === 0 && <p className="px-1 py-2 text-xs text-palette-neutral-400">No candidates</p>}
               </div>
             </div>
           )
         })}
-      </div>
-
-      <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
-        <h2 className="text-sm font-semibold text-palette-neutral-900">Current status</h2>
-        <p className="mt-2 text-sm text-foreground">{opening.situationSummary}</p>
       </div>
     </div>
   )
