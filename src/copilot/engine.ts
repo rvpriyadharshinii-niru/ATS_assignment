@@ -4,6 +4,7 @@ import { getInterviewFeedback } from '../data/interviewFeedback'
 import { getOpening } from '../data/openings'
 import { getCandidate, recommendedCandidateIds } from '../data/candidates'
 import { buildComparisonSummary } from '../lib/comparison'
+import { buildDefaultEmail } from '../lib/email'
 import { STRENGTH_RANK, isUncertainStrength } from '../lib/evidence'
 import { advanceConsequences } from '../lib/stage'
 import type { Candidate, CandidateStage, CriterionKey, OpeningId } from '../types/domain'
@@ -323,13 +324,7 @@ function handleEmail(input: string, context: CopilotContext): CopilotResult {
   if (!target) {
     return { kind: 'clarify', message: 'Who should I email? Try "Email Ananya asking for her availability next week."' }
   }
-  const opening = getOpening(target.openingId)
-  const roleTitle = opening?.title ?? 'this role'
-  const firstName = target.name.split(' ')[0]
-  const subject = `Next steps — ${roleTitle}`
-  const body = /availability/i.test(input)
-    ? `Hi ${firstName},\n\nWe'd like to move forward with the next stage of the ${roleTitle} process.\n\nCould you share your availability for an interview next week?\n\nThanks,\nPriya`
-    : `Hi ${firstName},\n\nWe'd like to follow up regarding the ${roleTitle} process.\n\nThanks,\nPriya`
+  const { subject, body } = buildDefaultEmail(target, /availability/i.test(input))
   return { kind: 'emailDraft', candidateId: target.id, to: target.name, subject, body }
 }
 

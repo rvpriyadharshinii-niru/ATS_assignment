@@ -62,20 +62,26 @@ export function RoleWorkspaceLayout() {
 
         <div className="mt-2 flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-xl font-semibold tracking-tight text-palette-neutral-900">{opening.title}</h1>
-            <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
-              <span className="inline-flex items-center gap-1.5">
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-semibold tracking-tight text-palette-neutral-900">{opening.title}</h1>
+              <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-palette-success-150 px-2.5 py-1 text-xs font-medium text-palette-success-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
+                Active
+              </span>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
                 <Users className="h-3.5 w-3.5" aria-hidden="true" />
                 {opening.totalCandidates} candidates
               </span>
               {opening.needsAttention > 0 && (
-                <span className="inline-flex items-center gap-1.5 text-palette-warning-700">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-palette-warning-150 px-2.5 py-1 text-xs font-medium text-palette-warning-700">
                   <CircleAlert className="h-3.5 w-3.5" aria-hidden="true" />
                   {opening.needsAttention} need attention
                 </span>
               )}
               {opening.newSinceLastReview !== undefined && (
-                <span className="inline-flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
                   <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                   {opening.newSinceLastReview} new since last review
                 </span>

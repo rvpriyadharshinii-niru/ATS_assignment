@@ -4,8 +4,9 @@ import { advanceConsequences, nextStage } from '../../lib/stage'
 import { useAppStore } from '../../store/useAppStore'
 import type { Candidate } from '../../types/domain'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
+import { EmailComposeDialog } from './EmailComposeDialog'
 
-type OpenDialog = 'advance' | 'hold' | 'reject' | null
+type OpenDialog = 'advance' | 'hold' | 'reject' | 'email' | null
 
 export function CandidateActionsMenu({ candidate }: { candidate: Candidate }) {
   const [menuOpen, setMenuOpen] = useState(false)
@@ -64,6 +65,16 @@ export function CandidateActionsMenu({ candidate }: { candidate: Candidate }) {
               type="button"
               onClick={() => {
                 setMenuOpen(false)
+                setDialog('email')
+              }}
+              className="block w-full px-3 py-1.5 text-left text-sm text-foreground hover:bg-muted"
+            >
+              Send email
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false)
                 setDialog('reject')
               }}
               className="block w-full px-3 py-1.5 text-left text-sm text-destructive hover:bg-muted"
@@ -101,6 +112,8 @@ export function CandidateActionsMenu({ candidate }: { candidate: Candidate }) {
           setDialog(null)
         }}
       />
+
+      <EmailComposeDialog open={dialog === 'email'} onOpenChange={(open) => setDialog(open ? 'email' : null)} candidate={candidate} />
 
       <ConfirmDialog
         open={dialog === 'reject'}

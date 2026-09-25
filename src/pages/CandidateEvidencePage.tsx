@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { CriterionEvidenceList } from '../components/candidates/CriterionEvidence'
+import { EmailComposeDialog } from '../components/candidates/EmailComposeDialog'
 import { RecommendationBadge } from '../components/candidates/RecommendationBadge'
 import { getCriteria } from '../data/criteria'
 import { getOpening } from '../data/openings'
@@ -14,7 +15,7 @@ import { useAppStore } from '../store/useAppStore'
 import type { Candidate } from '../types/domain'
 import { cn } from '../lib/cn'
 
-type OpenDialog = 'advance' | 'hold' | 'reject' | null
+type OpenDialog = 'advance' | 'hold' | 'reject' | 'email' | null
 type DetailTab = 'evidence' | 'activity'
 
 interface ActivityEntry {
@@ -141,6 +142,13 @@ export function CandidateEvidencePage() {
             >
               Reject
             </button>
+            <button
+              type="button"
+              onClick={() => setOpenDialog('email')}
+              className="rounded-lg border border-border px-3.5 py-2 text-sm font-medium text-palette-neutral-700 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Send email
+            </button>
           </div>
         )}
       </div>
@@ -243,6 +251,8 @@ export function CandidateEvidencePage() {
           setOpenDialog(null)
         }}
       />
+
+      <EmailComposeDialog open={openDialog === 'email'} onOpenChange={(open) => setOpenDialog(open ? 'email' : null)} candidate={candidate} />
     </div>
   )
 }

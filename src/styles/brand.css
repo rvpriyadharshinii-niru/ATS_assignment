@@ -53,6 +53,10 @@
     --accent-foreground: var(--palette-brand-700);
     --ring: var(--palette-brand-500);
     --border: var(--palette-neutral-200);
+    /* Fuzzy Prism's muted-foreground (neutral-700, #3E353F) is darker than the default body
+       text (--foreground, #5D5D5D), so "muted" secondary text reads no lighter than primary
+       text — the app-wide flat-black look. neutral-550 sits meaningfully lighter than both. */
+    --muted-foreground: var(--palette-neutral-550);
     --gradient-brand_wash: linear-gradient(135deg, var(--palette-brand-500) 0%, var(--palette-plum-500) 100%);
 
     --font-sans: "Inter", system-ui, sans-serif;
