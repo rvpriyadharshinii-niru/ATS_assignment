@@ -1,4 +1,4 @@
-import type { Candidate, CandidateFilter, CandidateStage, OpeningId } from './domain'
+import type { Candidate, CandidateFilter, CandidateStage, CriterionKey, OpeningId } from './domain'
 
 export type CopilotScopeLevel = 'global' | 'role' | 'candidate'
 
@@ -9,6 +9,8 @@ export interface CopilotContext {
   filters: CandidateFilter[]
   /** Every candidate, with the current store overrides already applied — the same state the manual UI renders. */
   candidates: Candidate[]
+  /** Candidates this conversation most recently discussed — lets "move both to Interview" resolve after a comparison. */
+  recentCandidateIds?: string[]
 }
 
 export type PendingAction =
@@ -22,10 +24,26 @@ export interface WaitingCandidate {
   days: number
 }
 
+export interface CrossRoleAttentionItem {
+  openingId: OpeningId
+  openingTitle: string
+  headline: string
+  action?: { label: string; path: string }
+}
+
 export type CopilotResult =
   | { kind: 'text'; message: string }
   | { kind: 'clarify'; message: string }
-  | { kind: 'evidence'; message: string; candidateId: string }
+  | {
+      kind: 'evidence'
+      message: string
+      candidateId: string
+      /** When set, show only this one criterion's compact evidence instead of the full list — e.g. "biggest concern" queries. */
+      focusCriterionKey?: CriterionKey
+      /** An optional interview-prep suggestion appended under the evidence. */
+      followUpNote?: string
+    }
+  | { kind: 'crossRoleAttention'; message: string; items: CrossRoleAttentionItem[] }
   | {
       kind: 'candidateList'
       message: string
@@ -52,4 +70,16 @@ export interface CopilotTurn {
   id: string
   query: string
   result: CopilotResult
+}
+
+/** A persistent chat thread. The contextual panel and the full workspace both read/write the same ones. */
+export interface CopilotConversation {
+  id: string
+  title: string
+  createdAt: number
+  turns: CopilotTurn[]
+  /** The role a query in this conversation last explicitly switched to — lets a follow-up in the standalone workspace stay on-topic without page context. */
+  stickyOpeningId: OpeningId | null
+  /** Candidates most recently surfaced in this thread (evidence/comparison/list) — resolves "move both to Interview" after "Compare Ananya and Rahul". */
+  lastCandidateIds: string[]
 }

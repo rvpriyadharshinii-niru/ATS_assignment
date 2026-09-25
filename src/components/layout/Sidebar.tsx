@@ -1,7 +1,6 @@
 import { Bell, Briefcase, Home, Settings, Sparkles, Users } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { cn } from '../../lib/cn'
-import { useAppStore } from '../../store/useAppStore'
 
 const PRIMARY_OPENING = 'senior-product-designer'
 
@@ -64,7 +63,6 @@ function SectionLabel({ children }: { children: string }) {
 
 export function Sidebar() {
   const { pathname } = useLocation()
-  const openCopilot = useAppStore((state) => state.openCopilot)
 
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-border bg-card">
@@ -85,7 +83,7 @@ export function Sidebar() {
 
         <SectionLabel>Intelligence</SectionLabel>
         <div className="ml-3 space-y-0.5">
-          <NavRow label="Copilot" Icon={Sparkles} active={false} onClick={openCopilot} />
+          <NavRow to="/copilot" label="Copilot" Icon={Sparkles} active={pathname === '/copilot'} />
         </div>
 
         <SectionLabel>Activity</SectionLabel>

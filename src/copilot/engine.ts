@@ -1,9 +1,11 @@
+import { crossRoleAttention } from '../data/attention'
 import { getCriteria, getCriterionName } from '../data/criteria'
 import { getOpening } from '../data/openings'
 import { getCandidate, recommendedCandidateIds } from '../data/candidates'
 import { buildComparisonSummary } from '../lib/comparison'
+import { STRENGTH_RANK, isUncertainStrength } from '../lib/evidence'
 import { advanceConsequences } from '../lib/stage'
-import type { Candidate, CandidateStage, CriterionKey } from '../types/domain'
+import type { Candidate, CandidateStage, CriterionKey, OpeningId } from '../types/domain'
 import type { CopilotContext, CopilotResult } from '../types/copilot'
 
 /**
@@ -32,21 +34,40 @@ const STAGE_KEYWORDS: { pattern: RegExp; stage: CandidateStage }[] = [
   { pattern: /\bapplied\b/i, stage: 'Applied' },
 ]
 
+/** Explicit role mentions in a query always win over whatever page Priya happens to be on. */
+const OPENING_NAME_KEYWORDS: { pattern: RegExp; id: OpeningId }[] = [
+  { pattern: /product manager/i, id: 'product-manager' },
+  { pattern: /ux researcher/i, id: 'ux-researcher' },
+  { pattern: /senior product designer/i, id: 'senior-product-designer' },
+]
+
+/** Deterministic interview probes surfaced after a "biggest concern" answer, keyed by the weak criterion. */
+const INTERVIEW_PROBES: Partial<Record<CriterionKey, string>> = {
+  leadership: 'Tell me about a product direction you owned across multiple designers or teams.',
+  aiProductExperience: 'Walk me through an AI feature you shipped end-to-end, including the tradeoffs.',
+  designSystems: 'Describe a design system decision you owned and how you drove adoption.',
+  complexWorkflows: 'Walk me through the most complex workflow you designed and how you simplified it.',
+  enterpriseSaas: 'Tell me about designing for a demanding enterprise customer with conflicting needs.',
+}
+
 const WHY_PATTERN = /\bwhy\b/i
-const WHO_TO_REVIEW_PATTERN = /who should i review/i
+const TOP_CANDIDATES_PATTERN = /who should i review|top candidates|which candidates/i
 const LENS_TRIGGER_PATTERN = /strongest|strong in|prioriti[sz]e|show candidates/i
 const FINALIZE_PATTERN = /\bfinalize\b/i
 const REJECT_PATTERN = /\breject\b/i
 const HOLD_PATTERN = /\bhold\b/i
 const EMAIL_PATTERN = /\bemail\b/i
 const COMPARE_PATTERN = /\bcompare\b/i
-const BLOCKING_PATTERN = /\bblocking\b|\bslowing down\b/i
-const WAITING_FEEDBACK_PATTERN = /waiting (for|on) feedback|pending feedback/i
+const BLOCKING_PATTERN = /\bblocking\b|\bblocked\b|\bslowing down\b|\bbottleneck\b/i
+const WAITING_FEEDBACK_PATTERN = /waiting (for|on) feedback|pending feedback|review.*feedback/i
 const FINALISTS_PATTERN = /\bfinalists?\b/i
 const WHO_PATTERN = /\bwho\b/i
 const IN_PATTERN = /\bin\b/i
 const ADVANCE_PATTERN = /\b(move|advance)\b/i
 const PRONOUN_PATTERN = /\bher\b|\bhim\b|\bthem\b|\bthis candidate\b/i
+const COLLECTIVE_PATTERN = /\bboth\b|\ball of them\b|\bthem\b/i
+const CONCERN_PATTERN = /biggest concern|main concern|main uncertainty|what.*concern/i
+const GLOBAL_ATTENTION_PATTERN = /what needs my attention|needs my attention today|catch me up/i
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -56,6 +77,11 @@ function findStageKeyword(input: string): CandidateStage | undefined {
   return STAGE_KEYWORDS.find((keyword) => keyword.pattern.test(input))?.stage
 }
 
+/** An explicit role name in the query text always overrides whatever opening the current page/conversation is scoped to. */
+export function resolveOpeningOverride(input: string): OpeningId | undefined {
+  return OPENING_NAME_KEYWORDS.find((keyword) => keyword.pattern.test(input))?.id
+}
+
 /** Name-only matching against the current opening's (or all) candidates — no pronoun fallback. */
 function matchCandidatesByName(input: string, context: CopilotContext): Candidate[] {
   const lower = input.toLowerCase()
@@ -63,10 +89,14 @@ function matchCandidatesByName(input: string, context: CopilotContext): Candidat
   return pool.filter((candidate) => new RegExp(`\\b${escapeRegExp(candidate.name.split(' ')[0].toLowerCase())}\\b`, 'i').test(lower))
 }
 
-/** Name matches, falling back to the candidate currently open (via pronoun or scope) when nothing is named. */
+/** Name matches, falling back to recently-discussed candidates (e.g. "both") or the candidate currently open when nothing is named. */
 function resolveCandidates(input: string, context: CopilotContext): Candidate[] {
   const named = matchCandidatesByName(input, context)
   if (named.length > 0) return named
+  if (COLLECTIVE_PATTERN.test(input) && context.recentCandidateIds && context.recentCandidateIds.length > 0) {
+    const recent = context.recentCandidateIds.map((id) => context.candidates.find((candidate) => candidate.id === id)).filter((c): c is Candidate => c !== undefined)
+    if (recent.length > 0) return recent
+  }
   if (context.level === 'candidate' && context.candidateId) {
     const current = context.candidates.find((candidate) => candidate.id === context.candidateId)
     if (current) return [current]
@@ -96,23 +126,66 @@ function handleWhy(input: string, context: CopilotContext): CopilotResult {
   return { kind: 'evidence', message: buildEvidenceMessage(candidate), candidateId: candidate.id }
 }
 
-function handleWhoShouldIReview(context: CopilotContext): CopilotResult {
+function joinWithAnd(items: string[]): string {
+  if (items.length <= 1) return items[0] ?? ''
+  return `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`
+}
+
+function handleBiggestConcern(input: string, context: CopilotContext): CopilotResult {
+  const candidate = resolveCandidates(input, context)[0]
+  if (!candidate) {
+    return { kind: 'clarify', message: 'Which candidate? Try "What\'s Rahul\'s biggest concern?"' }
+  }
+  if (candidate.evidence.length === 0) {
+    return { kind: 'text', message: `I don't have a detailed evidence profile for ${candidate.name} yet.` }
+  }
+
+  const ranked = [...candidate.evidence].sort((a, b) => STRENGTH_RANK[a.strength] - STRENGTH_RANK[b.strength])
+  const weakest = ranked[0]
+  if (!isUncertainStrength(weakest.strength)) {
+    return { kind: 'text', message: `${candidate.name} doesn't have a clear weak spot — evidence is solid across all configured criteria.` }
+  }
+
+  const weakestName = getCriterionName(candidate.openingId, weakest.criterionKey)
+  const strongNames = candidate.evidence
+    .filter((evidence) => evidence.criterionKey !== weakest.criterionKey && STRENGTH_RANK[evidence.strength] >= STRENGTH_RANK.Good)
+    .map((evidence) => getCriterionName(candidate.openingId, evidence.criterionKey).toLowerCase())
+  const strongSentence = strongNames.length > 0 ? `${candidate.name} has strong evidence for ${joinWithAnd(strongNames)}, but ` : ''
+  const message = `The main uncertainty is ${weakestName.toLowerCase()}.\n\n${strongSentence}${weakest.detail}`
+
+  const probe = INTERVIEW_PROBES[weakest.criterionKey]
+  const followUpNote = probe ? `You could validate this during interview:\n"${probe}"` : undefined
+
+  return { kind: 'evidence', message, candidateId: candidate.id, focusCriterionKey: weakest.criterionKey, followUpNote }
+}
+
+/** Real named candidates per opening — only Senior Product Designer has a ranked shortlist; others surface whatever we actually track. */
+function handleTopCandidates(context: CopilotContext): CopilotResult {
   if (!context.openingId) {
-    return {
-      kind: 'clarify',
-      message: 'Which opening would you like to review? I can look at Senior Product Designer if you select it.',
-    }
+    return { kind: 'clarify', message: 'Which opening — Senior Product Designer, Product Manager or UX Researcher?' }
   }
-  const pool = context.candidates.filter((candidate) => candidate.openingId === context.openingId)
-  const recommended = pool.filter((candidate) => recommendedCandidateIds.includes(candidate.id))
-  if (recommended.length === 0) {
-    return { kind: 'clarify', message: 'I don’t have detailed candidate records for this opening yet.' }
+  const opening = getOpening(context.openingId)
+  const roleTitle = opening?.title ?? 'this role'
+  const pool = context.candidates.filter((candidate) => candidate.openingId === context.openingId && !candidate.rejected)
+  const top = context.openingId === 'senior-product-designer' ? pool.filter((candidate) => recommendedCandidateIds.includes(candidate.id)) : pool
+
+  if (top.length === 0) {
+    return { kind: 'text', message: `${roleTitle}: ${opening?.situationSummary ?? 'no immediate action is required from you right now.'}` }
   }
+
+  const message =
+    context.openingId === 'senior-product-designer'
+      ? 'Based on the configured criteria, these candidates currently have the strongest supporting evidence:'
+      : `Sure — looking at ${roleTitle}. ${top.length === 1 ? `${top[0].name} is your current finalist:` : "Here's where things stand:"}`
+
   return {
     kind: 'candidateList',
-    message: 'Based on the configured criteria, these candidates currently have the strongest supporting evidence:',
-    candidateIds: recommended.map((candidate) => candidate.id),
-    navTo: { label: 'Open candidates', path: `/openings/${context.openingId}/candidates` },
+    message,
+    candidateIds: top.map((candidate) => candidate.id),
+    navTo:
+      top.length === 1
+        ? { label: `Open ${top[0].name}`, path: `/candidates/${top[0].id}` }
+        : { label: `Open ${roleTitle} candidates`, path: `/openings/${context.openingId}/candidates` },
   }
 }
 
@@ -268,7 +341,7 @@ function handleFinalists(context: CopilotContext): CopilotResult {
     kind: 'candidateList',
     message: 'Currently in Final:',
     candidateIds: pool.map((candidate) => candidate.id),
-    navTo: { label: 'View pipeline', path: `/openings/${context.openingId}/pipeline` },
+    navTo: { label: 'Open pipeline', path: `/openings/${context.openingId}/pipeline` },
   }
 }
 
@@ -287,16 +360,16 @@ function handleWhoInStage(input: string, context: CopilotContext): CopilotResult
     kind: 'candidateList',
     message: `Currently in ${stage}:`,
     candidateIds: pool.map((candidate) => candidate.id),
-    navTo: { label: 'View pipeline', path: `/openings/${context.openingId}/pipeline` },
+    navTo: { label: 'Open pipeline', path: `/openings/${context.openingId}/pipeline` },
   }
 }
 
 function handleBlocking(context: CopilotContext): CopilotResult {
-  if (!context.openingId) {
-    return { kind: 'clarify', message: 'Which opening? Select one first.' }
-  }
+  // "Where are my pipelines blocked?" from the standalone workspace carries no page context —
+  // Senior Product Designer is the only role with a modeled pipeline, so it's the sensible default.
+  const openingId = context.openingId ?? 'senior-product-designer'
   const interviewCandidates = context.candidates.filter(
-    (candidate) => candidate.openingId === context.openingId && candidate.stage === 'Interview' && !candidate.rejected,
+    (candidate) => candidate.openingId === openingId && candidate.stage === 'Interview' && !candidate.rejected,
   )
   const waitingOnYou = interviewCandidates.filter((candidate) => candidate.waitingOn === 'priya')
   const waitingOnOthers = interviewCandidates.filter((candidate) => candidate.waitingOn === 'other')
@@ -307,20 +380,18 @@ function handleBlocking(context: CopilotContext): CopilotResult {
 
   return {
     kind: 'pipelineDiagnosis',
-    headline: 'Interview feedback is currently the main delay',
-    message: `${waitingOnYou.length + waitingOnOthers.length} of ${interviewCandidates.length} candidates in Interview have been waiting for feedback for several days.`,
+    headline: 'Interview is the main bottleneck',
+    message: `${waitingOnYou.length + waitingOnOthers.length} candidates are waiting for feedback.`,
     waitingOnYou: waitingOnYou.map((candidate) => ({ candidateId: candidate.id, days: candidate.waitingDays ?? 0 })),
     waitingOnOthers: waitingOnOthers.map((candidate) => ({ candidateId: candidate.id, days: candidate.waitingDays ?? 0 })),
-    navTo: { label: 'View pipeline', path: `/openings/${context.openingId}/pipeline` },
+    navTo: { label: 'Open pipeline', path: `/openings/${openingId}/pipeline` },
   }
 }
 
 function handleWaitingFeedback(context: CopilotContext): CopilotResult {
-  if (!context.openingId) {
-    return { kind: 'clarify', message: 'Which opening? Select one first.' }
-  }
+  const openingId = context.openingId ?? 'senior-product-designer'
   const pool = context.candidates.filter(
-    (candidate) => candidate.openingId === context.openingId && candidate.stage === 'Interview' && candidate.waitingOn && !candidate.rejected,
+    (candidate) => candidate.openingId === openingId && candidate.stage === 'Interview' && candidate.waitingOn && !candidate.rejected,
   )
   if (pool.length === 0) {
     return { kind: 'text', message: 'No one is currently waiting for feedback.' }
@@ -329,43 +400,62 @@ function handleWaitingFeedback(context: CopilotContext): CopilotResult {
     kind: 'candidateList',
     message: 'Waiting for feedback:',
     candidateIds: pool.map((candidate) => candidate.id),
-    navTo: { label: 'View pipeline', path: `/openings/${context.openingId}/pipeline` },
+    navTo: { label: 'Open pipeline', path: `/openings/${openingId}/pipeline` },
   }
 }
 
-function handleFallback(): CopilotResult {
+function handleGlobalAttention(): CopilotResult {
+  return {
+    kind: 'crossRoleAttention',
+    message: `You have ${crossRoleAttention.length} items that need attention.`,
+    items: crossRoleAttention,
+  }
+}
+
+function handleFallback(context: CopilotContext): CopilotResult {
+  const opening = context.openingId ? getOpening(context.openingId) : undefined
+  const roleNote = opening ? ` for ${opening.title}` : ''
   return {
     kind: 'clarify',
-    message:
-      'I can help with candidate evidence, comparisons, pipeline moves and recommendations for Senior Product Designer. Try "Why Ananya?", "Compare Ananya and Rahul", "Move Ananya to Interview" or "What\'s blocking this role?"',
+    message: `I can help with candidate evidence, comparisons, pipeline moves and recommendations${roleNote}. Try "Why Ananya?", "Compare Ananya and Rahul", "Move Ananya to Interview" or "What's blocking this role?"`,
   }
 }
 
 export function runCopilotQuery(rawInput: string, context: CopilotContext): CopilotResult {
   const input = rawInput.trim()
-  if (input.length === 0) return handleFallback()
+  if (input.length === 0) return handleFallback(context)
 
-  if (FINALIZE_PATTERN.test(input)) return handleFinalize(input, context)
-  if (REJECT_PATTERN.test(input)) return handleReject(input, context)
-  if (HOLD_PATTERN.test(input)) return handleHold(input, context)
-  if (EMAIL_PATTERN.test(input)) return handleEmail(input, context)
-  if (COMPARE_PATTERN.test(input)) return handleCompare(input, context)
-  if (BLOCKING_PATTERN.test(input)) return handleBlocking(context)
-  if (WAITING_FEEDBACK_PATTERN.test(input)) return handleWaitingFeedback(context)
-  if (FINALISTS_PATTERN.test(input)) return handleFinalists(context)
+  if (GLOBAL_ATTENTION_PATTERN.test(input)) return handleGlobalAttention()
 
-  const whoInStageResult = handleWhoInStage(input, context)
+  // An explicit role mention always wins over the page Priya happens to be viewing.
+  const openingOverride = resolveOpeningOverride(input)
+  const effectiveContext: CopilotContext =
+    openingOverride && openingOverride !== context.openingId
+      ? { ...context, openingId: openingOverride, level: 'role', candidateId: null }
+      : context
+
+  if (FINALIZE_PATTERN.test(input)) return handleFinalize(input, effectiveContext)
+  if (REJECT_PATTERN.test(input)) return handleReject(input, effectiveContext)
+  if (HOLD_PATTERN.test(input)) return handleHold(input, effectiveContext)
+  if (EMAIL_PATTERN.test(input)) return handleEmail(input, effectiveContext)
+  if (CONCERN_PATTERN.test(input)) return handleBiggestConcern(input, effectiveContext)
+  if (COMPARE_PATTERN.test(input)) return handleCompare(input, effectiveContext)
+  if (BLOCKING_PATTERN.test(input)) return handleBlocking(effectiveContext)
+  if (WAITING_FEEDBACK_PATTERN.test(input)) return handleWaitingFeedback(effectiveContext)
+  if (FINALISTS_PATTERN.test(input)) return handleFinalists(effectiveContext)
+
+  const whoInStageResult = handleWhoInStage(input, effectiveContext)
   if (whoInStageResult) return whoInStageResult
 
-  if (WHO_TO_REVIEW_PATTERN.test(input)) return handleWhoShouldIReview(context)
-  if (ADVANCE_PATTERN.test(input) && findStageKeyword(input)) return handleAdvance(input, context)
+  if (TOP_CANDIDATES_PATTERN.test(input)) return handleTopCandidates(effectiveContext)
+  if (ADVANCE_PATTERN.test(input) && findStageKeyword(input)) return handleAdvance(input, effectiveContext)
 
-  const lensResult = handleLensChange(input, context)
+  const lensResult = handleLensChange(input, effectiveContext)
   if (lensResult) return lensResult
 
-  if (WHY_PATTERN.test(input)) return handleWhy(input, context)
+  if (WHY_PATTERN.test(input)) return handleWhy(input, effectiveContext)
 
-  return handleFallback()
+  return handleFallback(effectiveContext)
 }
 
 /** Follow-up prompts surfaced under a turn's result — always drawn from the supported intent set. */
@@ -382,6 +472,6 @@ export function getFollowUpSuggestions(result: CopilotResult): string[] {
     if (result.appliedFilter?.criterionKey === 'aiProductExperience') return ['Show candidates strongest in design systems']
     return []
   }
-  if (result.kind === 'pipelineDiagnosis') return ['Show candidates waiting for feedback']
+  if (result.kind === 'pipelineDiagnosis') return ['Review feedback']
   return []
 }

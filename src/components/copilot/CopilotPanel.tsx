@@ -1,7 +1,9 @@
-import { Sparkles, X } from 'lucide-react'
+import { Maximize2, Sparkles, X } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { getCandidate } from '../../data/candidates'
 import { useCopilotScope } from '../../copilot/useCopilotScope'
+import { useActiveConversationTurns } from '../../store/copilotSelectors'
 import { useAppStore } from '../../store/useAppStore'
 import { CopilotResultView } from './CopilotResultView'
 
@@ -22,15 +24,16 @@ function useSuggestions(): string[] {
 export function CopilotPanel() {
   const closeCopilot = useAppStore((state) => state.closeCopilot)
   const submitCopilotMessage = useAppStore((state) => state.submitCopilotMessage)
-  const history = useAppStore((state) => state.copilotHistory)
+  const turns = useActiveConversationTurns()
   const { label } = useCopilotScope()
   const suggestions = useSuggestions()
   const [draft, setDraft] = useState('')
   const scrollRef = useRef<HTMLDivElement>(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-  }, [history.length])
+  }, [turns.length])
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -38,6 +41,11 @@ export function CopilotPanel() {
     if (!query) return
     submitCopilotMessage(query)
     setDraft('')
+  }
+
+  function handleExpand() {
+    closeCopilot()
+    navigate('/copilot')
   }
 
   return (
@@ -52,18 +60,29 @@ export function CopilotPanel() {
             <p className="truncate text-xs font-medium text-primary">{label}</p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={closeCopilot}
-          aria-label="Close Copilot"
-          className="rounded-md p-1.5 text-palette-neutral-400 hover:bg-background hover:text-palette-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <X className="h-4 w-4" aria-hidden="true" />
-        </button>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={handleExpand}
+            aria-label="Expand to full Copilot workspace"
+            title="Expand"
+            className="rounded-md p-1.5 text-palette-neutral-400 hover:bg-background hover:text-palette-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Maximize2 className="h-4 w-4" aria-hidden="true" />
+          </button>
+          <button
+            type="button"
+            onClick={closeCopilot}
+            aria-label="Close Copilot"
+            className="rounded-md p-1.5 text-palette-neutral-400 hover:bg-background hover:text-palette-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
       </header>
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-4">
-        {history.length === 0 ? (
+        {turns.length === 0 ? (
           <div>
             <p className="text-sm leading-relaxed text-muted-foreground">Ask about candidates, evidence or recommendations for {label}.</p>
             {suggestions.length > 0 && (
@@ -83,7 +102,7 @@ export function CopilotPanel() {
           </div>
         ) : (
           <div className="space-y-5">
-            {history.map((turn) => (
+            {turns.map((turn) => (
               <div key={turn.id} className="space-y-2.5">
                 <div className="flex justify-end">
                   <p className="max-w-[85%] rounded-2xl rounded-tr-sm bg-palette-brand-600 px-3.5 py-2 text-sm text-white">{turn.query}</p>

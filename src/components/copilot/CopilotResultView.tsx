@@ -10,7 +10,7 @@ import type { CandidateFilter } from '../../types/domain'
 import type { CopilotResult } from '../../types/copilot'
 import { CandidateCard } from '../candidates/CandidateCard'
 import { ComparisonView } from '../candidates/ComparisonView'
-import { CriterionEvidenceList } from '../candidates/CriterionEvidence'
+import { CriterionEvidenceList, CriterionRow } from '../candidates/CriterionEvidence'
 import { RecommendationBadge } from '../candidates/RecommendationBadge'
 
 function NavToAction({ navTo, filter }: { navTo: { label: string; path: string }; filter?: CandidateFilter }) {
@@ -187,16 +187,52 @@ function PipelineDiagnosisCard({ result }: { result: Extract<CopilotResult, { ki
   )
 }
 
+function CrossRoleAttentionCard({ result }: { result: Extract<CopilotResult, { kind: 'crossRoleAttention' }> }) {
+  const navigate = useNavigate()
+  const closeCopilot = useAppStore((state) => state.closeCopilot)
+
+  return (
+    <div>
+      <p className="text-sm leading-relaxed text-foreground">{result.message}</p>
+      <div className="mt-3 space-y-3">
+        {result.items.map((item) => (
+          <div key={item.openingId} className="border-l-2 border-palette-brand-200 pl-3">
+            <p className="text-xs font-semibold text-primary">{item.openingTitle}</p>
+            <p className="mt-0.5 text-sm text-foreground">{item.headline}</p>
+            {item.action && (
+              <button
+                type="button"
+                onClick={() => {
+                  navigate(item.action!.path)
+                  closeCopilot()
+                }}
+                className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {item.action.label}
+                <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 export function CopilotResultView({ turnId, result }: { turnId: string; result: CopilotResult }) {
   const effectiveCandidates = useAllEffectiveCandidates()
   const findCandidate = (id: string) => effectiveCandidates.find((candidate) => candidate.id === id)
 
   if (result.kind === 'text') {
-    return <p className="text-sm leading-relaxed text-foreground">{result.message}</p>
+    return <p className="whitespace-pre-line text-sm leading-relaxed text-foreground">{result.message}</p>
   }
 
   if (result.kind === 'clarify') {
-    return <p className="text-sm leading-relaxed italic text-muted-foreground">{result.message}</p>
+    return <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{result.message}</p>
+  }
+
+  if (result.kind === 'crossRoleAttention') {
+    return <CrossRoleAttentionCard result={result} />
   }
 
   if (result.kind === 'actionComplete') {
@@ -237,16 +273,25 @@ export function CopilotResultView({ turnId, result }: { turnId: string; result: 
     const candidate = findCandidate(result.candidateId)
     if (!candidate) return <p className="text-sm text-muted-foreground">{result.message}</p>
     const criteria = getCriteria(candidate.openingId)
+    const focusCriterion = result.focusCriterionKey ? criteria.find((criterion) => criterion.key === result.focusCriterionKey) : undefined
+    const focusEvidence = result.focusCriterionKey
+      ? candidate.evidence.find((evidence) => evidence.criterionKey === result.focusCriterionKey)
+      : undefined
+
     return (
       <div>
-        <p className="text-sm leading-relaxed text-foreground">{result.message}</p>
+        <p className="whitespace-pre-line text-sm leading-relaxed text-foreground">{result.message}</p>
         <div className="mt-3 rounded-lg border border-border bg-muted p-3.5">
           <div className="flex items-center justify-between gap-2">
             <span className="text-sm font-semibold text-palette-neutral-900">{candidate.name}</span>
             {candidate.recommendation && <RecommendationBadge label={candidate.recommendation} />}
           </div>
           <div className="mt-1">
-            <CriterionEvidenceList criteria={criteria} evidence={candidate.evidence} compact />
+            {focusCriterion ? (
+              <CriterionRow criterion={focusCriterion} evidence={focusEvidence} compact />
+            ) : (
+              <CriterionEvidenceList criteria={criteria} evidence={candidate.evidence} compact />
+            )}
           </div>
           <Link
             to={`/candidates/${candidate.id}`}
@@ -255,6 +300,7 @@ export function CopilotResultView({ turnId, result }: { turnId: string; result: 
             View full evidence
           </Link>
         </div>
+        {result.followUpNote && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-muted-foreground">{result.followUpNote}</p>}
         <FollowUpSuggestions result={result} />
       </div>
     )

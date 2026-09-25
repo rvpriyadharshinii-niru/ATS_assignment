@@ -309,6 +309,17 @@ export const candidates: Candidate[] = [
     interviewStatus: 'Final interview scheduled',
     updatedLabel: '3d',
   },
+
+  /** Product Manager's one named record, from PROTOTYPE_DATA.md section 27. */
+  {
+    id: 'aarav-sethi',
+    name: 'Aarav Sethi',
+    openingId: 'product-manager',
+    stage: 'Final',
+    evidence: [],
+    interviewStatus: 'Awaiting Hiring Manager decision',
+    updatedLabel: '1d',
+  },
 ]
 
 export function getCandidatesForOpening(openingId: OpeningId): Candidate[] {

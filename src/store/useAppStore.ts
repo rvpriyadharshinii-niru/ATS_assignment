@@ -1,8 +1,9 @@
 import { create } from 'zustand'
 import { applyCandidateOverride, candidates, getCandidate } from '../data/candidates'
-import { runCopilotQuery } from '../copilot/engine'
+import { seedConversationOrder, seedConversationsById } from '../data/seedConversations'
+import { resolveOpeningOverride, runCopilotQuery } from '../copilot/engine'
 import type { Candidate, CandidateFilter, CandidateOverride, CandidateStage, OpeningId } from '../types/domain'
-import type { CopilotContext, CopilotResult, CopilotScopeLevel, CopilotTurn, PendingAction } from '../types/copilot'
+import type { CopilotConversation, CopilotContext, CopilotResult, CopilotScopeLevel, CopilotTurn, PendingAction } from '../types/copilot'
 
 interface EmailRecord {
   id: string
@@ -18,7 +19,11 @@ interface AppState {
   selectedCandidateId: string | null
   filters: CandidateFilter[]
   copilotExpanded: boolean
-  copilotHistory: CopilotTurn[]
+
+  /** Every Copilot thread, contextual panel and full workspace alike — two views of the same conversation set. */
+  conversations: Record<string, CopilotConversation>
+  conversationOrder: string[]
+  activeConversationId: string | null
 
   /** The single source of truth for every candidate's current stage/hold/reject/etc, layered on top of the static base data. */
   candidateOverrides: Record<string, CandidateOverride>
@@ -34,7 +39,10 @@ interface AppState {
   openCopilot: () => void
   closeCopilot: () => void
   toggleCopilot: () => void
-  submitCopilotMessage: (query: string) => void
+  /** `ignorePageContext: true` is used by the standalone workspace, which is cross-role by default rather than scoped to whatever page Priya last browsed. */
+  submitCopilotMessage: (query: string, options?: { ignorePageContext?: boolean }) => void
+  startNewConversation: () => void
+  selectConversation: (conversationId: string) => void
 
   advanceCandidates: (candidateIds: string[], toStage: CandidateStage) => void
   holdCandidates: (candidateIds: string[]) => void
@@ -49,9 +57,26 @@ interface AppState {
 }
 
 function describeStageChange(candidateIds: string[], toStage: CandidateStage): string {
-  const names = candidateIds.map((id) => getCandidate(id)?.name ?? id)
+  const names = candidateIds.map((id) => getCandidate(id)?.name.split(' ')[0] ?? id)
   const namesJoined = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0]
-  return `${namesJoined} moved to ${toStage}.`
+  const verb = names.length > 1 ? 'are' : 'is'
+  return `Done. ${namesJoined} ${verb} now in ${toStage}.`
+}
+
+function conversationTitleFrom(query: string): string {
+  return query.length > 48 ? `${query.slice(0, 48)}…` : query
+}
+
+/** Candidates a turn's result put in front of Priya — remembered so "move both to Interview" can resolve after a comparison. */
+function extractCandidateIds(result: CopilotResult): string[] {
+  if (result.kind === 'candidateList' || result.kind === 'comparison') return result.candidateIds
+  if (result.kind === 'evidence') return [result.candidateId]
+  if (result.kind === 'actionComplete' && result.candidateIds) return result.candidateIds
+  if (result.kind === 'confirm') {
+    if (result.action.kind === 'finalize') return [result.action.candidateId]
+    return result.action.candidateIds
+  }
+  return []
 }
 
 export const useAppStore = create<AppState>((set, get) => ({
@@ -59,7 +84,9 @@ export const useAppStore = create<AppState>((set, get) => ({
   selectedCandidateId: null,
   filters: [],
   copilotExpanded: false,
-  copilotHistory: [],
+  conversations: seedConversationsById,
+  conversationOrder: seedConversationOrder,
+  activeConversationId: null,
   candidateOverrides: {},
   sentEmails: [],
 
@@ -93,23 +120,72 @@ export const useAppStore = create<AppState>((set, get) => ({
   closeCopilot: () => set({ copilotExpanded: false }),
   toggleCopilot: () => set((state) => ({ copilotExpanded: !state.copilotExpanded })),
 
-  submitCopilotMessage: (query) => {
+  startNewConversation: () => set({ activeConversationId: null }),
+  selectConversation: (conversationId) => set({ activeConversationId: conversationId }),
+
+  submitCopilotMessage: (query, options) => {
     const state = get()
-    const level: CopilotScopeLevel = state.selectedCandidateId ? 'candidate' : state.selectedOpeningId ? 'role' : 'global'
+    const ignorePageContext = options?.ignorePageContext ?? false
+
+    let conversationId = state.activeConversationId
+    let conversations = state.conversations
+    let conversationOrder = state.conversationOrder
+    if (!conversationId || !conversations[conversationId]) {
+      conversationId = `conv-${Date.now()}`
+      conversations = {
+        ...conversations,
+        [conversationId]: {
+          id: conversationId,
+          title: conversationTitleFrom(query),
+          createdAt: Date.now(),
+          turns: [],
+          stickyOpeningId: null,
+          lastCandidateIds: [],
+        },
+      }
+      conversationOrder = [conversationId, ...conversationOrder]
+    }
+    const activeConversation = conversations[conversationId]
+
+    // The contextual panel always inherits the current page's role/candidate. The
+    // standalone workspace is cross-role by default, falling back only to whatever
+    // role this specific conversation thread last explicitly switched to.
+    const baseOpeningId = ignorePageContext ? activeConversation.stickyOpeningId : (state.selectedOpeningId ?? activeConversation.stickyOpeningId)
+    const baseCandidateId = ignorePageContext ? null : state.selectedCandidateId
+    const openingOverride = resolveOpeningOverride(query)
+    const effectiveOpeningId = openingOverride ?? baseOpeningId
+    const level: CopilotScopeLevel = baseCandidateId ? 'candidate' : effectiveOpeningId ? 'role' : 'global'
+
     const effectiveCandidates: Candidate[] = candidates.map((candidate) => applyCandidateOverride(candidate, state.candidateOverrides[candidate.id]))
     const context: CopilotContext = {
       level,
-      openingId: state.selectedOpeningId,
-      candidateId: state.selectedCandidateId,
+      openingId: effectiveOpeningId,
+      candidateId: baseCandidateId,
       filters: state.filters,
       candidates: effectiveCandidates,
+      recentCandidateIds: activeConversation.lastCandidateIds,
     }
     // Structured results (candidate lists, pipeline insight) render inside Copilot only.
     // The background workspace is never mutated or navigated until Priya explicitly
-    // clicks the result's "Open candidates" / "View pipeline" action.
+    // clicks the result's "Open candidates" / "Open pipeline" action.
     const result = runCopilotQuery(query, context)
-    const turn: CopilotTurn = { id: `${Date.now()}-${state.copilotHistory.length}`, query, result }
-    set((current) => ({ copilotHistory: [...current.copilotHistory, turn], copilotExpanded: true }))
+    const turn: CopilotTurn = { id: `${Date.now()}-${activeConversation.turns.length}`, query, result }
+    const mentionedCandidateIds = extractCandidateIds(result)
+
+    set({
+      conversations: {
+        ...conversations,
+        [conversationId]: {
+          ...activeConversation,
+          turns: [...activeConversation.turns, turn],
+          stickyOpeningId: openingOverride ?? activeConversation.stickyOpeningId,
+          lastCandidateIds: mentionedCandidateIds.length > 0 ? mentionedCandidateIds : activeConversation.lastCandidateIds,
+        },
+      },
+      conversationOrder,
+      activeConversationId: conversationId,
+      ...(ignorePageContext ? {} : { copilotExpanded: true }),
+    })
   },
 
   advanceCandidates: (candidateIds, toStage) =>
@@ -166,9 +242,18 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   resolveCopilotTurn: (turnId, result) =>
-    set((state) => ({
-      copilotHistory: state.copilotHistory.map((turn) => (turn.id === turnId ? { ...turn, result } : turn)),
-    })),
+    set((state) => {
+      const conversationId = state.activeConversationId
+      if (!conversationId) return {}
+      const conversation = state.conversations[conversationId]
+      if (!conversation) return {}
+      return {
+        conversations: {
+          ...state.conversations,
+          [conversationId]: { ...conversation, turns: conversation.turns.map((turn) => (turn.id === turnId ? { ...turn, result } : turn)) },
+        },
+      }
+    }),
 
   confirmPendingAction: (turnId, action) => {
     let message = ''

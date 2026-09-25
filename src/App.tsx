@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
 import { CandidateEvidencePage } from './pages/CandidateEvidencePage'
 import { CandidateExplorationPage } from './pages/CandidateExplorationPage'
+import { CopilotWorkspacePage } from './pages/CopilotWorkspacePage'
 import { HiringCriteriaPage } from './pages/HiringCriteriaPage'
 import { HomePage } from './pages/HomePage'
 import { InterviewsPage } from './pages/InterviewsPage'
@@ -26,6 +27,7 @@ function App() {
           <Route path="criteria" element={<HiringCriteriaPage />} />
         </Route>
         <Route path="/candidates/:candidateId" element={<CandidateEvidencePage />} />
+        <Route path="/copilot" element={<CopilotWorkspacePage />} />
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

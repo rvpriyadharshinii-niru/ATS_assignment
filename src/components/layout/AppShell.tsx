@@ -1,4 +1,4 @@
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import { useAppStore } from '../../store/useAppStore'
 import { CopilotLauncher } from '../copilot/CopilotLauncher'
 import { CopilotPanel } from '../copilot/CopilotPanel'
@@ -6,6 +6,8 @@ import { Sidebar } from './Sidebar'
 
 export function AppShell() {
   const copilotExpanded = useAppStore((state) => state.copilotExpanded)
+  const { pathname } = useLocation()
+  const isCopilotWorkspace = pathname === '/copilot'
 
   return (
     <div className="flex h-svh bg-palette-brand-100">
@@ -17,7 +19,8 @@ export function AppShell() {
           </div>
         </main>
       </div>
-      {copilotExpanded ? <CopilotPanel /> : <CopilotLauncher />}
+      {/* The standalone workspace IS the Copilot UI here — no floating launcher/panel duplicate. */}
+      {!isCopilotWorkspace && (copilotExpanded ? <CopilotPanel /> : <CopilotLauncher />)}
     </div>
   )
 }
