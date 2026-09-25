@@ -5,13 +5,23 @@ import type { CriterionEvidence as CriterionEvidenceItem, EvidenceStrength, Hiri
 import { cn } from '../../lib/cn'
 
 const STRENGTH_TONE: Record<EvidenceStrength, string> = {
-  Strong: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
-  Good: 'bg-sky-50 text-sky-700 ring-sky-600/20',
-  Moderate: 'bg-neutral-100 text-neutral-700 ring-neutral-500/15',
-  Limited: 'bg-neutral-100 text-neutral-700 ring-neutral-500/15',
-  Possible: 'bg-amber-50 text-amber-800 ring-amber-600/20',
-  Unclear: 'bg-amber-50 text-amber-800 ring-amber-600/20',
-  'Not available': 'bg-amber-50 text-amber-800 ring-amber-600/20',
+  Strong: 'bg-palette-success-150 text-palette-success-700 ring-palette-success-400/30',
+  Good: 'bg-palette-info-150 text-palette-info-700 ring-palette-info-400/30',
+  Moderate: 'bg-palette-neutral-150 text-palette-neutral-600 ring-palette-neutral-400/20',
+  Limited: 'bg-palette-neutral-150 text-palette-neutral-600 ring-palette-neutral-400/20',
+  Possible: 'bg-palette-warning-150 text-palette-warning-700 ring-palette-warning-400/30',
+  Unclear: 'bg-palette-warning-150 text-palette-warning-700 ring-palette-warning-400/30',
+  'Not available': 'bg-palette-warning-150 text-palette-warning-700 ring-palette-warning-400/30',
+}
+
+const STRENGTH_BAR_TONE: Record<EvidenceStrength, string> = {
+  Strong: 'bg-palette-success-450',
+  Good: 'bg-palette-info-450',
+  Moderate: 'bg-palette-neutral-300',
+  Limited: 'bg-palette-neutral-300',
+  Possible: 'bg-palette-warning-450',
+  Unclear: 'bg-palette-warning-450',
+  'Not available': 'bg-palette-warning-450',
 }
 
 function StrengthBadge({ strength }: { strength: EvidenceStrength }) {
@@ -19,7 +29,7 @@ function StrengthBadge({ strength }: { strength: EvidenceStrength }) {
   return (
     <span
       className={cn(
-        'inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset',
+        'inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.04em] ring-1 ring-inset',
         STRENGTH_TONE[strength],
       )}
     >
@@ -40,27 +50,36 @@ export function CriterionRow({ criterion, evidence, compact = false }: Criterion
   const strength = evidence?.strength ?? 'Not available'
 
   return (
-    <div className={cn('border-b border-neutral-100 py-3.5 last:border-b-0', compact && 'py-2')}>
-      <div className="flex items-center justify-between gap-3">
-        <span className="text-sm font-semibold text-neutral-900">
-          {criterion.name}
-          <span className="ml-1.5 text-xs font-normal text-neutral-400">{criterion.priority}</span>
-        </span>
-        <StrengthBadge strength={strength} />
+    <div className="flex gap-3">
+      <span className={cn('w-[3px] shrink-0 self-stretch rounded-full', STRENGTH_BAR_TONE[strength])} aria-hidden="true" />
+      <div className={cn('min-w-0 flex-1 py-3', compact && 'py-1.5')}>
+        <div className="flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold text-palette-neutral-900">
+            {criterion.name}
+            <span className="ml-1.5 font-mono text-[10px] font-normal uppercase tracking-[0.04em] text-palette-neutral-400">
+              {criterion.priority}
+            </span>
+          </span>
+          <StrengthBadge strength={strength} />
+        </div>
+        {!compact && evidence?.detail && (
+          <>
+            <p className="font-sans mt-1.5 max-w-2xl text-sm leading-relaxed text-foreground">{evidence.detail}</p>
+            <button
+              type="button"
+              onClick={() => setSourceOpen((current) => !current)}
+              className="mt-1.5 text-xs font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              {sourceOpen ? 'Hide source' : 'View source →'}
+            </button>
+            {sourceOpen && (
+              <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.04em] text-palette-neutral-400">
+                Sourced from resume, application and screening information
+              </p>
+            )}
+          </>
+        )}
       </div>
-      {!compact && evidence?.detail && (
-        <>
-          <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-neutral-600">{evidence.detail}</p>
-          <button
-            type="button"
-            onClick={() => setSourceOpen((current) => !current)}
-            className="mt-1.5 text-xs font-medium text-indigo-600 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-          >
-            {sourceOpen ? 'Hide source' : 'View source →'}
-          </button>
-          {sourceOpen && <p className="mt-1 text-xs text-neutral-400">Sourced from resume, application and screening information.</p>}
-        </>
-      )}
     </div>
   )
 }
@@ -73,7 +92,7 @@ interface CriterionEvidenceListProps {
 
 export function CriterionEvidenceList({ criteria, evidence, compact = false }: CriterionEvidenceListProps) {
   return (
-    <div>
+    <div className={compact ? 'space-y-0' : 'space-y-1'}>
       {criteria.map((criterion) => (
         <CriterionRow
           key={criterion.key}

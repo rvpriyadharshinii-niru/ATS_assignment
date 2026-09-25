@@ -20,7 +20,7 @@ function FollowUpSuggestions({ result }: { result: CopilotResult }) {
           key={suggestion}
           type="button"
           onClick={() => submitCopilotMessage(suggestion)}
-          className="rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-palette-neutral-600 hover:border-palette-brand-300 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {suggestion}
         </button>
@@ -31,23 +31,23 @@ function FollowUpSuggestions({ result }: { result: CopilotResult }) {
 
 export function CopilotResultView({ result }: { result: CopilotResult }) {
   if (result.kind === 'text') {
-    return <p className="text-sm leading-relaxed text-neutral-700">{result.message}</p>
+    return <p className="font-sans text-sm leading-relaxed text-foreground">{result.message}</p>
   }
 
   if (result.kind === 'clarify') {
-    return <p className="text-sm leading-relaxed text-neutral-500 italic">{result.message}</p>
+    return <p className="font-sans text-sm leading-relaxed italic text-muted-foreground">{result.message}</p>
   }
 
   if (result.kind === 'evidence') {
     const candidate = getCandidate(result.candidateId)
-    if (!candidate) return <p className="text-sm text-neutral-500">{result.message}</p>
+    if (!candidate) return <p className="text-sm text-muted-foreground">{result.message}</p>
     const criteria = getCriteria(candidate.openingId)
     return (
       <div>
-        <p className="text-sm leading-relaxed text-neutral-700">{result.message}</p>
-        <div className="mt-3 rounded-lg border border-neutral-200 bg-neutral-50/60 p-3.5">
+        <p className="font-sans text-sm leading-relaxed text-foreground">{result.message}</p>
+        <div className="mt-3 rounded-lg border border-border bg-muted p-3.5">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-semibold text-neutral-900">{candidate.name}</span>
+            <span className="text-sm font-semibold text-palette-neutral-900">{candidate.name}</span>
             <RecommendationBadge label={candidate.recommendation} />
           </div>
           <div className="mt-1">
@@ -55,7 +55,7 @@ export function CopilotResultView({ result }: { result: CopilotResult }) {
           </div>
           <Link
             to={`/candidates/${candidate.id}`}
-            className="mt-2.5 inline-block text-sm font-medium text-indigo-600 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            className="mt-2.5 inline-block text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             View full evidence
           </Link>
@@ -69,7 +69,7 @@ export function CopilotResultView({ result }: { result: CopilotResult }) {
 
   return (
     <div>
-      <p className="text-sm leading-relaxed text-neutral-700">{result.message}</p>
+      <p className="font-sans text-sm leading-relaxed text-foreground">{result.message}</p>
       <div className="mt-3 space-y-2">
         {matchedCandidates.map((candidate) => (
           <CandidateCard key={candidate.id} candidate={candidate} />

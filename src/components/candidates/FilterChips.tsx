@@ -9,7 +9,7 @@ function Chip({ filter, onRemove }: { filter: CandidateFilter; onRemove: () => v
     <span
       className={cn(
         'inline-flex items-center gap-1.5 rounded-full py-1 pl-3 pr-1.5 text-xs font-medium ring-1 ring-inset',
-        isAi ? 'bg-indigo-50 text-indigo-700 ring-indigo-200' : 'bg-neutral-100 text-neutral-700 ring-neutral-300',
+        isAi ? 'bg-accent text-accent-foreground ring-palette-brand-300/40' : 'bg-palette-neutral-150 text-palette-neutral-700 ring-palette-neutral-400/20',
       )}
     >
       {filter.label}
@@ -18,8 +18,10 @@ function Chip({ filter, onRemove }: { filter: CandidateFilter; onRemove: () => v
         onClick={onRemove}
         aria-label={`Remove filter ${filter.label}`}
         className={cn(
-          'rounded-full p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
-          isAi ? 'text-indigo-500 hover:bg-indigo-100 hover:text-indigo-700' : 'text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700',
+          'rounded-full p-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+          isAi
+            ? 'text-palette-brand-600 hover:bg-palette-brand-200 hover:text-palette-brand-700'
+            : 'text-palette-neutral-500 hover:bg-palette-neutral-250 hover:text-palette-neutral-700',
         )}
       >
         <X className="h-3 w-3" aria-hidden="true" />
@@ -41,7 +43,7 @@ export function FilterChips() {
     <div className="flex flex-wrap items-center gap-3">
       {aiFilters.length > 0 && (
         <div className="flex flex-wrap items-center gap-2">
-          <span className="inline-flex items-center gap-1 text-xs font-medium text-indigo-600">
+          <span className="inline-flex items-center gap-1 font-mono text-[10px] uppercase tracking-[0.06em] text-primary">
             <Sparkles className="h-3 w-3" aria-hidden="true" />
             AI applied
           </span>

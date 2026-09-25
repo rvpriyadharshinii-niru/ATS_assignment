@@ -20,8 +20,8 @@ export function CandidateEvidencePage() {
 
   if (!candidate) {
     return (
-      <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center">
-        <p className="text-sm text-neutral-500">This candidate record is not available in the prototype.</p>
+      <div className="rounded-xl border border-border bg-card p-8 text-center">
+        <p className="text-sm text-muted-foreground">This candidate record is not available in the prototype.</p>
       </div>
     )
   }
@@ -34,46 +34,48 @@ export function CandidateEvidencePage() {
     <div className="space-y-6">
       <Link
         to={`/openings/${candidate.openingId}`}
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-neutral-500 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-palette-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
         {opening?.title ?? 'Candidates'}
       </Link>
 
-      <div className="rounded-xl border border-neutral-200 bg-white p-6">
+      <div className="rounded-xl border border-border bg-card p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">{candidate.name}</h1>
-            <p className="mt-1 text-sm text-neutral-500">
+            <h1 className="text-xl font-semibold tracking-tight text-palette-neutral-900">{candidate.name}</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               {candidate.currentRole && `${candidate.currentRole} · ${candidate.currentCompany} · `}
               {candidate.experienceYears} yrs experience · {candidate.location}
             </p>
           </div>
-          <span className="shrink-0 rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600">{candidate.stage}</span>
+          <span className="shrink-0 rounded-full bg-muted px-3 py-1 font-mono text-[10px] uppercase tracking-[0.04em] text-muted-foreground">
+            {candidate.stage}
+          </span>
         </div>
 
-        <div className="mt-5 flex items-center gap-3">
+        <div className="mt-5 flex flex-wrap items-center gap-3">
           <RecommendationBadge label={candidate.recommendation} />
           {candidate.prioritiesSupported !== undefined && (
-            <span className="text-sm font-medium text-neutral-700">{candidate.prioritiesSupported} / 5 priorities supported</span>
+            <span className="text-sm font-medium text-palette-neutral-700">{candidate.prioritiesSupported} / 5 priorities supported</span>
           )}
           {candidate.screeningScore !== undefined && (
-            <span className="text-sm text-neutral-400">AI Screening Score: {candidate.screeningScore}</span>
+            <span className="font-mono text-[11px] text-palette-neutral-400">AI Screening Score: {candidate.screeningScore}</span>
           )}
         </div>
 
-        {candidate.summary && <p className="mt-3 text-sm leading-relaxed text-neutral-600">{candidate.summary}</p>}
+        {candidate.summary && <p className="font-sans mt-3 text-sm leading-relaxed text-foreground">{candidate.summary}</p>}
       </div>
 
-      <div className="rounded-xl border border-neutral-200 bg-white p-6">
-        <h2 className="text-sm font-semibold text-neutral-900">Criteria &amp; evidence</h2>
-        <div className="mt-2">
+      <div className="rounded-xl border border-border bg-card p-6">
+        <h2 className="text-sm font-semibold text-palette-neutral-900">Criteria &amp; evidence</h2>
+        <div className="mt-3">
           <CriterionEvidenceList criteria={criteria} evidence={candidate.evidence} />
         </div>
         {hasUncertainty && (
-          <p className="mt-3 text-xs text-neutral-500">
-            Criteria marked <span className="font-medium text-amber-700">Unclear</span> or{' '}
-            <span className="font-medium text-amber-700">Not available</span> reflect missing information, not a negative finding.
+          <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
+            Criteria marked <span className="font-medium text-palette-warning-700">Unclear</span> or{' '}
+            <span className="font-medium text-palette-warning-700">Not available</span> reflect missing information, not a negative finding.
           </p>
         )}
       </div>

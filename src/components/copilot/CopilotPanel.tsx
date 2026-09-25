@@ -36,22 +36,22 @@ export function CopilotPanel() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 top-6 z-50 flex w-[440px] max-w-[calc(100vw-3rem)] flex-col rounded-xl border border-neutral-200 bg-white shadow-xl shadow-neutral-900/10">
-      <header className="flex items-center justify-between gap-2 border-b border-neutral-100 px-4 py-3.5">
-        <div className="flex items-center gap-2 min-w-0">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white">
+    <div className="fixed bottom-6 right-6 top-6 z-50 flex w-[440px] max-w-[calc(100vw-3rem)] flex-col rounded-xl border border-border bg-card shadow-xl">
+      <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-3.5">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[image:var(--gradient-brand_wash)] text-background">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
           </span>
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-neutral-900">Copilot</p>
-            <p className="truncate text-xs text-neutral-500">{label}</p>
+            <p className="text-sm font-semibold text-palette-neutral-900">Copilot</p>
+            <p className="truncate font-mono text-[10px] uppercase tracking-[0.04em] text-primary">{label}</p>
           </div>
         </div>
         <button
           type="button"
           onClick={closeCopilot}
           aria-label="Close Copilot"
-          className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          className="rounded-md p-1.5 text-palette-neutral-400 hover:bg-muted hover:text-palette-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -60,7 +60,7 @@ export function CopilotPanel() {
       <div className="flex-1 overflow-y-auto px-4 py-4">
         {history.length === 0 ? (
           <div>
-            <p className="text-sm leading-relaxed text-neutral-500">
+            <p className="font-sans text-sm leading-relaxed text-muted-foreground">
               Ask about candidates, evidence or recommendations for {label}.
             </p>
             {suggestions.length > 0 && (
@@ -70,7 +70,7 @@ export function CopilotPanel() {
                     key={suggestion}
                     type="button"
                     onClick={() => submitCopilotMessage(suggestion)}
-                    className="rounded-full border border-neutral-200 px-3 py-1.5 text-xs font-medium text-neutral-600 hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                    className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-palette-neutral-600 hover:border-palette-brand-300 hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {suggestion}
                   </button>
@@ -82,7 +82,7 @@ export function CopilotPanel() {
           <div className="space-y-6">
             {history.map((turn) => (
               <div key={turn.id}>
-                <p className="border-l-2 border-neutral-200 pl-2.5 text-sm text-neutral-500">{turn.query}</p>
+                <p className="border-l-2 border-palette-brand-300 pl-2.5 text-sm text-muted-foreground">{turn.query}</p>
                 <div className="mt-2.5">
                   <CopilotResultView result={turn.result} />
                 </div>
@@ -92,7 +92,7 @@ export function CopilotPanel() {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="border-t border-neutral-100 p-3">
+      <form onSubmit={handleSubmit} className="border-t border-border p-3">
         <div className="flex items-center gap-2">
           <input
             type="text"
@@ -100,11 +100,11 @@ export function CopilotPanel() {
             onChange={(event) => setDraft(event.target.value)}
             placeholder="Ask Copilot about your hiring…"
             aria-label="Ask Copilot"
-            className="flex-1 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+            className="flex-1 rounded-lg border border-border bg-card px-3 py-2 text-sm text-palette-neutral-900 placeholder:text-palette-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40"
           />
           <button
             type="submit"
-            className="rounded-lg bg-indigo-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-lg bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
             disabled={draft.trim().length === 0}
           >
             Ask

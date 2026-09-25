@@ -19,18 +19,18 @@ export function AppShell() {
   const { pathname } = useLocation()
 
   return (
-    <div className="min-h-svh bg-neutral-50">
-      <header className="border-b border-neutral-200 bg-white">
+    <div className="min-h-svh bg-palette-neutral-100">
+      <header className="border-b border-border bg-card">
         <div className="mx-auto flex h-14 w-full max-w-[1280px] items-center justify-between px-8">
-          <span className="text-sm font-semibold tracking-tight text-neutral-900">Hiring Workspace</span>
+          <span className="text-sm font-semibold tracking-tight text-palette-neutral-900">Hiring Workspace</span>
           <nav className="flex items-center gap-1" aria-label="Primary">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.label}
                 to={item.to}
                 className={cn(
-                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500',
-                  item.isActive(pathname) ? 'bg-neutral-100 text-neutral-900' : 'text-neutral-500 hover:text-neutral-900',
+                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  item.isActive(pathname) ? 'bg-muted text-palette-neutral-900' : 'text-muted-foreground hover:text-palette-neutral-900',
                 )}
               >
                 {item.label}

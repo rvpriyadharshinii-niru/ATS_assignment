@@ -13,8 +13,8 @@ export function OpeningsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">My Openings</h1>
-        <p className="mt-1 text-neutral-500">Roles you own and their current hiring status.</p>
+        <h1 className="text-heading text-palette-neutral-900">My Openings</h1>
+        <p className="font-sans mt-1 text-muted-foreground">Roles you own and their current hiring status.</p>
       </div>
       <div className="grid grid-cols-3 gap-4">
         {openings.map((opening) => (
