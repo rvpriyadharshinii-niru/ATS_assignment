@@ -52,30 +52,35 @@ interface AppState {
 
   resolveCopilotTurn: (turnId: string, result: CopilotResult) => void
   confirmPendingAction: (turnId: string, action: PendingAction) => void
+  /** Executes one non-batch action and reports what happened — shared by a single confirm and each leg of a batch confirm. */
+  applyAtomicAction: (action: Exclude<PendingAction, { kind: 'batch' }>) => { message: string; candidateIds: string[] }
   cancelPendingAction: (turnId: string) => void
   sendEmailFromCopilot: (turnId: string, candidateId: string, subject: string, body: string) => void
 }
 
-function describeStageChange(candidateIds: string[], toStage: CandidateStage): string {
-  const names = candidateIds.map((id) => getCandidate(id)?.name.split(' ')[0] ?? id)
-  const namesJoined = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0]
-  const verb = names.length > 1 ? 'are' : 'is'
-  return `Done. ${namesJoined} ${verb} now in ${toStage}.`
+/** Interview-status note shown right after landing on a stage — undefined for stages with no default note. */
+const STAGE_ENTRY_STATUS: Partial<Record<CandidateStage, string>> = {
+  Final: 'Final evaluation in progress',
+  Offer: 'Preparing offer',
 }
 
 function conversationTitleFrom(query: string): string {
   return query.length > 48 ? `${query.slice(0, 48)}…` : query
 }
 
+function candidateIdsFromAction(action: PendingAction): string[] {
+  if (action.kind === 'finalize') return [action.candidateId]
+  if (action.kind === 'batch') return action.actions.flatMap(candidateIdsFromAction)
+  return action.candidateIds
+}
+
 /** Candidates a turn's result put in front of Priya — remembered so "move both to Interview" can resolve after a comparison. */
 function extractCandidateIds(result: CopilotResult): string[] {
   if (result.kind === 'candidateList' || result.kind === 'comparison') return result.candidateIds
-  if (result.kind === 'evidence') return [result.candidateId]
+  if (result.kind === 'evidence' || result.kind === 'candidateReview') return [result.candidateId]
+  if (result.kind === 'reviewQueue') return result.items.map((item) => item.candidateId)
   if (result.kind === 'actionComplete' && result.candidateIds) return result.candidateIds
-  if (result.kind === 'confirm') {
-    if (result.action.kind === 'finalize') return [result.action.candidateId]
-    return result.action.candidateIds
-  }
+  if (result.kind === 'confirm') return candidateIdsFromAction(result.action)
   return []
 }
 
@@ -197,9 +202,13 @@ export const useAppStore = create<AppState>((set, get) => ({
           ...previous,
           stage: toStage,
           hold: false,
-          ...(toStage === 'Interview' && !previous.interviewStatus && !getCandidate(id)?.interviewStatus
-            ? { interviewStatus: 'Interview scheduled' }
-            : {}),
+          // A stage change always invalidates whatever "waiting on X" note the candidate had in the
+          // previous stage, so leaving Interview clears it rather than leaving stale text behind.
+          ...(toStage === 'Interview'
+            ? !previous.interviewStatus && !getCandidate(id)?.interviewStatus
+              ? { interviewStatus: 'Interview scheduled' }
+              : {}
+            : { waitingOn: undefined, waitingDays: undefined, interviewStatus: STAGE_ENTRY_STATUS[toStage] }),
         }
       }
       return { candidateOverrides: overrides }
@@ -256,30 +265,39 @@ export const useAppStore = create<AppState>((set, get) => ({
     }),
 
   confirmPendingAction: (turnId, action) => {
-    let message = ''
-    let candidateIds: string[] | undefined
+    if (action.kind === 'batch') {
+      const applied = action.actions.map((sub) => get().applyAtomicAction(sub))
+      const message = `Done.\n\n${applied.map((entry) => entry.message).join('\n')}`
+      get().resolveCopilotTurn(turnId, { kind: 'actionComplete', message, candidateIds: applied.flatMap((entry) => entry.candidateIds) })
+      return
+    }
+    const { message, candidateIds } = get().applyAtomicAction(action)
+    get().resolveCopilotTurn(turnId, { kind: 'actionComplete', message: `Done. ${message}`, candidateIds })
+  },
 
+  applyAtomicAction: (action) => {
     if (action.kind === 'advance') {
       get().advanceCandidates(action.candidateIds, action.toStage)
-      candidateIds = action.candidateIds
-      message = describeStageChange(action.candidateIds, action.toStage)
-    } else if (action.kind === 'hold') {
-      get().holdCandidates(action.candidateIds)
-      candidateIds = action.candidateIds
-      const names = action.candidateIds.map((id) => getCandidate(id)?.name ?? id)
-      message = `${names.join(' and ')} placed on hold.`
-    } else if (action.kind === 'reject') {
-      get().rejectCandidates(action.candidateIds)
-      candidateIds = action.candidateIds
-      const names = action.candidateIds.map((id) => getCandidate(id)?.name ?? id)
-      message = `${names.join(' and ')} rejected and removed from the active pipeline.`
-    } else if (action.kind === 'finalize') {
-      get().finalizeCandidate(action.candidateId)
-      candidateIds = [action.candidateId]
-      message = `${getCandidate(action.candidateId)?.name} marked as the selected candidate. Next: prepare offer process.`
+      const names = action.candidateIds.map((id) => getCandidate(id)?.name.split(' ')[0] ?? id)
+      const namesJoined = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0]
+      const verb = names.length > 1 ? 'are' : 'is'
+      return { message: `${namesJoined} ${verb} now in ${action.toStage}.`, candidateIds: action.candidateIds }
     }
-
-    get().resolveCopilotTurn(turnId, { kind: 'actionComplete', message, candidateIds })
+    if (action.kind === 'hold') {
+      get().holdCandidates(action.candidateIds)
+      const names = action.candidateIds.map((id) => getCandidate(id)?.name ?? id)
+      return { message: `${names.join(' and ')} placed on hold.`, candidateIds: action.candidateIds }
+    }
+    if (action.kind === 'reject') {
+      get().rejectCandidates(action.candidateIds)
+      const names = action.candidateIds.map((id) => getCandidate(id)?.name ?? id)
+      return { message: `${names.join(' and ')} rejected and removed from the active pipeline.`, candidateIds: action.candidateIds }
+    }
+    get().finalizeCandidate(action.candidateId)
+    return {
+      message: `${getCandidate(action.candidateId)?.name} marked as the selected candidate. Next: prepare offer process.`,
+      candidateIds: [action.candidateId],
+    }
   },
 
   cancelPendingAction: (turnId) => get().resolveCopilotTurn(turnId, { kind: 'text', message: 'Cancelled — no changes were made.' }),

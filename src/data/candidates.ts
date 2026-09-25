@@ -253,7 +253,29 @@ export const candidates: Candidate[] = [
     name: 'Nisha Verma',
     openingId: 'senior-product-designer',
     stage: 'Interview',
-    evidence: [],
+    evidence: [
+      { criterionKey: 'enterpriseSaas', strength: 'Good', detail: 'Interview reinforced solid enterprise SaaS depth from earlier rounds.' },
+      {
+        criterionKey: 'complexWorkflows',
+        strength: 'Strong',
+        detail: 'Walked through a complex multi-step workflow redesign with clear before/after reasoning.',
+      },
+      {
+        criterionKey: 'aiProductExperience',
+        strength: 'Good',
+        detail: 'Discussed AI-assisted feature work, though with less depth than the strongest candidates.',
+      },
+      {
+        criterionKey: 'designSystems',
+        strength: 'Strong',
+        detail: 'Design Lead confirmed strong systems thinking and clear ownership during the interview.',
+      },
+      {
+        criterionKey: 'leadership',
+        strength: 'Unclear',
+        detail: "Interviewers want to validate ownership at a broader product level before concluding.",
+      },
+    ],
     interviewStatus: "Waiting on Priya's feedback",
     waitingOn: 'priya',
     waitingDays: 5,
@@ -265,7 +287,21 @@ export const candidates: Candidate[] = [
     name: 'Rohan Das',
     openingId: 'senior-product-designer',
     stage: 'Interview',
-    evidence: [],
+    evidence: [
+      { criterionKey: 'enterpriseSaas', strength: 'Strong', detail: 'Deep enterprise SaaS background, reinforced across both interview rounds.' },
+      { criterionKey: 'complexWorkflows', strength: 'Good', detail: 'Solid handling of a configuration-heavy workflow walkthrough.' },
+      {
+        criterionKey: 'aiProductExperience',
+        strength: 'Limited',
+        detail: "Hasn't shown much AI-specific product work yet — the panel flagged this as a gap.",
+      },
+      { criterionKey: 'designSystems', strength: 'Good', detail: 'Solid craft and componentization instincts, without a systems-ownership story.' },
+      {
+        criterionKey: 'leadership',
+        strength: 'Strong',
+        detail: 'Confident owner of ambiguous problems with strong stakeholder management.',
+      },
+    ],
     interviewStatus: "Waiting on another interviewer's feedback",
     waitingOn: 'other',
     waitingDays: 4,
@@ -277,7 +313,13 @@ export const candidates: Candidate[] = [
     name: 'Tara Menon',
     openingId: 'senior-product-designer',
     stage: 'Interview',
-    evidence: [],
+    evidence: [
+      { criterionKey: 'enterpriseSaas', strength: 'Good', detail: 'Good evidence of enterprise SaaS experience from the interview.' },
+      { criterionKey: 'complexWorkflows', strength: 'Good', detail: 'Good handling of a complex workflow discussion.' },
+      { criterionKey: 'aiProductExperience', strength: 'Moderate', detail: 'Some exposure to AI-assisted product work, not yet a clear strength.' },
+      { criterionKey: 'designSystems', strength: 'Moderate', detail: 'Used and contributed to an existing design system.' },
+      { criterionKey: 'leadership', strength: 'Limited', detail: 'No strong evidence yet of senior-level ownership.' },
+    ],
     interviewStatus: "Waiting on another interviewer's feedback",
     waitingOn: 'other',
     waitingDays: 4,
@@ -362,8 +404,10 @@ export function applyCandidateOverride(candidate: Candidate, override?: Candidat
     hold: override.hold ?? candidate.hold,
     rejected: override.rejected ?? candidate.rejected,
     selected: override.selected ?? candidate.selected,
-    interviewStatus: override.interviewStatus ?? candidate.interviewStatus,
-    waitingOn: override.waitingOn ?? candidate.waitingOn,
-    waitingDays: override.waitingDays ?? candidate.waitingDays,
+    // These three track a specific in-stage wait, which a stage change always invalidates — so an
+    // override that explicitly sets the key (even to undefined, to clear it) wins over the base value.
+    interviewStatus: 'interviewStatus' in override ? override.interviewStatus : candidate.interviewStatus,
+    waitingOn: 'waitingOn' in override ? override.waitingOn : candidate.waitingOn,
+    waitingDays: 'waitingDays' in override ? override.waitingDays : candidate.waitingDays,
   }
 }

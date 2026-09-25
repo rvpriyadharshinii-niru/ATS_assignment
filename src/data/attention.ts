@@ -10,14 +10,14 @@ export const crossRoleAttention: CrossRoleAttentionItem[] = [
   {
     openingId: 'senior-product-designer',
     openingTitle: 'Senior Product Designer',
-    headline: '2 interviews waiting for your feedback.',
-    action: { label: 'Review interviews', path: '/openings/senior-product-designer/interviews' },
+    headline: '3 interviews waiting for your feedback.',
+    action: { label: 'Review interviews', query: 'Review interviews for Senior Product Designer' },
   },
   {
     openingId: 'product-manager',
     openingTitle: 'Product Manager',
     headline: '1 finalist waiting for a decision.',
-    action: { label: 'Review finalist', path: '/candidates/aarav-sethi' },
+    action: { label: 'Review finalist', query: 'Review finalist for Product Manager' },
   },
   {
     openingId: 'ux-researcher',

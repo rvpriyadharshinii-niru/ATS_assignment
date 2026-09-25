@@ -1,13 +1,14 @@
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, Quote } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { getFollowUpSuggestions } from '../../copilot/engine'
 import { getCandidate } from '../../data/candidates'
 import { getCriteria } from '../../data/criteria'
+import { cn } from '../../lib/cn'
 import { useAllEffectiveCandidates } from '../../store/candidateSelectors'
 import { useAppStore } from '../../store/useAppStore'
 import type { CandidateFilter } from '../../types/domain'
-import type { CopilotResult } from '../../types/copilot'
+import type { CopilotResult, InterviewFeedbackEntry } from '../../types/copilot'
 import { CandidateCard } from '../candidates/CandidateCard'
 import { ComparisonView } from '../candidates/ComparisonView'
 import { CriterionEvidenceList, CriterionRow } from '../candidates/CriterionEvidence'
@@ -188,8 +189,7 @@ function PipelineDiagnosisCard({ result }: { result: Extract<CopilotResult, { ki
 }
 
 function CrossRoleAttentionCard({ result }: { result: Extract<CopilotResult, { kind: 'crossRoleAttention' }> }) {
-  const navigate = useNavigate()
-  const closeCopilot = useAppStore((state) => state.closeCopilot)
+  const submitCopilotMessage = useAppStore((state) => state.submitCopilotMessage)
 
   return (
     <div>
@@ -202,10 +202,7 @@ function CrossRoleAttentionCard({ result }: { result: Extract<CopilotResult, { k
             {item.action && (
               <button
                 type="button"
-                onClick={() => {
-                  navigate(item.action!.path)
-                  closeCopilot()
-                }}
+                onClick={() => submitCopilotMessage(item.action!.query, { ignorePageContext: true })}
                 className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 {item.action.label}
@@ -215,6 +212,149 @@ function CrossRoleAttentionCard({ result }: { result: Extract<CopilotResult, { k
           </div>
         ))}
       </div>
+    </div>
+  )
+}
+
+function ReviewQueueCard({ result }: { result: Extract<CopilotResult, { kind: 'reviewQueue' }> }) {
+  const effectiveCandidates = useAllEffectiveCandidates()
+  const submitCopilotMessage = useAppStore((state) => state.submitCopilotMessage)
+
+  return (
+    <div>
+      <p className="text-sm leading-relaxed text-foreground">{result.message}</p>
+      <div className="mt-3 space-y-2.5">
+        {result.items.map((item) => {
+          const candidate = effectiveCandidates.find((c) => c.id === item.candidateId)
+          if (!candidate) return null
+          const firstName = candidate.name.split(' ')[0]
+          return (
+            <div key={item.candidateId} className="rounded-lg border border-border bg-muted p-3.5">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-semibold text-palette-neutral-900">{candidate.name}</span>
+                {candidate.waitingDays !== undefined && (
+                  <span className="shrink-0 text-xs text-muted-foreground">Waiting {candidate.waitingDays}d</span>
+                )}
+              </div>
+              {item.strengths.length > 0 && (
+                <p className="mt-1.5 text-xs leading-relaxed text-foreground">
+                  <span className="font-semibold text-palette-success-700">Strong evidence: </span>
+                  {item.strengths.join(', ')}
+                </p>
+              )}
+              {item.concerns.length > 0 && (
+                <p className="mt-1 text-xs leading-relaxed text-foreground">
+                  <span className="font-semibold text-palette-warning-700">Needs clarification: </span>
+                  {item.concerns.join(', ')}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => submitCopilotMessage(`Review ${firstName}`)}
+                className="mt-2 text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Review {firstName}
+              </button>
+            </div>
+          )
+        })}
+      </div>
+      {result.navTo && <NavToAction navTo={result.navTo} />}
+    </div>
+  )
+}
+
+const FEEDBACK_SENTIMENT_TONE: Record<InterviewFeedbackEntry['sentiment'], string> = {
+  positive: 'text-palette-success-700',
+  mixed: 'text-palette-warning-700',
+  negative: 'text-palette-danger-700',
+}
+
+function CandidateReviewCard({ result }: { result: Extract<CopilotResult, { kind: 'candidateReview' }> }) {
+  const effectiveCandidates = useAllEffectiveCandidates()
+  const submitCopilotMessage = useAppStore((state) => state.submitCopilotMessage)
+  const candidate = effectiveCandidates.find((c) => c.id === result.candidateId)
+  if (!candidate) return <p className="text-sm text-muted-foreground">{result.message}</p>
+  const criteria = getCriteria(candidate.openingId)
+
+  return (
+    <div>
+      <p className="whitespace-pre-line text-sm leading-relaxed text-foreground">{result.message}</p>
+
+      {result.hasScorecard && (
+        <div className="mt-3 space-y-3">
+          {(result.strengths.length > 0 || result.concerns.length > 0) && (
+            <div className="rounded-lg border border-border bg-muted p-3.5">
+              {result.strengths.length > 0 && (
+                <p className="text-sm leading-relaxed text-foreground">
+                  <span className="font-semibold text-palette-success-700">Strengths: </span>
+                  {result.strengths.join(', ')}
+                </p>
+              )}
+              {result.concerns.length > 0 && (
+                <p className={cn('text-sm leading-relaxed text-foreground', result.strengths.length > 0 && 'mt-1.5')}>
+                  <span className="font-semibold text-palette-warning-700">Concern / uncertainty: </span>
+                  {result.concerns.join(', ')}
+                </p>
+              )}
+            </div>
+          )}
+
+          {result.feedback.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Interviewer feedback</p>
+              <div className="mt-1.5 space-y-2">
+                {result.feedback.map((entry) => (
+                  <div key={`${entry.reviewer}-${entry.quote}`} className="rounded-lg border border-border p-3">
+                    <div className="flex items-center gap-1.5">
+                      <Quote className="h-3 w-3 shrink-0 text-palette-neutral-400" aria-hidden="true" />
+                      <span className="text-xs font-semibold text-palette-neutral-900">{entry.reviewer}</span>
+                      <span className={cn('text-xs font-medium', FEEDBACK_SENTIMENT_TONE[entry.sentiment])}>
+                        {entry.sentiment === 'positive' ? 'Positive' : entry.sentiment === 'mixed' ? 'Positive with question' : 'Negative'}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-sm leading-relaxed text-foreground">&ldquo;{entry.quote}&rdquo;</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Scorecard</p>
+            <div className="mt-1 rounded-lg border border-border bg-muted p-2">
+              <CriterionEvidenceList criteria={criteria} evidence={candidate.evidence} compact />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {result.decisions.length > 0 && (
+        <div className="mt-3">
+          <p className="text-sm font-medium text-foreground">What would you like to do?</p>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {result.decisions.map((decision) => (
+              <button
+                key={decision.label}
+                type="button"
+                onClick={() => submitCopilotMessage(decision.query)}
+                className={cn(
+                  'rounded-lg px-3.5 py-1.5 text-sm font-medium transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                  decision.label === 'Reject'
+                    ? 'bg-destructive text-destructive-foreground'
+                    : decision.label.startsWith('Advance')
+                      ? 'bg-primary text-primary-foreground'
+                      : 'border border-border text-foreground hover:bg-muted',
+                )}
+              >
+                {decision.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {result.navTo && <NavToAction navTo={result.navTo} />}
     </div>
   )
 }
@@ -233,6 +373,14 @@ export function CopilotResultView({ turnId, result }: { turnId: string; result: 
 
   if (result.kind === 'crossRoleAttention') {
     return <CrossRoleAttentionCard result={result} />
+  }
+
+  if (result.kind === 'reviewQueue') {
+    return <ReviewQueueCard result={result} />
+  }
+
+  if (result.kind === 'candidateReview') {
+    return <CandidateReviewCard result={result} />
   }
 
   if (result.kind === 'actionComplete') {

@@ -1,12 +1,13 @@
 import { crossRoleAttention } from '../data/attention'
 import { getCriteria, getCriterionName } from '../data/criteria'
+import { getInterviewFeedback } from '../data/interviewFeedback'
 import { getOpening } from '../data/openings'
 import { getCandidate, recommendedCandidateIds } from '../data/candidates'
 import { buildComparisonSummary } from '../lib/comparison'
 import { STRENGTH_RANK, isUncertainStrength } from '../lib/evidence'
 import { advanceConsequences } from '../lib/stage'
 import type { Candidate, CandidateStage, CriterionKey, OpeningId } from '../types/domain'
-import type { CopilotContext, CopilotResult } from '../types/copilot'
+import type { CopilotContext, CopilotResult, PendingAction } from '../types/copilot'
 
 /**
  * Deterministic Copilot simulation. No live model: input is matched against
@@ -57,6 +58,7 @@ const FINALIZE_PATTERN = /\bfinalize\b/i
 const REJECT_PATTERN = /\breject\b/i
 const HOLD_PATTERN = /\bhold\b/i
 const EMAIL_PATTERN = /\bemail\b/i
+const REVIEW_PATTERN = /\breview\b/i
 const COMPARE_PATTERN = /\bcompare\b/i
 const BLOCKING_PATTERN = /\bblocking\b|\bblocked\b|\bslowing down\b|\bbottleneck\b/i
 const WAITING_FEEDBACK_PATTERN = /waiting (for|on) feedback|pending feedback|review.*feedback/i
@@ -68,6 +70,8 @@ const PRONOUN_PATTERN = /\bher\b|\bhim\b|\bthem\b|\bthis candidate\b/i
 const COLLECTIVE_PATTERN = /\bboth\b|\ball of them\b|\bthem\b/i
 const CONCERN_PATTERN = /biggest concern|main concern|main uncertainty|what.*concern/i
 const GLOBAL_ATTENTION_PATTERN = /what needs my attention|needs my attention today|catch me up/i
+/** Splits a compound instruction like "Move Nisha to Final and hold Rohan" into per-candidate clauses. */
+const AND_SPLIT_PATTERN = /\s+and\s+/i
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -329,6 +333,179 @@ function handleEmail(input: string, context: CopilotContext): CopilotResult {
   return { kind: 'emailDraft', candidateId: target.id, to: target.name, subject, body }
 }
 
+/** The criterion names a candidate currently has clearly Strong evidence for — Good is solid but not called out either way. */
+function strongCriteriaNames(candidate: Candidate): string[] {
+  return candidate.evidence
+    .filter((evidence) => evidence.strength === 'Strong')
+    .map((evidence) => getCriterionName(candidate.openingId, evidence.criterionKey))
+}
+
+/** The criterion names still uncertain or thin — never a criterion that's simply "Moderate". */
+function weakCriteriaNames(candidate: Candidate): string[] {
+  return candidate.evidence
+    .filter((evidence) => isUncertainStrength(evidence.strength) || evidence.strength === 'Limited')
+    .map((evidence) => getCriterionName(candidate.openingId, evidence.criterionKey))
+}
+
+function buildReviewQueueItem(candidate: Candidate): { candidateId: string; strengths: string[]; concerns: string[] } {
+  return { candidateId: candidate.id, strengths: strongCriteriaNames(candidate), concerns: weakCriteriaNames(candidate) }
+}
+
+/** The next-step decisions offered under a candidate review — always resolved through the same query pipeline as typed text. */
+function buildReviewDecisions(candidate: Candidate): { label: string; query: string }[] {
+  const firstName = candidate.name.split(' ')[0]
+  const advanceStage = candidate.stage === 'Interview' ? 'Final' : candidate.stage === 'Final' ? 'Offer' : undefined
+  const decisions: { label: string; query: string }[] = []
+  if (advanceStage) decisions.push({ label: `Advance to ${advanceStage}`, query: `Move ${firstName} to ${advanceStage}` })
+  decisions.push({ label: 'Hold', query: `Hold ${firstName}` })
+  decisions.push({ label: 'Reject', query: `Reject ${firstName}` })
+  return decisions
+}
+
+/** The single-candidate deep dive behind "Review <name>" — interview picture, feedback and next-step decisions, all inline. */
+function handleCandidateReview(candidate: Candidate): CopilotResult {
+  const hasScorecard = candidate.evidence.length > 0
+  const message = hasScorecard
+    ? `Here's the interview picture for ${candidate.name}.`
+    : `${candidate.name} is currently in ${candidate.stage}${candidate.interviewStatus ? ` — ${candidate.interviewStatus.toLowerCase()}` : ''}. A detailed evidence profile isn't available for this candidate yet.`
+
+  return {
+    kind: 'candidateReview',
+    message,
+    candidateId: candidate.id,
+    strengths: strongCriteriaNames(candidate),
+    concerns: weakCriteriaNames(candidate),
+    feedback: getInterviewFeedback(candidate.id),
+    hasScorecard,
+    decisions: buildReviewDecisions(candidate),
+    navTo: { label: 'View full candidate profile', path: `/candidates/${candidate.id}` },
+  }
+}
+
+/** "Review interviews" — everyone in Interview currently waiting on feedback, with a per-candidate drill-in. */
+function handleReviewInterviews(context: CopilotContext): CopilotResult {
+  const openingId = context.openingId ?? 'senior-product-designer'
+  const pool = context.candidates.filter(
+    (candidate) => candidate.openingId === openingId && candidate.stage === 'Interview' && candidate.waitingOn && !candidate.rejected,
+  )
+  if (pool.length === 0) {
+    return { kind: 'text', message: 'No interviews are currently waiting for your feedback.' }
+  }
+  const opening = getOpening(openingId)
+  return {
+    kind: 'reviewQueue',
+    message:
+      pool.length === 1
+        ? "Here's the interview waiting for your feedback."
+        : `Here are the ${pool.length} interviews waiting for your feedback.`,
+    items: pool.map((candidate) => buildReviewQueueItem(candidate)),
+    navTo: { label: `Open ${opening?.title ?? 'role'} interviews`, path: `/openings/${openingId}/interviews` },
+  }
+}
+
+/** "Review finalist(s)" — goes straight to the single finalist's deep dive, or a queue when there's more than one. */
+function handleReviewFinalists(context: CopilotContext): CopilotResult {
+  if (!context.openingId) {
+    return { kind: 'clarify', message: 'Which opening — Senior Product Designer, Product Manager or UX Researcher?' }
+  }
+  const opening = getOpening(context.openingId)
+  const pool = context.candidates.filter((candidate) => candidate.openingId === context.openingId && candidate.stage === 'Final' && !candidate.rejected)
+  if (pool.length === 0) {
+    return { kind: 'text', message: `No candidates are currently in Final for ${opening?.title ?? 'this role'}.` }
+  }
+  if (pool.length === 1) return handleCandidateReview(pool[0])
+  return {
+    kind: 'reviewQueue',
+    message: `${pool.length} candidates are currently in Final for ${opening?.title ?? 'this role'}.`,
+    items: pool.map((candidate) => buildReviewQueueItem(candidate)),
+    navTo: { label: 'Open pipeline', path: `/openings/${context.openingId}/pipeline` },
+  }
+}
+
+/** Dispatches every "review …" phrasing — a named candidate, the interview queue, finalists, or a role's candidate list. */
+function handleReview(input: string, context: CopilotContext): CopilotResult | undefined {
+  const named = matchCandidatesByName(input, context)
+  if (named.length === 1) return handleCandidateReview(named[0])
+  if (/\binterviews?\b/i.test(input)) return handleReviewInterviews(context)
+  if (/\bfinalists?\b/i.test(input)) return handleReviewFinalists(context)
+  if (/\bfeedback\b/i.test(input)) return handleReviewInterviews(context)
+  if (/\bcandidates?\b/i.test(input)) return handleTopCandidates(context)
+  if (context.level === 'candidate' && context.candidateId) {
+    const current = context.candidates.find((candidate) => candidate.id === context.candidateId)
+    if (current) return handleCandidateReview(current)
+  }
+  return undefined
+}
+
+type AtomicPendingAction = Exclude<PendingAction, { kind: 'batch' }>
+
+/** Parses one clause of a compound instruction ("hold Rohan") into a single pending action plus its confirm-card copy. */
+function parseActionClause(clause: string, context: CopilotContext): { action: AtomicPendingAction; lines: string[]; consequences: string[] } | undefined {
+  const trimmed = clause.trim()
+  if (trimmed.length === 0) return undefined
+
+  if (HOLD_PATTERN.test(trimmed)) {
+    const targets = matchCandidatesByName(trimmed, context)
+    if (targets.length === 0) return undefined
+    return {
+      action: { kind: 'hold', candidateIds: targets.map((candidate) => candidate.id) },
+      lines: targets.map((candidate) => `${candidate.name} — remains in ${candidate.stage} · flagged Hold`),
+      consequences: targets.map((candidate) => `Flag ${candidate.name} as on hold`),
+    }
+  }
+  if (REJECT_PATTERN.test(trimmed)) {
+    const targets = matchCandidatesByName(trimmed, context)
+    if (targets.length === 0) return undefined
+    return {
+      action: { kind: 'reject', candidateIds: targets.map((candidate) => candidate.id) },
+      lines: targets.map((candidate) => `${candidate.name} — Rejected`),
+      consequences: targets.map((candidate) => `Move ${candidate.name} to Rejected`),
+    }
+  }
+  if (FINALIZE_PATTERN.test(trimmed)) {
+    const target = matchCandidatesByName(trimmed, context)[0]
+    if (!target) return undefined
+    return {
+      action: { kind: 'finalize', candidateId: target.id },
+      lines: [`${target.name} — marked as selected`],
+      consequences: [`Mark ${target.name} as the selected candidate`],
+    }
+  }
+  const stage = findStageKeyword(trimmed)
+  if (stage && ADVANCE_PATTERN.test(trimmed)) {
+    const targets = matchCandidatesByName(trimmed, context)
+    if (targets.length === 0) return undefined
+    return {
+      action: { kind: 'advance', candidateIds: targets.map((candidate) => candidate.id), toStage: stage },
+      lines: targets.map((candidate) => `${candidate.name} — ${candidate.stage} → ${stage}`),
+      consequences: targets.map((candidate) => `Update ${candidate.name}'s stage to ${stage}`),
+    }
+  }
+  return undefined
+}
+
+/** "Move Nisha to Final and hold Rohan" — one confirm card covering every clause, executed together on confirm. */
+function handleCompoundAction(input: string, context: CopilotContext): CopilotResult | undefined {
+  if (!AND_SPLIT_PATTERN.test(input)) return undefined
+  const clauses = input.split(AND_SPLIT_PATTERN).map((clause) => clause.trim()).filter((clause) => clause.length > 0)
+  if (clauses.length < 2) return undefined
+
+  const parsed = clauses.map((clause) => parseActionClause(clause, context)).filter((entry): entry is NonNullable<typeof entry> => entry !== undefined)
+  if (parsed.length < 2) return undefined
+
+  const allCandidateIds = parsed.flatMap((entry) => (entry.action.kind === 'finalize' ? [entry.action.candidateId] : entry.action.candidateIds))
+  if (new Set(allCandidateIds).size < 2) return undefined
+
+  return {
+    kind: 'confirm',
+    title: `Apply ${parsed.length} actions?`,
+    lines: parsed.flatMap((entry) => entry.lines),
+    consequences: parsed.flatMap((entry) => entry.consequences),
+    confirmLabel: 'Confirm & apply',
+    action: { kind: 'batch', actions: parsed.map((entry) => entry.action) },
+  }
+}
+
 function handleFinalists(context: CopilotContext): CopilotResult {
   if (!context.openingId) {
     return { kind: 'clarify', message: 'Which opening? Select one first.' }
@@ -434,10 +611,23 @@ export function runCopilotQuery(rawInput: string, context: CopilotContext): Copi
       ? { ...context, openingId: openingOverride, level: 'role', candidateId: null }
       : context
 
+  // A compound instruction ("Move Nisha to Final and hold Rohan") must be parsed as a whole before any
+  // single-verb handler below gets a chance to match just one of its clauses against every named candidate.
+  const compoundResult = handleCompoundAction(input, effectiveContext)
+  if (compoundResult) return compoundResult
+
   if (FINALIZE_PATTERN.test(input)) return handleFinalize(input, effectiveContext)
   if (REJECT_PATTERN.test(input)) return handleReject(input, effectiveContext)
   if (HOLD_PATTERN.test(input)) return handleHold(input, effectiveContext)
   if (EMAIL_PATTERN.test(input)) return handleEmail(input, effectiveContext)
+
+  // "Review …" (interviews, finalist(s), a named candidate, or a role's candidates) stays inside the
+  // conversation — it takes priority over the plainer list-style handlers below.
+  if (REVIEW_PATTERN.test(input)) {
+    const reviewResult = handleReview(input, effectiveContext)
+    if (reviewResult) return reviewResult
+  }
+
   if (CONCERN_PATTERN.test(input)) return handleBiggestConcern(input, effectiveContext)
   if (COMPARE_PATTERN.test(input)) return handleCompare(input, effectiveContext)
   if (BLOCKING_PATTERN.test(input)) return handleBlocking(effectiveContext)
@@ -473,5 +663,15 @@ export function getFollowUpSuggestions(result: CopilotResult): string[] {
     return []
   }
   if (result.kind === 'pipelineDiagnosis') return ['Review feedback']
+  if (result.kind === 'reviewQueue' && result.items.length >= 2) {
+    const [first, second] = result.items
+    const firstName = getCandidate(first.candidateId)?.name.split(' ')[0]
+    const secondName = getCandidate(second.candidateId)?.name.split(' ')[0]
+    return firstName && secondName ? [`Compare ${firstName} and ${secondName}`] : []
+  }
+  if (result.kind === 'candidateReview' && result.hasScorecard) {
+    const candidate = getCandidate(result.candidateId)
+    return candidate ? [`What's ${candidate.name.split(' ')[0]}'s biggest concern?`] : []
+  }
   return []
 }

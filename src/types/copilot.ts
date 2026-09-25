@@ -18,17 +18,32 @@ export type PendingAction =
   | { kind: 'hold'; candidateIds: string[] }
   | { kind: 'reject'; candidateIds: string[] }
   | { kind: 'finalize'; candidateId: string }
+  /** Several actions confirmed and executed together, e.g. "Move Nisha to Final and hold Rohan". */
+  | { kind: 'batch'; actions: Exclude<PendingAction, { kind: 'batch' }>[] }
 
 export interface WaitingCandidate {
   candidateId: string
   days: number
 }
 
+/** A cross-role attention action always continues the conversation — it's a Copilot query, never a page path. */
 export interface CrossRoleAttentionItem {
   openingId: OpeningId
   openingTitle: string
   headline: string
-  action?: { label: string; path: string }
+  action?: { label: string; query: string }
+}
+
+export interface InterviewFeedbackEntry {
+  reviewer: string
+  sentiment: 'positive' | 'mixed' | 'negative'
+  quote: string
+}
+
+/** A decision offered under a candidate review — clicking re-enters the same query pipeline as typing it. */
+export interface ReviewDecision {
+  label: string
+  query: string
 }
 
 export type CopilotResult =
@@ -63,6 +78,25 @@ export type CopilotResult =
       message: string
       waitingOnYou: WaitingCandidate[]
       waitingOnOthers: WaitingCandidate[]
+      navTo?: { label: string; path: string }
+    }
+  | {
+      /** A compact per-candidate queue — "Review interviews" / "Review finalist(s)" list before drilling into one. */
+      kind: 'reviewQueue'
+      message: string
+      items: { candidateId: string; strengths: string[]; concerns: string[] }[]
+      navTo?: { label: string; path: string }
+    }
+  | {
+      /** The single-candidate deep dive — interview picture, interviewer feedback, scorecard and next-step decisions — all inline. */
+      kind: 'candidateReview'
+      message: string
+      candidateId: string
+      strengths: string[]
+      concerns: string[]
+      feedback: InterviewFeedbackEntry[]
+      hasScorecard: boolean
+      decisions: ReviewDecision[]
       navTo?: { label: string; path: string }
     }
 
