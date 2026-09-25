@@ -36,7 +36,7 @@ export function CopilotPanel() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 top-6 z-50 flex w-[400px] max-w-[calc(100vw-3rem)] flex-col rounded-xl border border-neutral-200 bg-white shadow-xl shadow-neutral-900/10">
+    <div className="fixed bottom-6 right-6 top-6 z-50 flex w-[440px] max-w-[calc(100vw-3rem)] flex-col rounded-xl border border-neutral-200 bg-white shadow-xl shadow-neutral-900/10">
       <header className="flex items-center justify-between gap-2 border-b border-neutral-100 px-4 py-3.5">
         <div className="flex items-center gap-2 min-w-0">
           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white">
@@ -79,11 +79,13 @@ export function CopilotPanel() {
             )}
           </div>
         ) : (
-          <div className="space-y-5">
+          <div className="space-y-6">
             {history.map((turn) => (
               <div key={turn.id}>
-                <p className="mb-2 self-end rounded-lg bg-neutral-100 px-3 py-2 text-sm text-neutral-800">{turn.query}</p>
-                <CopilotResultView result={turn.result} />
+                <p className="border-l-2 border-neutral-200 pl-2.5 text-sm text-neutral-500">{turn.query}</p>
+                <div className="mt-2.5">
+                  <CopilotResultView result={turn.result} />
+                </div>
               </div>
             ))}
           </div>

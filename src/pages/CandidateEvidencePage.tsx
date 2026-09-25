@@ -66,10 +66,7 @@ export function CandidateEvidencePage() {
       </div>
 
       <div className="rounded-xl border border-neutral-200 bg-white p-6">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-sm font-semibold text-neutral-900">Criteria &amp; evidence</h2>
-          <p className="text-xs text-neutral-400">Sourced from resume, application and screening information</p>
-        </div>
+        <h2 className="text-sm font-semibold text-neutral-900">Criteria &amp; evidence</h2>
         <div className="mt-2">
           <CriterionEvidenceList criteria={criteria} evidence={candidate.evidence} />
         </div>

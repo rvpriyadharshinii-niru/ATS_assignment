@@ -9,7 +9,42 @@ const PRIORITY_TONE: Record<Opening['priority'], string> = {
   Normal: 'bg-neutral-100 text-neutral-600 ring-neutral-500/15',
 }
 
-export function OpeningCard({ opening }: { opening: Opening }) {
+function PriorityTag({ priority }: { priority: Opening['priority'] }) {
+  return (
+    <span
+      className={cn(
+        'inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset',
+        PRIORITY_TONE[priority],
+      )}
+    >
+      {priority}
+    </span>
+  )
+}
+
+export function OpeningCard({ opening, compact = false }: { opening: Opening; compact?: boolean }) {
+  if (compact) {
+    const row = (
+      <div className="flex items-center justify-between gap-4 px-5 py-3.5">
+        <div className="flex min-w-0 shrink-0 items-center gap-2.5">
+          <span className="text-sm font-semibold text-neutral-900">{opening.title}</span>
+          <PriorityTag priority={opening.priority} />
+        </div>
+        <p className="hidden min-w-0 flex-1 truncate text-sm text-neutral-500 sm:block">{opening.situationSummary}</p>
+        {opening.hasDetailedData && <ChevronRight className="h-4 w-4 shrink-0 text-neutral-300" aria-hidden="true" />}
+      </div>
+    )
+    if (!opening.hasDetailedData) return row
+    return (
+      <Link
+        to={`/openings/${opening.id}`}
+        className="block transition-colors hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-500"
+      >
+        {row}
+      </Link>
+    )
+  }
+
   const content = (
     <>
       <div className="flex items-start justify-between gap-3">
@@ -20,21 +55,14 @@ export function OpeningCard({ opening }: { opening: Opening }) {
             {opening.needsAttention > 0 && <span className="text-neutral-400"> · {opening.needsAttention} need attention</span>}
           </p>
         </div>
-        <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ring-inset', PRIORITY_TONE[opening.priority])}>
-          {opening.priority}
-        </span>
+        <PriorityTag priority={opening.priority} />
       </div>
       <p className="mt-3 text-sm text-neutral-600">{opening.situationSummary}</p>
     </>
   )
 
   if (!opening.hasDetailedData) {
-    return (
-      <div className="rounded-xl border border-neutral-200 bg-neutral-50/60 p-5 opacity-80" aria-disabled="true">
-        {content}
-        <p className="mt-3 text-xs text-neutral-400">Detailed candidate records not yet available in this prototype.</p>
-      </div>
-    )
+    return <div className="rounded-xl border border-neutral-200 bg-white p-5">{content}</div>
   }
 
   return (

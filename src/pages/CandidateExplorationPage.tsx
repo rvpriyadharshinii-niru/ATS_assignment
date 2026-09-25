@@ -1,3 +1,4 @@
+import { Search } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { CandidateCard } from '../components/candidates/CandidateCard'
@@ -7,7 +8,15 @@ import { getCriteria } from '../data/criteria'
 import { getOpening } from '../data/openings'
 import { candidateMatchesFilters } from '../lib/evidence'
 import { useAppStore } from '../store/useAppStore'
-import type { OpeningId } from '../types/domain'
+import type { Candidate, OpeningId } from '../types/domain'
+
+type SortKey = 'recommended' | 'experience' | 'score'
+
+function sortCandidates(list: Candidate[], sortKey: SortKey): Candidate[] {
+  if (sortKey === 'experience') return [...list].sort((a, b) => b.experienceYears - a.experienceYears)
+  if (sortKey === 'score') return [...list].sort((a, b) => (b.screeningScore ?? -1) - (a.screeningScore ?? -1))
+  return list
+}
 
 export function CandidateExplorationPage() {
   const { openingId } = useParams<{ openingId: string }>()
@@ -16,6 +25,9 @@ export function CandidateExplorationPage() {
   const filters = useAppStore((state) => state.filters)
   const clearFilters = useAppStore((state) => state.clearFilters)
   const [showAll, setShowAll] = useState(false)
+  const [criteriaOpen, setCriteriaOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [sortKey, setSortKey] = useState<SortKey>('recommended')
 
   useEffect(() => {
     if (opening) setSelectedOpening(opening.id)
@@ -24,7 +36,7 @@ export function CandidateExplorationPage() {
   if (!opening || !opening.hasDetailedData) {
     return (
       <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center">
-        <p className="text-sm text-neutral-500">Detailed candidate records are not yet available for this opening in the prototype.</p>
+        <p className="text-sm text-neutral-500">Candidate records for this opening aren&rsquo;t available yet.</p>
       </div>
     )
   }
@@ -32,34 +44,74 @@ export function CandidateExplorationPage() {
   const criteria = getCriteria(opening.id as OpeningId)
   const pool = getCandidatesForOpening(opening.id as OpeningId)
   const hasFilters = filters.length > 0
-  const baseCandidates = hasFilters || showAll ? pool : pool.filter((candidate) => recommendedCandidateIds.includes(candidate.id))
-  const visibleCandidates = baseCandidates.filter((candidate) => candidateMatchesFilters(candidate, filters))
+  const isSearching = searchQuery.trim().length > 0
+  const query = searchQuery.trim().toLowerCase()
+
+  const baseCandidates = hasFilters || showAll || isSearching ? pool : pool.filter((candidate) => recommendedCandidateIds.includes(candidate.id))
+  const filtered = baseCandidates.filter((candidate) => candidateMatchesFilters(candidate, filters))
+  const searched = isSearching
+    ? filtered.filter((candidate) =>
+        [candidate.name, candidate.currentRole, candidate.currentCompany].some((value) => value?.toLowerCase().includes(query)),
+      )
+    : filtered
+  const visibleCandidates = sortCandidates(searched, sortKey)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">{opening.title}</h1>
-        <p className="mt-1 text-sm text-neutral-500">
-          {opening.totalCandidates} total candidates · {pool.length} with detailed records in this prototype
-        </p>
-      </div>
-
-      <div className="rounded-lg border border-neutral-200 bg-white px-4 py-3">
-        <p className="text-xs font-medium uppercase tracking-wide text-neutral-400">Configured criteria</p>
-        <p className="mt-1 text-sm text-neutral-600">
-          {criteria.map((criterion, index) => (
-            <span key={criterion.key}>
-              {criterion.name}
-              <span className="text-neutral-400"> ({criterion.priority})</span>
-              {index < criteria.length - 1 && <span className="text-neutral-300"> · </span>}
-            </span>
-          ))}
-        </p>
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm text-neutral-500">
+          <span>{opening.totalCandidates} total candidates</span>
+          <span className="text-neutral-300">·</span>
+          <span>Evaluating against {criteria.length} configured criteria</span>
+          <button
+            type="button"
+            onClick={() => setCriteriaOpen((current) => !current)}
+            className="font-medium text-indigo-600 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          >
+            {criteriaOpen ? 'Hide criteria' : 'View criteria'}
+          </button>
+        </div>
+        {criteriaOpen && (
+          <div className="mt-2 rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-600">
+            {criteria.map((criterion, index) => (
+              <span key={criterion.key}>
+                {criterion.name}
+                <span className="text-neutral-400"> ({criterion.priority})</span>
+                {index < criteria.length - 1 && <span className="text-neutral-300"> · </span>}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <FilterChips />
-        {!hasFilters && (
+        <div className="flex flex-1 flex-wrap items-center gap-3">
+          <div className="relative w-full min-w-[220px] max-w-sm">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" aria-hidden="true" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search candidates…"
+              aria-label="Search candidates"
+              className="w-full rounded-lg border border-neutral-200 py-2 pl-9 pr-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-neutral-500">
+            Sort
+            <select
+              value={sortKey}
+              onChange={(event) => setSortKey(event.target.value as SortKey)}
+              className="rounded-lg border border-neutral-200 py-2 pl-2.5 pr-8 text-sm text-neutral-700 focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/40"
+            >
+              <option value="recommended">Recommended</option>
+              <option value="experience">Experience</option>
+              <option value="score">AI Screening Score</option>
+            </select>
+          </label>
+        </div>
+        {!hasFilters && !isSearching && (
           <button
             type="button"
             onClick={() => setShowAll((current) => !current)}
@@ -70,17 +122,21 @@ export function CandidateExplorationPage() {
         )}
       </div>
 
+      <FilterChips />
+
       {visibleCandidates.length === 0 ? (
         <div className="rounded-xl border border-neutral-200 bg-white p-8 text-center">
-          <p className="text-sm font-medium text-neutral-700">No candidates match the current filters</p>
-          <p className="mt-1 text-sm text-neutral-500">Try relaxing or removing a filter to see more candidates.</p>
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="mt-3 text-sm font-medium text-indigo-600 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-          >
-            Clear filters
-          </button>
+          <p className="text-sm font-medium text-neutral-700">No candidates match the current view</p>
+          <p className="mt-1 text-sm text-neutral-500">Try a different search term, or relax the applied filters.</p>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="mt-3 text-sm font-medium text-indigo-600 hover:text-indigo-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            >
+              Clear filters
+            </button>
+          )}
         </div>
       ) : (
         <div className="space-y-2">

@@ -20,24 +20,28 @@ export function HomePage() {
   }, [setSelectedOpening])
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-neutral-900">Good morning, Priya</h1>
         <p className="mt-1 text-neutral-500">Here is what needs your attention today.</p>
-      </div>
-
-      <div className="grid grid-cols-4 gap-4">
-        {METRICS.map((metric) => (
-          <div key={metric.label} className="rounded-xl border border-neutral-200 bg-white p-5">
-            <p className="text-2xl font-semibold text-neutral-900">{metric.value}</p>
-            <p className="mt-1 text-sm text-neutral-500">{metric.label}</p>
-          </div>
-        ))}
+        <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1 text-sm text-neutral-500">
+          {METRICS.map((metric, index) => (
+            <span key={metric.label} className="flex items-center gap-2">
+              {index > 0 && (
+                <span className="text-neutral-300" aria-hidden="true">
+                  ·
+                </span>
+              )}
+              <span className="font-semibold text-neutral-700">{metric.value}</span>
+              <span>{metric.label}</span>
+            </span>
+          ))}
+        </div>
       </div>
 
       <section>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">Copilot Insights</h2>
-        <div className="mt-3 grid grid-cols-3 gap-4">
+        <h2 className="text-base font-semibold text-neutral-900">Needs your attention</h2>
+        <div className="mt-3 rounded-xl border border-neutral-200 bg-white px-5">
           {homeInsights.map((insight) => (
             <InsightCard key={insight.id} insight={insight} />
           ))}
@@ -45,10 +49,10 @@ export function HomePage() {
       </section>
 
       <section>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-400">My Openings</h2>
-        <div className="mt-3 grid grid-cols-3 gap-4">
+        <h2 className="text-base font-semibold text-neutral-900">My Openings</h2>
+        <div className="mt-3 divide-y divide-neutral-100 rounded-xl border border-neutral-200 bg-white">
           {openings.map((opening) => (
-            <OpeningCard key={opening.id} opening={opening} />
+            <OpeningCard key={opening.id} opening={opening} compact />
           ))}
         </div>
       </section>

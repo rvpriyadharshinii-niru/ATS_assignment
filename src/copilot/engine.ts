@@ -13,12 +13,11 @@ import type { CopilotContext, CopilotResult } from '../types/copilot'
 interface CriterionKeyword {
   pattern: RegExp
   key: CriterionKey
-  label: string
 }
 
 const CRITERION_KEYWORDS: CriterionKeyword[] = [
-  { pattern: /design systems?/i, key: 'designSystems', label: 'Design Systems' },
-  { pattern: /ai product experience|ai experience|ai products?/i, key: 'aiProductExperience', label: 'AI Product Experience' },
+  { pattern: /design systems?/i, key: 'designSystems' },
+  { pattern: /ai product experience|ai experience|ai products?/i, key: 'aiProductExperience' },
 ]
 
 const WHY_PATTERN = /\bwhy\b/i
@@ -103,7 +102,7 @@ function handleLensChange(input: string, context: CopilotContext): CopilotResult
     candidateIds: matches.map((candidate) => candidate.id),
     appliedFilter: {
       id: `ai-${matchedKeyword.key}`,
-      label: `${matchedKeyword.label}: Strong`,
+      label: `${criterionName} · Strong`,
       source: 'ai',
       criterionKey: matchedKeyword.key,
       minStrength: 'Strong',
@@ -131,4 +130,15 @@ export function runCopilotQuery(rawInput: string, context: CopilotContext): Copi
   if (WHY_PATTERN.test(input)) return handleWhy(input, context)
 
   return handleFallback()
+}
+
+/** Follow-up prompts surfaced under a turn's result — always drawn from the supported intent set. */
+export function getFollowUpSuggestions(result: CopilotResult): string[] {
+  if (result.kind === 'evidence') return ['Show candidates strongest in design systems']
+  if (result.kind === 'candidateList') {
+    if (result.appliedFilter?.criterionKey === 'designSystems') return ['Prioritize AI product experience']
+    if (result.appliedFilter?.criterionKey === 'aiProductExperience') return ['Show candidates strongest in design systems']
+    return ['Show candidates strongest in design systems']
+  }
+  return []
 }
