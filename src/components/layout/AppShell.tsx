@@ -12,7 +12,7 @@ export function AppShell() {
   return (
     <div className="flex h-svh bg-palette-brand-100">
       <Sidebar />
-      <div className="min-w-0 flex-1 p-3 pl-0">
+      <div className="min-w-0 flex-1 p-3">
         <main className="h-full min-w-0 overflow-hidden rounded-3xl bg-background shadow-sm">
           <div className="h-full overflow-y-auto">
             <Outlet />
