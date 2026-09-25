@@ -1,4 +1,4 @@
-import type { Candidate, CandidateFilter, CandidateStage, CriterionKey, OpeningId } from './domain'
+import type { Candidate, CandidateFilter, CandidateStage, CriterionKey, CriterionPriority, OpeningId } from './domain'
 
 export type CopilotScopeLevel = 'global' | 'role' | 'candidate'
 
@@ -18,6 +18,7 @@ export type PendingAction =
   | { kind: 'hold'; candidateIds: string[] }
   | { kind: 'reject'; candidateIds: string[] }
   | { kind: 'finalize'; candidateId: string }
+  | { kind: 'setCriterionPriority'; openingId: OpeningId; criterionKey: CriterionKey; criterionName: string; priority: CriterionPriority }
   /** Several actions confirmed and executed together, e.g. "Move Nisha to Final and hold Rohan". */
   | { kind: 'batch'; actions: Exclude<PendingAction, { kind: 'batch' }>[] }
 

@@ -27,51 +27,61 @@ interface CandidateCardProps {
   candidate: Candidate
   /** `board` renders a condensed vertical card suited to a narrow Kanban column. */
   variant?: 'row' | 'board'
+  /** Board only — an active filter/highlight (e.g. from Copilot) matches this candidate. */
+  highlighted?: boolean
+  /** Board only — an active filter/highlight is set and this candidate does NOT match it. */
+  dimmed?: boolean
 }
 
-export function CandidateCard({ candidate, variant = 'row' }: CandidateCardProps) {
+export function CandidateCard({ candidate, variant = 'row', highlighted = false, dimmed = false }: CandidateCardProps) {
   const statusNote = buildStatusNote(candidate)
 
   if (variant === 'board') {
     const feedbackNeeded = candidate.waitingOn === 'priya'
+    const metaParts = [
+      candidate.experienceYears !== undefined ? `${candidate.experienceYears} yrs` : undefined,
+      candidate.location,
+    ].filter((part): part is string => Boolean(part))
     return (
       <div
         className={cn(
-          'rounded-lg border border-border bg-card px-3 py-2.5 shadow-xs transition-colors hover:border-palette-neutral-300',
+          'flex gap-2 rounded-lg border bg-card shadow-xs transition-shadow hover:shadow-sm',
+          highlighted ? 'border-palette-brand-350 ring-1 ring-palette-brand-300' : 'border-border',
           candidate.rejected && 'opacity-60',
-          feedbackNeeded && 'border-palette-warning-300',
+          dimmed && 'opacity-40',
         )}
       >
-        <div className="flex items-start justify-between gap-1">
-          <Link
-            to={`/candidates/${candidate.id}`}
-            className="truncate text-sm font-semibold text-palette-neutral-900 hover:text-primary focus-visible:outline-none focus-visible:underline"
-          >
-            {candidate.name}
-          </Link>
-          <CandidateActionsMenu candidate={candidate} />
-        </div>
-        <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
-          {candidate.recommendation && <RecommendationBadge label={candidate.recommendation} />}
-          {candidate.prioritiesSupported !== undefined && <span>{candidate.prioritiesSupported}/5</span>}
-        </div>
-        <p className="mt-1 text-xs text-palette-neutral-500">
-          {candidate.stage}
-          {candidate.updatedLabel && ` · ${candidate.updatedLabel}`}
-        </p>
-        {(candidate.hold || candidate.rejected || candidate.selected) && (
-          <div className="mt-1 flex flex-wrap gap-1">
-            <StatusTags candidate={candidate} />
+        <span className={cn('w-[3px] shrink-0 rounded-l-lg', feedbackNeeded ? 'bg-palette-warning-450' : 'bg-transparent')} aria-hidden="true" />
+        <div className="min-w-0 flex-1 py-2.5 pr-3">
+          <div className="flex items-start justify-between gap-1">
+            <Link
+              to={`/candidates/${candidate.id}`}
+              className="truncate text-sm font-semibold text-palette-neutral-900 hover:text-primary focus-visible:outline-none focus-visible:underline"
+            >
+              {candidate.name}
+            </Link>
+            <CandidateActionsMenu candidate={candidate} />
           </div>
-        )}
-        {statusNote && (
-          <p className={cn('mt-1 text-xs', feedbackNeeded ? 'font-medium text-palette-warning-700' : 'text-palette-neutral-500')}>{statusNote}</p>
-        )}
-        {feedbackNeeded && (
-          <span className="mt-1.5 inline-flex items-center rounded-full bg-palette-warning-150 px-2 py-0.5 text-[11px] font-semibold text-palette-warning-700">
-            Feedback needed
-          </span>
-        )}
+          <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
+            {candidate.recommendation && <RecommendationBadge label={candidate.recommendation} />}
+            {candidate.prioritiesSupported !== undefined && <span>{candidate.prioritiesSupported}/5</span>}
+          </div>
+          {metaParts.length > 0 && <p className="mt-1 text-xs text-palette-neutral-500">{metaParts.join(' · ')}</p>}
+          <p className="mt-1 text-xs text-palette-neutral-500">Time in stage: {candidate.updatedLabel ?? '—'}</p>
+          {(candidate.hold || candidate.rejected || candidate.selected) && (
+            <div className="mt-1 flex flex-wrap gap-1">
+              <StatusTags candidate={candidate} />
+            </div>
+          )}
+          {statusNote && (
+            <p className={cn('mt-1 text-xs', feedbackNeeded ? 'font-medium text-palette-warning-700' : 'text-palette-neutral-500')}>{statusNote}</p>
+          )}
+          {feedbackNeeded && (
+            <span className="mt-1.5 inline-flex items-center rounded-full bg-palette-warning-150 px-2 py-0.5 text-[11px] font-semibold text-palette-warning-700">
+              Feedback needed
+            </span>
+          )}
+        </div>
       </div>
     )
   }

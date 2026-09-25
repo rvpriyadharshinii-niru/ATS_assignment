@@ -24,6 +24,11 @@ const STRENGTH_BAR_TONE: Record<EvidenceStrength, string> = {
   'Not available': 'bg-palette-warning-450',
 }
 
+/** Display-only relabel — the underlying EvidenceStrength value stays "Not available" everywhere else. */
+function displayStrength(strength: EvidenceStrength): string {
+  return strength === 'Not available' ? 'Insufficient evidence' : strength
+}
+
 function StrengthBadge({ strength }: { strength: EvidenceStrength }) {
   const uncertain = isUncertainStrength(strength)
   return (
@@ -34,7 +39,7 @@ function StrengthBadge({ strength }: { strength: EvidenceStrength }) {
       )}
     >
       {uncertain && <CircleHelp className="h-3 w-3" aria-hidden="true" />}
-      {strength}
+      {displayStrength(strength)}
     </span>
   )
 }

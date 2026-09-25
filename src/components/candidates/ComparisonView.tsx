@@ -47,7 +47,7 @@ export function ComparisonView({ candidates, criteria, summary }: { candidates: 
                   const strength = evidence?.strength ?? 'Not available'
                   return (
                     <td key={candidate.id} className={cn('px-3 py-2.5 font-medium', STRENGTH_CELL_TONE[strength])}>
-                      {strength}
+                      {strength === 'Not available' ? 'Insufficient evidence' : strength}
                       {isUncertainStrength(strength) && strength !== 'Not available' && <span className="text-palette-neutral-400"> ·</span>}
                     </td>
                   )

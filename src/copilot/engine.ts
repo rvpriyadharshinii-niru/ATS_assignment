@@ -4,10 +4,12 @@ import { getInterviewFeedback } from '../data/interviewFeedback'
 import { getOpening } from '../data/openings'
 import { getCandidate, recommendedCandidateIds } from '../data/candidates'
 import { buildComparisonSummary } from '../lib/comparison'
+import { needsValidationCriteriaNames, strongCriteriaNames } from '../lib/criteriaSummary'
+import { CRITERION_KEYWORDS } from '../lib/criterionKeywords'
 import { buildDefaultEmail } from '../lib/email'
 import { STRENGTH_RANK, isUncertainStrength } from '../lib/evidence'
 import { advanceConsequences } from '../lib/stage'
-import type { Candidate, CandidateStage, CriterionKey, OpeningId } from '../types/domain'
+import type { Candidate, CandidateStage, CriterionKey, CriterionPriority, OpeningId } from '../types/domain'
 import type { CopilotContext, CopilotResult, PendingAction } from '../types/copilot'
 
 /**
@@ -16,16 +18,6 @@ import type { CopilotContext, CopilotResult, PendingAction } from '../types/copi
  * each intent reads `context.candidates` — the same current, override-applied
  * state the manual UI renders — so Copilot and manual actions always agree.
  */
-
-interface CriterionKeyword {
-  pattern: RegExp
-  key: CriterionKey
-}
-
-const CRITERION_KEYWORDS: CriterionKeyword[] = [
-  { pattern: /design systems?/i, key: 'designSystems' },
-  { pattern: /ai product experience|ai experience|ai products?/i, key: 'aiProductExperience' },
-]
 
 const STAGE_KEYWORDS: { pattern: RegExp; stage: CandidateStage }[] = [
   { pattern: /\bhm review\b/i, stage: 'HM Review' },
@@ -63,16 +55,19 @@ const REVIEW_PATTERN = /\breview\b/i
 const COMPARE_PATTERN = /\bcompare\b/i
 const BLOCKING_PATTERN = /\bblocking\b|\bblocked\b|\bslowing down\b|\bbottleneck\b/i
 const WAITING_FEEDBACK_PATTERN = /waiting (for|on) feedback|pending feedback|review.*feedback/i
+const SHOW_THEM_PATTERN = /^show (them|these|those)\b|^show$/i
 const FINALISTS_PATTERN = /\bfinalists?\b/i
 const WHO_PATTERN = /\bwho\b/i
 const IN_PATTERN = /\bin\b/i
 const ADVANCE_PATTERN = /\b(move|advance)\b/i
 const PRONOUN_PATTERN = /\bher\b|\bhim\b|\bthem\b|\bthis candidate\b/i
 const COLLECTIVE_PATTERN = /\bboth\b|\ball of them\b|\bthem\b/i
-const CONCERN_PATTERN = /biggest concern|main concern|main uncertainty|what.*concern/i
+const CONCERN_PATTERN = /biggest concern|main concern|biggest uncertainty|main uncertainty|what.*concern|what.*uncertaint/i
 const GLOBAL_ATTENTION_PATTERN = /what needs my attention|needs my attention today|catch me up/i
 /** Splits a compound instruction like "Move Nisha to Final and hold Rohan" into per-candidate clauses. */
 const AND_SPLIT_PATTERN = /\s+and\s+/i
+const MAKE_PATTERN = /\bmake\b/i
+const PRIORITY_WORD_PATTERN = /\b(high|medium)\b/i
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -226,6 +221,7 @@ function handleLensChange(input: string, context: CopilotContext): CopilotResult
       id: `ai-${matchedKeyword.key}`,
       label: `${criterionName} · Strong`,
       source: 'ai',
+      kind: 'criterion',
       criterionKey: matchedKeyword.key,
       minStrength: 'Strong',
     },
@@ -328,22 +324,8 @@ function handleEmail(input: string, context: CopilotContext): CopilotResult {
   return { kind: 'emailDraft', candidateId: target.id, to: target.name, subject, body }
 }
 
-/** The criterion names a candidate currently has clearly Strong evidence for — Good is solid but not called out either way. */
-function strongCriteriaNames(candidate: Candidate): string[] {
-  return candidate.evidence
-    .filter((evidence) => evidence.strength === 'Strong')
-    .map((evidence) => getCriterionName(candidate.openingId, evidence.criterionKey))
-}
-
-/** The criterion names still uncertain or thin — never a criterion that's simply "Moderate". */
-function weakCriteriaNames(candidate: Candidate): string[] {
-  return candidate.evidence
-    .filter((evidence) => isUncertainStrength(evidence.strength) || evidence.strength === 'Limited')
-    .map((evidence) => getCriterionName(candidate.openingId, evidence.criterionKey))
-}
-
 function buildReviewQueueItem(candidate: Candidate): { candidateId: string; strengths: string[]; concerns: string[] } {
-  return { candidateId: candidate.id, strengths: strongCriteriaNames(candidate), concerns: weakCriteriaNames(candidate) }
+  return { candidateId: candidate.id, strengths: strongCriteriaNames(candidate), concerns: needsValidationCriteriaNames(candidate) }
 }
 
 /** The next-step decisions offered under a candidate review — always resolved through the same query pipeline as typed text. */
@@ -369,7 +351,7 @@ function handleCandidateReview(candidate: Candidate): CopilotResult {
     message,
     candidateId: candidate.id,
     strengths: strongCriteriaNames(candidate),
-    concerns: weakCriteriaNames(candidate),
+    concerns: needsValidationCriteriaNames(candidate),
     feedback: getInterviewFeedback(candidate.id),
     hasScorecard,
     decisions: buildReviewDecisions(candidate),
@@ -432,7 +414,7 @@ function handleReview(input: string, context: CopilotContext): CopilotResult | u
   return undefined
 }
 
-type AtomicPendingAction = Exclude<PendingAction, { kind: 'batch' }>
+type AtomicPendingAction = Exclude<PendingAction, { kind: 'batch' } | { kind: 'setCriterionPriority' }>
 
 /** Parses one clause of a compound instruction ("hold Rohan") into a single pending action plus its confirm-card copy. */
 function parseActionClause(clause: string, context: CopilotContext): { action: AtomicPendingAction; lines: string[]; consequences: string[] } | undefined {
@@ -477,6 +459,28 @@ function parseActionClause(clause: string, context: CopilotContext): { action: A
     }
   }
   return undefined
+}
+
+/** "Make Design Systems High priority" — a role-configuration mutation, previewed like any other consequential change. */
+function handleCriterionPriorityChange(input: string, context: CopilotContext): CopilotResult | undefined {
+  if (!MAKE_PATTERN.test(input) || !context.openingId) return undefined
+  const priorityMatch = PRIORITY_WORD_PATTERN.exec(input)
+  if (!priorityMatch) return undefined
+  const priority = (priorityMatch[1][0].toUpperCase() + priorityMatch[1].slice(1).toLowerCase()) as CriterionPriority
+  const criterion = getCriteria(context.openingId).find((entry) => new RegExp(escapeRegExp(entry.name), 'i').test(input))
+  if (!criterion) return undefined
+
+  if (criterion.priority === priority) {
+    return { kind: 'text', message: `${criterion.name} is already ${priority} priority.` }
+  }
+  return {
+    kind: 'confirm',
+    title: `Change ${criterion.name} priority?`,
+    lines: [`${criterion.name}: ${criterion.priority} → ${priority}`],
+    consequences: ['This will affect future AI assessments for this role.'],
+    confirmLabel: 'Confirm & update',
+    action: { kind: 'setCriterionPriority', openingId: context.openingId, criterionKey: criterion.key, criterionName: criterion.name, priority },
+  }
 }
 
 /** "Move Nisha to Final and hold Rohan" — one confirm card covering every clause, executed together on confirm. */
@@ -560,6 +564,24 @@ function handleBlocking(context: CopilotContext): CopilotResult {
   }
 }
 
+/** "Show them" after a blocking/pipelineDiagnosis turn — highlights those exact candidates in Pipeline via the shared filter, no navigation required. */
+function handleShowRecent(context: CopilotContext): CopilotResult | undefined {
+  if (!context.recentCandidateIds || context.recentCandidateIds.length === 0) return undefined
+  const matches = context.recentCandidateIds
+    .map((id) => context.candidates.find((candidate) => candidate.id === id))
+    .filter((candidate): candidate is Candidate => candidate !== undefined)
+  if (matches.length === 0) return undefined
+
+  const openingId = context.openingId ?? matches[0].openingId
+  return {
+    kind: 'candidateList',
+    message: `Highlighting ${matches.length} candidate${matches.length > 1 ? 's' : ''} in Pipeline.`,
+    candidateIds: matches.map((candidate) => candidate.id),
+    appliedFilter: { id: 'ai-stalled', label: 'Waiting in Interview', source: 'ai', kind: 'stalled' },
+    navTo: { label: 'Open pipeline', path: `/openings/${openingId}/pipeline` },
+  }
+}
+
 function handleWaitingFeedback(context: CopilotContext): CopilotResult {
   const openingId = context.openingId ?? 'senior-product-designer'
   const pool = context.candidates.filter(
@@ -611,6 +633,9 @@ export function runCopilotQuery(rawInput: string, context: CopilotContext): Copi
   const compoundResult = handleCompoundAction(input, effectiveContext)
   if (compoundResult) return compoundResult
 
+  const priorityResult = handleCriterionPriorityChange(input, effectiveContext)
+  if (priorityResult) return priorityResult
+
   if (FINALIZE_PATTERN.test(input)) return handleFinalize(input, effectiveContext)
   if (REJECT_PATTERN.test(input)) return handleReject(input, effectiveContext)
   if (HOLD_PATTERN.test(input)) return handleHold(input, effectiveContext)
@@ -625,6 +650,12 @@ export function runCopilotQuery(rawInput: string, context: CopilotContext): Copi
 
   if (CONCERN_PATTERN.test(input)) return handleBiggestConcern(input, effectiveContext)
   if (COMPARE_PATTERN.test(input)) return handleCompare(input, effectiveContext)
+
+  if (SHOW_THEM_PATTERN.test(input)) {
+    const showResult = handleShowRecent(effectiveContext)
+    if (showResult) return showResult
+  }
+
   if (BLOCKING_PATTERN.test(input)) return handleBlocking(effectiveContext)
   if (WAITING_FEEDBACK_PATTERN.test(input)) return handleWaitingFeedback(effectiveContext)
   if (FINALISTS_PATTERN.test(input)) return handleFinalists(effectiveContext)
@@ -653,8 +684,9 @@ export function getFollowUpSuggestions(result: CopilotResult): string[] {
     return [...suggestions, 'Show candidates strongest in design systems']
   }
   if (result.kind === 'candidateList') {
-    if (result.appliedFilter?.criterionKey === 'designSystems') return ['Prioritize AI product experience']
-    if (result.appliedFilter?.criterionKey === 'aiProductExperience') return ['Show candidates strongest in design systems']
+    const criterionKey = result.appliedFilter?.kind === 'criterion' ? result.appliedFilter.criterionKey : undefined
+    if (criterionKey === 'designSystems') return ['Prioritize AI product experience']
+    if (criterionKey === 'aiProductExperience') return ['Show candidates strongest in design systems']
     return []
   }
   if (result.kind === 'pipelineDiagnosis') return ['Review feedback']

@@ -1,21 +1,201 @@
+import { Bell, Calendar, SlidersHorizontal, Users } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { PageHeader } from '../components/layout/PageHeader'
-import { homeInsights } from '../data/insights'
+import { getCandidate } from '../data/candidates'
+import { staticNotifications, type NotificationCategory } from '../data/notifications'
+import { cn } from '../lib/cn'
+import { useAppStore } from '../store/useAppStore'
+
+type FilterKey = 'all' | 'unread' | NotificationCategory
+
+interface FeedItem {
+  id: string
+  category: NotificationCategory
+  eyebrow: string
+  title: string
+  detail?: string
+  timestamp: number
+  action?: { label: string; to: string }
+}
+
+const FILTERS: { key: FilterKey; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'unread', label: 'Unread' },
+  { key: 'candidates', label: 'Candidates' },
+  { key: 'interviews', label: 'Interviews' },
+  { key: 'hiring', label: 'Hiring' },
+]
+
+const CATEGORY_ICON: Record<NotificationCategory, typeof Bell> = {
+  candidates: Users,
+  interviews: Calendar,
+  hiring: SlidersHorizontal,
+}
+
+const CATEGORY_TINT: Record<NotificationCategory, string> = {
+  candidates: 'bg-palette-info-150 text-palette-info-700',
+  interviews: 'bg-palette-warning-150 text-palette-warning-700',
+  hiring: 'bg-palette-brand-100 text-palette-brand-700',
+}
+
+function startOfDay(timestamp: number): number {
+  const date = new Date(timestamp)
+  date.setHours(0, 0, 0, 0)
+  return date.getTime()
+}
+
+function groupLabel(timestamp: number): string {
+  const today = startOfDay(Date.now())
+  const day = startOfDay(timestamp)
+  if (day === today) return 'Today'
+  if (day === today - 24 * 60 * 60 * 1000) return 'Yesterday'
+  return 'Earlier'
+}
+
+function formatTime(timestamp: number): string {
+  return new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+}
 
 export function NotificationsPage() {
+  const activityLog = useAppStore((state) => state.activityLog)
+  const [filter, setFilter] = useState<FilterKey>('all')
+  const [readIds, setReadIds] = useState<Set<string>>(new Set())
+
+  const feed: FeedItem[] = useMemo(() => {
+    const fromStatic: FeedItem[] = staticNotifications.map((item) => ({
+      id: item.id,
+      category: item.category,
+      eyebrow: item.eyebrow,
+      title: item.title,
+      detail: item.detail,
+      timestamp: item.timestamp,
+      action: item.action,
+    }))
+    const fromActivity: FeedItem[] = activityLog.map((event) => {
+      const candidate = getCandidate(event.candidateId)
+      return {
+        id: event.id,
+        category: 'candidates',
+        eyebrow: 'Pipeline',
+        title: `${candidate?.name ?? 'A candidate'} — ${event.message}`,
+        timestamp: event.timestamp,
+        action: candidate ? { label: 'View', to: `/candidates/${candidate.id}` } : undefined,
+      }
+    })
+    return [...fromStatic, ...fromActivity].sort((a, b) => b.timestamp - a.timestamp)
+  }, [activityLog])
+
+  const filtered = feed.filter((item) => {
+    if (filter === 'all') return true
+    if (filter === 'unread') return !readIds.has(item.id)
+    return item.category === filter
+  })
+
+  const groups: { label: string; items: FeedItem[] }[] = []
+  for (const item of filtered) {
+    const label = groupLabel(item.timestamp)
+    const existing = groups.find((group) => group.label === label)
+    if (existing) existing.items.push(item)
+    else groups.push({ label, items: [item] })
+  }
+
+  const unreadCount = feed.filter((item) => !readIds.has(item.id)).length
+
   return (
     <div>
-      <PageHeader title="Notifications" description="Hiring updates across your openings." backTo="/" />
-      <div className="p-8">
-        <div className="divide-y divide-border rounded-xl border border-border bg-card shadow-xs">
-          {homeInsights.map((insight) => (
-            <div key={insight.id} className="px-5 py-4">
-              <p className="text-xs font-medium text-muted-foreground">{insight.openingTitle}</p>
-              <p className="mt-0.5 text-sm font-semibold text-palette-neutral-900">{insight.headline}</p>
-              <p className="mt-1 text-sm text-foreground">{insight.detail}</p>
-            </div>
+      <PageHeader
+        title="Notifications"
+        description={unreadCount > 0 ? `${unreadCount} unread` : 'You’re all caught up.'}
+        backTo="/"
+        actions={
+          unreadCount > 0 ? (
+            <button
+              type="button"
+              onClick={() => setReadIds(new Set(feed.map((item) => item.id)))}
+              className="text-sm font-medium text-primary hover:text-palette-brand-600"
+            >
+              Mark all read
+            </button>
+          ) : undefined
+        }
+      />
+
+      <div className="space-y-4 p-6">
+        <div className="flex items-center gap-2">
+          {FILTERS.map((entry) => (
+            <button
+              key={entry.key}
+              type="button"
+              onClick={() => setFilter(entry.key)}
+              className={cn(
+                'rounded-full px-3 py-1.5 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                filter === entry.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground',
+              )}
+            >
+              {entry.label}
+            </button>
           ))}
         </div>
+
+        {groups.length === 0 ? (
+          <div className="rounded-xl border border-border bg-card p-8 text-center shadow-xs">
+            <Bell className="mx-auto h-6 w-6 text-palette-neutral-300" aria-hidden="true" />
+            <p className="mt-2 text-sm text-muted-foreground">Nothing here.</p>
+          </div>
+        ) : (
+          groups.map((group) => (
+            <div key={group.label}>
+              <p className="px-1 pb-1.5 text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">{group.label}</p>
+              <div className="divide-y divide-border rounded-xl border border-border bg-card shadow-xs">
+                {group.items.map((item) => {
+                  const Icon = CATEGORY_ICON[item.category]
+                  const isRead = readIds.has(item.id)
+                  return (
+                    <div
+                      key={item.id}
+                      role="button"
+                      tabIndex={0}
+                      className={cn(
+                        'flex items-start gap-3 px-4 py-3.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset',
+                        !isRead && 'bg-palette-brand-100/20',
+                      )}
+                      onClick={() => setReadIds((current) => new Set(current).add(item.id))}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') setReadIds((current) => new Set(current).add(item.id))
+                      }}
+                    >
+                      <span className={cn('mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full', CATEGORY_TINT[item.category])}>
+                        <Icon className="h-4 w-4" aria-hidden="true" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-medium text-muted-foreground">{item.eyebrow}</p>
+                          {!isRead && <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />}
+                        </div>
+                        <p className="mt-0.5 text-sm font-semibold text-palette-neutral-900">{item.title}</p>
+                        {item.detail && <p className="mt-0.5 text-sm text-muted-foreground">{item.detail}</p>}
+                        <div className="mt-1.5 flex items-center gap-3">
+                          <p className="text-xs text-palette-neutral-400">{formatTime(item.timestamp)}</p>
+                          {item.action && (
+                            <Link
+                              to={item.action.to}
+                              className="text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:underline"
+                            >
+                              {item.action.label}
+                            </Link>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   )
 }
+

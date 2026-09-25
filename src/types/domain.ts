@@ -16,13 +16,20 @@ export interface Opening {
 
 export type CandidateStage = 'Applied' | 'AI Screened' | 'HM Review' | 'Interview' | 'Final' | 'Offer'
 
-/** The five official criteria configured for a role. Persistent grounding — never edited by exploration. */
+/**
+ * Every criterion this prototype can score evidence against. The first five are the default
+ * Senior Product Designer set; the rest are the catalog "+ Add criterion" can add to a role —
+ * configurable, but with no candidate evidence recorded against them until that happens.
+ */
 export type CriterionKey =
   | 'enterpriseSaas'
   | 'complexWorkflows'
   | 'aiProductExperience'
   | 'designSystems'
   | 'leadership'
+  | 'communicationSkills'
+  | 'crossFunctionalCollaboration'
+  | 'mentorship'
 
 export type CriterionPriority = 'High' | 'Medium'
 
@@ -30,6 +37,8 @@ export interface HiringCriterion {
   key: CriterionKey
   name: string
   priority: CriterionPriority
+  /** What Copilot/AI screening looks for when scoring this criterion. */
+  description?: string
 }
 
 /**
@@ -50,7 +59,7 @@ export type RecommendationLabel = 'Strong match' | 'Good match' | 'Potential mat
 export type WaitingOn = 'priya' | 'other'
 
 /** Where a candidate's application came from — lets Priya filter by acquisition channel. */
-export type CandidateSource = 'LinkedIn' | 'Career site' | 'Referral' | 'Agency'
+export type CandidateSource = 'LinkedIn' | 'Career site' | 'Referral' | 'Agency' | 'Manual' | 'CSV Import'
 
 export interface Candidate {
   id: string
@@ -70,6 +79,10 @@ export interface Candidate {
   /** The "Why <name>?" narrative, when the prototype data defines one. */
   summary?: string
   notableGap?: string
+  /** Only set for candidates entered through Add Candidate / CSV Import — the named prototype records don't carry contact info. */
+  email?: string
+  phone?: string
+  notes?: string
 
   /** Flagged on hold — stays in its current stage, never a separate pipeline column. */
   hold?: boolean
@@ -100,10 +113,27 @@ export interface CandidateOverride {
 
 export type FilterSource = 'manual' | 'ai'
 
-export interface CandidateFilter {
+/**
+ * One active lens on the Candidates table — AI-applied (via Copilot) and manually-applied filters
+ * are the exact same type, live in the same store array, and render as the same chip list, so
+ * "Priya sets Experience manually, Copilot adds an AI criterion filter, Priya removes Experience"
+ * all operate on one shared state instead of two parallel filtering systems.
+ */
+export type CandidateFilter =
+  | { id: string; label: string; source: FilterSource; kind: 'criterion'; criterionKey: CriterionKey; minStrength: EvidenceStrength }
+  | { id: string; label: string; source: FilterSource; kind: 'stage'; stage: CandidateStage }
+  | { id: string; label: string; source: FilterSource; kind: 'recommendation'; recommendation: RecommendationLabel }
+  | { id: string; label: string; source: FilterSource; kind: 'experience'; minExperienceYears: number }
+  | { id: string; label: string; source: FilterSource; kind: 'location'; location: string }
+  | { id: string; label: string; source: FilterSource; kind: 'candidateSource'; candidateSource: CandidateSource }
+  /** In Interview and stalled waiting on someone's feedback — what "What's blocking this role? / Show them" highlights. */
+  | { id: string; label: string; source: FilterSource; kind: 'stalled' }
+
+/** One real, timestamped event on a candidate's history — logged by the store itself whenever a
+ * mutation runs, so manual actions and the identical Copilot action produce the same entry. */
+export interface ActivityEvent {
   id: string
-  label: string
-  source: FilterSource
-  criterionKey: CriterionKey
-  minStrength: EvidenceStrength
+  candidateId: string
+  timestamp: number
+  message: string
 }

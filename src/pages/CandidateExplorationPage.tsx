@@ -1,27 +1,28 @@
 import * as Dialog from '@radix-ui/react-dialog'
-import { Search, X } from 'lucide-react'
+import { Download, Plus, Search, SlidersHorizontal, Sparkles, Star, Upload, X } from 'lucide-react'
 import { useState } from 'react'
 import { useParams } from 'react-router-dom'
+import { AddCandidateDialog } from '../components/candidates/AddCandidateDialog'
+import { AdvancedFiltersDrawer } from '../components/candidates/AdvancedFiltersDrawer'
 import { BulkMoveStageDialog } from '../components/candidates/BulkMoveStageDialog'
 import { CandidatesTable, type SortDirection, type SortKey } from '../components/candidates/CandidatesTable'
 import { ComparisonView } from '../components/candidates/ComparisonView'
 import { FilterChips } from '../components/candidates/FilterChips'
+import { ImportCsvDialog } from '../components/candidates/ImportCsvDialog'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { recommendedCandidateIds } from '../data/candidates'
 import { getCriteria } from '../data/criteria'
 import { getOpening } from '../data/openings'
 import { buildComparisonSummary } from '../lib/comparison'
+import { candidatesToCsv, downloadTextFile } from '../lib/exportCsv'
 import { candidateMatchesFilters } from '../lib/evidence'
+import { cn } from '../lib/cn'
 import { STAGE_ORDER } from '../lib/stage'
 import { useEffectiveCandidatesForOpening } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
-import type { Candidate, CandidateSource, CandidateStage, OpeningId } from '../types/domain'
+import type { Candidate, OpeningId } from '../types/domain'
 
-type ViewFilter = 'all' | 'recommended' | CandidateStage
-type SourceFilter = 'all' | CandidateSource
 const MAX_COMPARE = 3
-const STAGE_OPTIONS: CandidateStage[] = ['Applied', 'AI Screened', 'HM Review', 'Interview', 'Final', 'Offer']
-const SOURCE_OPTIONS: CandidateSource[] = ['LinkedIn', 'Career site', 'Referral', 'Agency']
 const DEFAULT_DIRECTION: Record<SortKey, SortDirection> = { name: 'asc', score: 'desc', stage: 'asc', updated: 'asc' }
 
 function parseUpdatedDays(label?: string): number {
@@ -49,9 +50,9 @@ export function CandidateExplorationPage() {
   const clearFilters = useAppStore((state) => state.clearFilters)
   const holdCandidates = useAppStore((state) => state.holdCandidates)
   const rejectCandidates = useAppStore((state) => state.rejectCandidates)
+  const openCopilot = useAppStore((state) => state.openCopilot)
   const pool = useEffectiveCandidatesForOpening(opening?.hasDetailedData ? (opening.id as OpeningId) : undefined)
-  const [viewFilter, setViewFilter] = useState<ViewFilter>('all')
-  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all')
+  const [recommendedOnly, setRecommendedOnly] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
@@ -60,6 +61,9 @@ export function CandidateExplorationPage() {
   const [moveStageOpen, setMoveStageOpen] = useState(false)
   const [holdDialogOpen, setHoldDialogOpen] = useState(false)
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
 
   if (!opening || !opening.hasDetailedData) {
     return (
@@ -77,21 +81,14 @@ export function CandidateExplorationPage() {
   const isSearching = searchQuery.trim().length > 0
   const query = searchQuery.trim().toLowerCase()
 
-  const baseCandidates = hasFilters
-    ? pool
-    : viewFilter === 'all'
-      ? pool
-      : viewFilter === 'recommended'
-        ? pool.filter((candidate) => recommendedCandidateIds.includes(candidate.id))
-        : pool.filter((candidate) => candidate.stage === viewFilter)
+  const baseCandidates = recommendedOnly ? pool.filter((candidate) => recommendedCandidateIds.includes(candidate.id)) : pool
   const filtered = baseCandidates.filter((candidate) => candidateMatchesFilters(candidate, filters))
   const searched = isSearching
     ? filtered.filter((candidate) =>
         [candidate.name, candidate.currentRole, candidate.currentCompany].some((value) => value?.toLowerCase().includes(query)),
       )
     : filtered
-  const sourceFiltered = sourceFilter === 'all' ? searched : searched.filter((candidate) => candidate.source === sourceFilter)
-  const visibleCandidates = sortCandidates(sourceFiltered, sortKey, sortDirection)
+  const visibleCandidates = sortCandidates(searched, sortKey, sortDirection)
 
   function handleSort(key: SortKey) {
     if (sortKey === key) {
@@ -113,75 +110,109 @@ export function CandidateExplorationPage() {
   const selectedCandidates = selectedIds.map((sid) => pool.find((candidate) => candidate.id === sid)).filter((c): c is Candidate => c !== undefined)
   const compareCandidates = selectedCandidates.slice(0, MAX_COMPARE)
 
+  function handleExport(scope: 'all' | 'selected') {
+    const rows = scope === 'selected' ? selectedCandidates : visibleCandidates
+    downloadTextFile(`${opening!.title.toLowerCase().replace(/\s+/g, '-')}-candidates.csv`, candidatesToCsv(rows))
+  }
+
   return (
-    <div className="space-y-4 p-8">
+    <div className="space-y-3 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-1 flex-wrap items-center gap-3">
-          <div className="relative w-full min-w-[220px] max-w-sm">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-palette-neutral-400" aria-hidden="true" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search candidates…"
-              aria-label="Search candidates"
-              className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm text-palette-neutral-900 placeholder:text-palette-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40"
-            />
-          </div>
-          <span className="text-sm text-muted-foreground">
+        <div>
+          <h1 className="text-lg font-semibold text-palette-neutral-900">Candidates</h1>
+          <p className="text-sm text-muted-foreground">
             {visibleCandidates.length} of {opening.totalCandidates}
-          </span>
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <select
-            value={sourceFilter}
-            onChange={(event) => setSourceFilter(event.target.value as SourceFilter)}
-            aria-label="Filter by source"
-            className="rounded-lg border border-border bg-card py-2 pl-2.5 pr-8 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40"
+          <button
+            type="button"
+            onClick={() => handleExport('all')}
+            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <option value="all">All sources</option>
-            {SOURCE_OPTIONS.map((source) => (
-              <option key={source} value={source}>
-                {source}
-              </option>
-            ))}
-          </select>
-          <select
-            value={viewFilter}
-            onChange={(event) => setViewFilter(event.target.value as ViewFilter)}
-            disabled={hasFilters}
-            aria-label="Filter candidates"
-            className="rounded-lg border border-border bg-card py-2 pl-2.5 pr-8 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
+            <Download className="h-4 w-4" aria-hidden="true" />
+            Export
+          </button>
+          <button
+            type="button"
+            onClick={() => setImportOpen(true)}
+            className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <optgroup label="Filter">
-              <option value="all">All candidates</option>
-              <option value="recommended">Recommended</option>
-            </optgroup>
-            <optgroup label="By stage">
-              {STAGE_OPTIONS.map((stage) => (
-                <option key={stage} value={stage}>
-                  {stage}
-                </option>
-              ))}
-            </optgroup>
-          </select>
+            <Upload className="h-4 w-4" aria-hidden="true" />
+            Import
+          </button>
+          <button
+            type="button"
+            onClick={() => setAddOpen(true)}
+            className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow-sm transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            <Plus className="h-4 w-4" aria-hidden="true" />
+            Add candidate
+          </button>
         </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative w-full min-w-[220px] max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-palette-neutral-400" aria-hidden="true" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search candidates…"
+            aria-label="Search candidates"
+            className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm text-palette-neutral-900 placeholder:text-palette-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40"
+          />
+        </div>
+        <button
+          type="button"
+          onClick={() => setFiltersOpen(true)}
+          className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+          Filters
+          {hasFilters && <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-semibold text-primary-foreground">{filters.length}</span>}
+        </button>
+        <button
+          type="button"
+          onClick={() => setRecommendedOnly((current) => !current)}
+          className={cn(
+            'flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+            recommendedOnly ? 'border-palette-brand-300 bg-accent text-accent-foreground' : 'border-border text-foreground hover:bg-muted',
+          )}
+        >
+          <Star className="h-4 w-4" aria-hidden="true" />
+          Recommended
+        </button>
       </div>
 
       <FilterChips />
 
       {visibleCandidates.length === 0 ? (
         <div className="rounded-xl border border-border bg-card p-8 text-center">
-          <p className="text-sm font-medium text-palette-neutral-700">No candidates match the current view</p>
-          {hasFilters && (
+          <p className="text-sm font-medium text-palette-neutral-700">No candidates match {hasFilters || recommendedOnly ? 'these filters' : 'this search'}.</p>
+          <div className="mt-3 flex items-center justify-center gap-4">
+            {(hasFilters || recommendedOnly) && (
+              <button
+                type="button"
+                onClick={() => {
+                  clearFilters()
+                  setRecommendedOnly(false)
+                }}
+                className="text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Clear filters
+              </button>
+            )}
             <button
               type="button"
-              onClick={clearFilters}
-              className="mt-3 text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={openCopilot}
+              className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              Clear filters
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+              Ask Copilot to broaden this search
             </button>
-          )}
+          </div>
         </div>
       ) : (
         <div className="pb-16">
@@ -229,6 +260,13 @@ export function CandidateExplorationPage() {
             className="text-sm font-medium text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             Hold
+          </button>
+          <button
+            type="button"
+            onClick={() => handleExport('selected')}
+            className="text-sm font-medium text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            Export
           </button>
           <button
             type="button"
@@ -295,6 +333,10 @@ export function CandidateExplorationPage() {
           setSelectedIds([])
         }}
       />
+
+      <AdvancedFiltersDrawer open={filtersOpen} onOpenChange={setFiltersOpen} openingId={id} pool={pool} />
+      <AddCandidateDialog open={addOpen} onOpenChange={setAddOpen} openingId={id} openingTitle={opening.title} />
+      <ImportCsvDialog open={importOpen} onOpenChange={setImportOpen} openingId={id} openingTitle={opening.title} />
     </div>
   )
 }

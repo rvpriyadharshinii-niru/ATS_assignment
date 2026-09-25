@@ -1,20 +1,18 @@
-import { Bell, Briefcase, Home, Settings, Sparkles, Users } from 'lucide-react'
+import { Bell, Briefcase, Home, Settings, Sparkles } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { cn } from '../../lib/cn'
 
-const PRIMARY_OPENING = 'senior-product-designer'
-
-function isOpeningsRoot(pathname: string) {
-  return pathname === '/openings' || /^\/openings\/[^/]+$/.test(pathname)
-}
-function isCandidatesRoute(pathname: string) {
-  return pathname.endsWith('/candidates') || /^\/candidates\/[^/]+$/.test(pathname)
+// Sidebar = location in the PRODUCT. A role workspace's own tabs (Candidates,
+// Pipeline, Interviews, Hiring Criteria) live one level down and never surface
+// here — entering any of them, or a candidate reached from one, must NOT move
+// the sidebar's selection off "My Openings". Only the role tab nav changes.
+function isMyOpeningsRoute(pathname: string) {
+  return pathname === '/openings' || pathname.startsWith('/openings/') || pathname.startsWith('/candidates/')
 }
 
 const MAIN_ITEMS = [
   { to: '/', label: 'Home', icon: Home, isActive: (p: string) => p === '/' },
-  { to: '/openings', label: 'My Openings', icon: Briefcase, isActive: isOpeningsRoot },
-  { to: `/openings/${PRIMARY_OPENING}/candidates`, label: 'Candidates', icon: Users, isActive: isCandidatesRoute },
+  { to: '/openings', label: 'My Openings', icon: Briefcase, isActive: isMyOpeningsRoute },
 ]
 
 const ACTIVITY_ITEMS = [{ to: '/notifications', label: 'Notifications', icon: Bell, isActive: (p: string) => p === '/notifications' }]
@@ -81,7 +79,7 @@ export function Sidebar() {
           ))}
         </div>
 
-        <SectionLabel>Intelligence</SectionLabel>
+        <SectionLabel>AI</SectionLabel>
         <div className="ml-3 space-y-0.5">
           <NavRow to="/copilot" label="Copilot" Icon={Sparkles} active={pathname === '/copilot'} />
         </div>

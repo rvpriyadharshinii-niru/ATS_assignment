@@ -1,8 +1,20 @@
 import { create } from 'zustand'
-import { applyCandidateOverride, candidates, getCandidate } from '../data/candidates'
+import { addManualCandidate, applyCandidateOverride, candidates, getCandidate, slugifyCandidateId } from '../data/candidates'
+import { addCriterionToOpening, removeCriterionFromOpening, setCriterionPriority as setCriterionPriorityData } from '../data/criteria'
 import { seedConversationOrder, seedConversationsById } from '../data/seedConversations'
 import { resolveOpeningOverride, runCopilotQuery } from '../copilot/engine'
-import type { Candidate, CandidateFilter, CandidateOverride, CandidateStage, OpeningId } from '../types/domain'
+import type {
+  ActivityEvent,
+  Candidate,
+  CandidateFilter,
+  CandidateOverride,
+  CandidateSource,
+  CandidateStage,
+  CriterionKey,
+  CriterionPriority,
+  HiringCriterion,
+  OpeningId,
+} from '../types/domain'
 import type { CopilotConversation, CopilotContext, CopilotResult, CopilotScopeLevel, CopilotTurn, PendingAction } from '../types/copilot'
 
 interface EmailRecord {
@@ -12,6 +24,19 @@ interface EmailRecord {
   subject: string
   body: string
   sentAt: number
+}
+
+/** The fields Add Candidate / CSV Import collect. */
+export interface NewCandidateInput {
+  name: string
+  openingId: OpeningId
+  email?: string
+  phone?: string
+  currentTitle?: string
+  currentCompany?: string
+  location?: string
+  source?: CandidateSource
+  notes?: string
 }
 
 interface AppState {
@@ -28,6 +53,10 @@ interface AppState {
   /** The single source of truth for every candidate's current stage/hold/reject/etc, layered on top of the static base data. */
   candidateOverrides: Record<string, CandidateOverride>
   sentEmails: EmailRecord[]
+  /** Every real, timestamped event across every candidate — manual actions and identical Copilot actions log here the same way. */
+  activityLog: ActivityEvent[]
+  /** Bumped on every criteria mutation so components reading getCriteria() re-render — the criteria lists themselves are mutated in place in data/criteria.ts. */
+  criteriaVersion: number
 
   setSelectedOpening: (openingId: OpeningId | null) => void
   setSelectedCandidate: (candidateId: string | null, openingId: OpeningId | null) => void
@@ -49,6 +78,11 @@ interface AppState {
   rejectCandidates: (candidateIds: string[]) => void
   finalizeCandidate: (candidateId: string) => void
   sendEmail: (candidateId: string, subject: string, body: string) => void
+  logActivity: (candidateId: string, message: string) => void
+  addCandidate: (input: NewCandidateInput) => Candidate
+  setCriterionPriority: (openingId: OpeningId, criterionKey: CriterionKey, priority: CriterionPriority) => void
+  addCriterion: (openingId: OpeningId, criterion: HiringCriterion) => void
+  removeCriterion: (openingId: OpeningId, criterionKey: CriterionKey) => void
 
   resolveCopilotTurn: (turnId: string, result: CopilotResult) => void
   confirmPendingAction: (turnId: string, action: PendingAction) => void
@@ -71,6 +105,7 @@ function conversationTitleFrom(query: string): string {
 function candidateIdsFromAction(action: PendingAction): string[] {
   if (action.kind === 'finalize') return [action.candidateId]
   if (action.kind === 'batch') return action.actions.flatMap(candidateIdsFromAction)
+  if (action.kind === 'setCriterionPriority') return []
   return action.candidateIds
 }
 
@@ -81,6 +116,7 @@ function extractCandidateIds(result: CopilotResult): string[] {
   if (result.kind === 'reviewQueue') return result.items.map((item) => item.candidateId)
   if (result.kind === 'actionComplete' && result.candidateIds) return result.candidateIds
   if (result.kind === 'confirm') return candidateIdsFromAction(result.action)
+  if (result.kind === 'pipelineDiagnosis') return [...result.waitingOnYou, ...result.waitingOnOthers].map((entry) => entry.candidateId)
   return []
 }
 
@@ -94,6 +130,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   activeConversationId: null,
   candidateOverrides: {},
   sentEmails: [],
+  activityLog: [],
+  criteriaVersion: 0,
 
   setSelectedOpening: (openingId) =>
     set((state) => {
@@ -191,9 +229,17 @@ export const useAppStore = create<AppState>((set, get) => ({
       activeConversationId: conversationId,
       ...(ignorePageContext ? {} : { copilotExpanded: true }),
     })
+
+    // Reversible view operations never need confirmation (per the operating-layer model): when
+    // Copilot is used from a page-scoped context (the docked panel, not the standalone cross-role
+    // workspace), an applied filter takes effect immediately instead of waiting for a click-through —
+    // Priya is already looking at the table/board it would apply to.
+    if (!ignorePageContext && result.kind === 'candidateList' && result.appliedFilter) {
+      get().addFilter(result.appliedFilter)
+    }
   },
 
-  advanceCandidates: (candidateIds, toStage) =>
+  advanceCandidates: (candidateIds, toStage) => {
     set((state) => {
       const overrides = { ...state.candidateOverrides }
       for (const id of candidateIds) {
@@ -212,33 +258,44 @@ export const useAppStore = create<AppState>((set, get) => ({
         }
       }
       return { candidateOverrides: overrides }
-    }),
+    })
+    for (const id of candidateIds) {
+      const fromStage = getCandidate(id)?.stage
+      get().logActivity(id, fromStage && fromStage !== toStage ? `Moved ${fromStage} → ${toStage}` : `Stage set to ${toStage}`)
+    }
+  },
 
-  holdCandidates: (candidateIds) =>
+  holdCandidates: (candidateIds) => {
     set((state) => {
       const overrides = { ...state.candidateOverrides }
       for (const id of candidateIds) {
         overrides[id] = { ...(overrides[id] ?? {}), hold: true }
       }
       return { candidateOverrides: overrides }
-    }),
+    })
+    for (const id of candidateIds) get().logActivity(id, 'Flagged on hold')
+  },
 
-  rejectCandidates: (candidateIds) =>
+  rejectCandidates: (candidateIds) => {
     set((state) => {
       const overrides = { ...state.candidateOverrides }
       for (const id of candidateIds) {
         overrides[id] = { ...(overrides[id] ?? {}), rejected: true, hold: false }
       }
       return { candidateOverrides: overrides }
-    }),
+    })
+    for (const id of candidateIds) get().logActivity(id, 'Rejected — removed from the active pipeline')
+  },
 
-  finalizeCandidate: (candidateId) =>
+  finalizeCandidate: (candidateId) => {
     set((state) => ({
       candidateOverrides: {
         ...state.candidateOverrides,
         [candidateId]: { ...(state.candidateOverrides[candidateId] ?? {}), selected: true },
       },
-    })),
+    }))
+    get().logActivity(candidateId, 'Marked as the selected candidate')
+  },
 
   sendEmail: (candidateId, subject, body) => {
     const candidate = getCandidate(candidateId)
@@ -248,6 +305,52 @@ export const useAppStore = create<AppState>((set, get) => ({
         { id: `${Date.now()}-${state.sentEmails.length}`, candidateId, to: candidate?.name ?? candidateId, subject, body, sentAt: Date.now() },
       ],
     }))
+    get().logActivity(candidateId, `Email sent: "${subject}"`)
+  },
+
+  logActivity: (candidateId, message) =>
+    set((state) => ({
+      activityLog: [{ id: `act-${Date.now()}-${Math.round(Math.random() * 1e5)}`, candidateId, timestamp: Date.now(), message }, ...state.activityLog],
+    })),
+
+  addCandidate: (input) => {
+    const id = slugifyCandidateId(input.name)
+    const candidate: Candidate = {
+      id,
+      name: input.name,
+      openingId: input.openingId,
+      stage: 'Applied',
+      evidence: [],
+      currentRole: input.currentTitle,
+      currentCompany: input.currentCompany,
+      location: input.location,
+      email: input.email,
+      phone: input.phone,
+      notes: input.notes,
+      source: input.source ?? 'Manual',
+      updatedLabel: 'Today',
+    }
+    addManualCandidate(candidate)
+    // Registering an (empty) override is the reactivity trigger: it gives candidateOverrides a new
+    // reference so every selector subscribed to it re-runs and picks up the mutated candidates array.
+    set((state) => ({ candidateOverrides: { ...state.candidateOverrides, [id]: state.candidateOverrides[id] ?? {} } }))
+    get().logActivity(id, input.source === 'CSV Import' ? 'Imported via CSV' : 'Candidate added manually')
+    return candidate
+  },
+
+  setCriterionPriority: (openingId, criterionKey, priority) => {
+    setCriterionPriorityData(openingId, criterionKey, priority)
+    set((state) => ({ criteriaVersion: state.criteriaVersion + 1 }))
+  },
+
+  addCriterion: (openingId, criterion) => {
+    addCriterionToOpening(openingId, criterion)
+    set((state) => ({ criteriaVersion: state.criteriaVersion + 1 }))
+  },
+
+  removeCriterion: (openingId, criterionKey) => {
+    removeCriterionFromOpening(openingId, criterionKey)
+    set((state) => ({ criteriaVersion: state.criteriaVersion + 1 }))
   },
 
   resolveCopilotTurn: (turnId, result) =>
@@ -293,11 +396,15 @@ export const useAppStore = create<AppState>((set, get) => ({
       const names = action.candidateIds.map((id) => getCandidate(id)?.name ?? id)
       return { message: `${names.join(' and ')} rejected and removed from the active pipeline.`, candidateIds: action.candidateIds }
     }
-    get().finalizeCandidate(action.candidateId)
-    return {
-      message: `${getCandidate(action.candidateId)?.name} marked as the selected candidate. Next: prepare offer process.`,
-      candidateIds: [action.candidateId],
+    if (action.kind === 'finalize') {
+      get().finalizeCandidate(action.candidateId)
+      return {
+        message: `${getCandidate(action.candidateId)?.name} marked as the selected candidate. Next: prepare offer process.`,
+        candidateIds: [action.candidateId],
+      }
     }
+    get().setCriterionPriority(action.openingId, action.criterionKey, action.priority)
+    return { message: `${action.criterionName} is now ${action.priority} priority.`, candidateIds: [] }
   },
 
   cancelPendingAction: (turnId) => get().resolveCopilotTurn(turnId, { kind: 'text', message: 'Cancelled — no changes were made.' }),

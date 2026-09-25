@@ -24,7 +24,8 @@ export const homeInsights: HomeInsight[] = [
     headline: '2 interviews are waiting on feedback',
     openingId: 'senior-product-designer',
     openingTitle: 'Senior Product Designer',
-    detail: 'Feedback is currently blocking the next step for two candidates.',
+    detail: 'Feedback is currently blocking the next step for two candidates. Oldest waiting: 5d.',
+    action: { label: 'Review', to: '/openings/senior-product-designer/interviews' },
   },
   {
     id: 'pm-decision-waiting',
@@ -32,5 +33,6 @@ export const homeInsights: HomeInsight[] = [
     openingId: 'product-manager',
     openingTitle: 'Product Manager',
     detail: 'A finalist has completed the current evaluation stage and is awaiting a decision.',
+    action: { label: 'Review finalist', to: '/candidates/aarav-sethi' },
   },
 ]

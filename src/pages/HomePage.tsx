@@ -1,7 +1,8 @@
-import { Briefcase, Calendar, CircleAlert, MessageSquare, Search, Users } from 'lucide-react'
+import { Briefcase, Calendar, ChevronRight, CircleAlert, MessageSquare, Search, Users } from 'lucide-react'
 import { useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { InsightCard } from '../components/home/InsightCard'
-import { OpeningCard } from '../components/openings/OpeningCard'
+import { PriorityTag } from '../components/openings/OpeningCard'
 import { globalMetrics, openings } from '../data/openings'
 import { homeInsights } from '../data/insights'
 import { usePipelineStages } from '../store/candidateSelectors'
@@ -29,7 +30,7 @@ export function HomePage() {
   }, [setSelectedOpening])
 
   return (
-    <div className="space-y-6 p-8">
+    <div className="space-y-5 p-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight text-palette-neutral-900">Good morning, Priya</h1>
         <p className="mt-1 text-muted-foreground">Here&rsquo;s what needs your attention today.</p>
@@ -102,10 +103,47 @@ export function HomePage() {
 
       <section>
         <h2 className="text-sm font-semibold text-palette-neutral-900">My Openings</h2>
-        <div className="mt-3 divide-y divide-border rounded-xl border border-border bg-card shadow-xs">
-          {openings.map((opening) => (
-            <OpeningCard key={opening.id} opening={opening} compact />
-          ))}
+        <div className="mt-3 overflow-hidden rounded-xl border border-border bg-card shadow-xs">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="border-b border-border bg-palette-brand-100/50 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">
+                <th className="px-4 py-2.5">Role</th>
+                <th className="px-4 py-2.5">Candidates</th>
+                <th className="px-4 py-2.5">Needs attention</th>
+                <th className="px-4 py-2.5">Priority</th>
+                <th className="px-4 py-2.5">Status</th>
+                <th className="w-10 px-4 py-2.5" />
+              </tr>
+            </thead>
+            <tbody>
+              {openings.map((opening) => (
+                <tr key={opening.id} className="border-b border-border last:border-0 hover:bg-muted/60">
+                  <td className="px-4 py-3">
+                    <Link to={`/openings/${opening.id}`} className="font-semibold text-palette-neutral-900 hover:text-primary focus-visible:outline-none focus-visible:underline">
+                      {opening.title}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3 text-foreground">{opening.totalCandidates}</td>
+                  <td className="px-4 py-3">
+                    {opening.needsAttention > 0 ? (
+                      <span className="font-medium text-palette-warning-700">{opening.needsAttention}</span>
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <PriorityTag priority={opening.priority} />
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">{opening.situationSummary}</td>
+                  <td className="px-4 py-3 text-right">
+                    <Link to={`/openings/${opening.id}`} aria-label={`Open ${opening.title}`}>
+                      <ChevronRight className="ml-auto h-4 w-4 text-palette-neutral-300" aria-hidden="true" />
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </section>
     </div>

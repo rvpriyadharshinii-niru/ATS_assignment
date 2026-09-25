@@ -388,6 +388,30 @@ export function getCandidate(candidateId: string | undefined): Candidate | undef
   return candidates.find((candidate) => candidate.id === candidateId)
 }
 
+/**
+ * Appends a candidate entered through Add Candidate or CSV Import to the live pool, in place —
+ * every reader above (getCandidate, getCandidatesForOpening, the `candidates` array itself) picks
+ * it up on its next call with no separate cache, exactly like the static seed records.
+ */
+export function addManualCandidate(candidate: Candidate): void {
+  candidates.push(candidate)
+}
+
+export function slugifyCandidateId(name: string): string {
+  const base = name
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+  let id = base || 'candidate'
+  let suffix = 1
+  while (getCandidate(id)) {
+    suffix += 1
+    id = `${base}-${suffix}`
+  }
+  return id
+}
+
 /** The three candidates surfaced by "Who should I review?" / the Home insight. */
 export const recommendedCandidateIds = ['ananya-rao', 'rahul-mehta', 'meera-shah']
 

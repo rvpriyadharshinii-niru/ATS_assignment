@@ -49,8 +49,8 @@ export function CopilotPanel() {
   }
 
   return (
-    <div className="fixed bottom-6 right-6 top-6 z-50 flex w-[440px] max-w-[calc(100vw-3rem)] flex-col rounded-xl border border-border bg-card shadow-xl">
-      <header className="flex items-center justify-between gap-2 rounded-t-xl border-b border-border bg-palette-brand-100/40 px-4 py-3.5">
+    <div className="flex h-full w-full flex-col bg-card">
+      <header className="flex items-center justify-between gap-2 border-b border-border bg-palette-brand-100/40 px-4 py-3.5">
         <div className="flex min-w-0 items-center gap-2">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[image:var(--gradient-brand_wash)] text-background shadow-sm">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
