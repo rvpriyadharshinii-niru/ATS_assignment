@@ -40,7 +40,7 @@ export function OpeningCard({ opening, compact = false }: { opening: Opening; co
   return (
     <Link
       to={`/openings/${opening.id}`}
-      className="group block rounded-xl border border-border bg-card p-5 transition-colors hover:border-palette-brand-250 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      className="group block rounded-xl border border-border bg-card p-5 shadow-xs transition-colors hover:border-palette-brand-250 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
     >
       <div className="flex items-start justify-between gap-3">
         <div>

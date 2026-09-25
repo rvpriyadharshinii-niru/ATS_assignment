@@ -42,7 +42,7 @@ export function CandidateEvidencePage() {
         {opening?.title ?? 'Candidates'}
       </Link>
 
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h1 className="text-xl font-semibold tracking-tight text-palette-neutral-900">{candidate.name}</h1>
@@ -67,7 +67,7 @@ export function CandidateEvidencePage() {
         {candidate.summary && <p className="mt-3 text-sm leading-relaxed text-foreground">{candidate.summary}</p>}
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-6">
+      <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
         <h2 className="text-sm font-semibold text-palette-neutral-900">Criteria &amp; evidence</h2>
         <div className="mt-3">
           <CriterionEvidenceList criteria={criteria} evidence={candidate.evidence} />

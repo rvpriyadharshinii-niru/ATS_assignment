@@ -79,8 +79,10 @@ export function Sidebar() {
 
   return (
     <aside className="flex h-svh w-60 shrink-0 flex-col border-r border-border bg-card">
-      <div className="flex h-14 items-center gap-2 border-b border-border px-4">
-        <span className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-sm font-semibold text-primary-foreground">H</span>
+      <div className="flex h-16 items-center gap-2.5 border-b border-border px-4">
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[image:var(--gradient-brand_wash)] text-sm font-semibold text-background shadow-sm">
+          H
+        </span>
         <span className="text-sm font-semibold text-palette-neutral-900">Hiring Workspace</span>
       </div>
 

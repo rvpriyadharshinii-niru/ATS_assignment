@@ -5,7 +5,7 @@ export function SettingsPage() {
     <div>
       <PageHeader title="Settings" description="Account and profile information." />
       <div className="p-8">
-        <div className="max-w-md rounded-xl border border-border bg-card p-6">
+        <div className="max-w-md rounded-xl border border-border bg-card p-6 shadow-xs">
           <div className="flex items-center gap-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-full bg-palette-brand-100 text-base font-semibold text-palette-brand-700">
               P

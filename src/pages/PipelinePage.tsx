@@ -1,3 +1,5 @@
+import { ChevronRight } from 'lucide-react'
+import { Fragment } from 'react'
 import { useParams } from 'react-router-dom'
 import { getOpening } from '../data/openings'
 import { getPipelineStages } from '../data/pipeline'
@@ -20,26 +22,38 @@ export function PipelinePage() {
     )
   }
 
-  const maxCount = Math.max(...stages.map((stage) => stage.count), 1)
+  const entryCount = stages[0].count
 
   return (
-    <div className="p-8">
-      <div className="rounded-xl border border-border bg-card p-6">
+    <div className="space-y-6 p-8">
+      <div>
         <h2 className="text-sm font-semibold text-palette-neutral-900">Stage progression</h2>
-        <div className="mt-5 grid grid-cols-6 gap-3">
-          {stages.map((stage) => (
-            <div key={stage.stage} className="text-center">
-              <div className="flex h-24 items-end justify-center rounded-lg bg-palette-neutral-100">
-                <div
-                  className="w-full rounded-t-lg bg-palette-brand-300"
-                  style={{ height: `${Math.max((stage.count / maxCount) * 100, stage.count > 0 ? 6 : 0)}%` }}
-                />
+        <div className="mt-3 flex items-stretch gap-1.5">
+          {stages.map((stage, index) => (
+            <Fragment key={stage.stage}>
+              <div className="min-w-0 flex-1 rounded-xl border border-border bg-card p-4 shadow-xs">
+                <p className="truncate text-xs font-medium text-muted-foreground">{stage.stage}</p>
+                <p className="mt-1 text-2xl font-semibold text-palette-neutral-900">{stage.count}</p>
+                <div className="mt-3 h-1.5 rounded-full bg-palette-neutral-100">
+                  <div
+                    className="h-1.5 rounded-full bg-primary"
+                    style={{ width: `${Math.max((stage.count / entryCount) * 100, stage.count > 0 ? 4 : 0)}%` }}
+                  />
+                </div>
               </div>
-              <p className="mt-2 text-lg font-semibold text-palette-neutral-900">{stage.count}</p>
-              <p className="text-xs text-muted-foreground">{stage.stage}</p>
-            </div>
+              {index < stages.length - 1 && (
+                <div className="flex shrink-0 items-center text-palette-neutral-300">
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                </div>
+              )}
+            </Fragment>
           ))}
         </div>
+      </div>
+
+      <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+        <h2 className="text-sm font-semibold text-palette-neutral-900">Current status</h2>
+        <p className="mt-2 text-sm text-foreground">{opening.situationSummary}</p>
       </div>
     </div>
   )

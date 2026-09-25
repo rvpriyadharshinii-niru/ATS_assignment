@@ -28,12 +28,12 @@ export function HiringCriteriaPage() {
   return (
     <div className="grid grid-cols-3 gap-6 p-8">
       <div className="col-span-2 space-y-6">
-        <section className="rounded-xl border border-border bg-card p-6">
+        <section className="rounded-xl border border-border bg-card p-6 shadow-xs">
           <h2 className="text-sm font-semibold text-palette-neutral-900">Job description</h2>
           <p className="mt-2 text-sm leading-relaxed text-foreground">{SPD_DESCRIPTION}</p>
         </section>
 
-        <section className="rounded-xl border border-border bg-card p-6">
+        <section className="rounded-xl border border-border bg-card p-6 shadow-xs">
           <h2 className="text-sm font-semibold text-palette-neutral-900">Configured hiring criteria</h2>
           <p className="mt-1 text-sm text-muted-foreground">
             These are the persistent criteria Copilot uses by default when evaluating candidates for this role.
@@ -52,7 +52,7 @@ export function HiringCriteriaPage() {
       </div>
 
       <div className="space-y-6">
-        <section className="rounded-xl border border-palette-brand-200 bg-palette-brand-100 p-5">
+        <section className="rounded-xl border border-palette-brand-200 bg-palette-brand-100 p-5 shadow-xs">
           <h2 className="text-sm font-semibold text-palette-brand-700">Temporary exploration lens</h2>
           <p className="mt-1 text-sm text-palette-brand-700/80">
             Priya can temporarily change how Copilot prioritizes candidates through conversation or manual filters. This never

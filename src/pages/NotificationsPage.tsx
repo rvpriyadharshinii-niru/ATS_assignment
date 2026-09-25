@@ -6,7 +6,7 @@ export function NotificationsPage() {
     <div>
       <PageHeader title="Notifications" description="Hiring updates across your openings." />
       <div className="p-8">
-        <div className="divide-y divide-border rounded-xl border border-border bg-card">
+        <div className="divide-y divide-border rounded-xl border border-border bg-card shadow-xs">
           {homeInsights.map((insight) => (
             <div key={insight.id} className="px-5 py-4">
               <p className="text-xs font-medium text-muted-foreground">{insight.openingTitle}</p>
