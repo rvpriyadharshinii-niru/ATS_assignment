@@ -11,10 +11,10 @@ function useSuggestions(): string[] {
 
   if (candidateId) {
     const candidate = getCandidate(candidateId)
-    return candidate ? [`Why ${candidate.name.split(' ')[0]}?`] : []
+    return candidate ? [`Why ${candidate.name.split(' ')[0]}?`, `Move ${candidate.name.split(' ')[0]} to Interview`] : []
   }
   if (openingId) {
-    return ['Who should I review?', 'Show candidates strongest in design systems', 'Prioritize AI product experience']
+    return ['Who should I review?', 'What’s blocking this role?', 'Who are my finalists?', 'Show candidates strongest in design systems']
   }
   return []
 }
@@ -84,7 +84,7 @@ export function CopilotPanel() {
               <div key={turn.id}>
                 <p className="border-l-2 border-palette-brand-300 pl-2.5 text-sm text-muted-foreground">{turn.query}</p>
                 <div className="mt-2.5">
-                  <CopilotResultView result={turn.result} />
+                  <CopilotResultView turnId={turn.id} result={turn.result} />
                 </div>
               </div>
             ))}

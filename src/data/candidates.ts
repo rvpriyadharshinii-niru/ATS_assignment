@@ -1,4 +1,4 @@
-import type { Candidate, OpeningId } from '../types/domain'
+import type { Candidate, CandidateOverride, OpeningId } from '../types/domain'
 
 /**
  * Named candidate records for Senior Product Designer, transcribed from
@@ -225,6 +225,75 @@ export const candidates: Candidate[] = [
     ],
     notableGap: 'Not enough information to confidently rank this candidate yet.',
   },
+
+  /**
+   * Interview- and Final-stage candidates from PROTOTYPE_DATA.md sections 24 & 26.
+   * These exist to make the pipeline believable — the source data intentionally
+   * gives them a stage/status/waiting state but no full evidence profile, so we
+   * don't fabricate resume details for them.
+   */
+  {
+    id: 'nisha-verma',
+    name: 'Nisha Verma',
+    openingId: 'senior-product-designer',
+    stage: 'Interview',
+    evidence: [],
+    interviewStatus: "Waiting on Priya's feedback",
+    waitingOn: 'priya',
+    waitingDays: 5,
+  },
+  {
+    id: 'rohan-das',
+    name: 'Rohan Das',
+    openingId: 'senior-product-designer',
+    stage: 'Interview',
+    evidence: [],
+    interviewStatus: "Waiting on another interviewer's feedback",
+    waitingOn: 'other',
+    waitingDays: 4,
+  },
+  {
+    id: 'tara-menon',
+    name: 'Tara Menon',
+    openingId: 'senior-product-designer',
+    stage: 'Interview',
+    evidence: [],
+    interviewStatus: "Waiting on another interviewer's feedback",
+    waitingOn: 'other',
+    waitingDays: 4,
+  },
+  {
+    id: 'ishaan-kapoor',
+    name: 'Ishaan Kapoor',
+    openingId: 'senior-product-designer',
+    stage: 'Interview',
+    evidence: [],
+    interviewStatus: 'Interview scheduled',
+  },
+  {
+    id: 'pooja-reddy',
+    name: 'Pooja Reddy',
+    openingId: 'senior-product-designer',
+    stage: 'Interview',
+    evidence: [],
+    interviewStatus: 'Interview scheduled',
+  },
+  {
+    id: 'aditya-bose',
+    name: 'Aditya Bose',
+    openingId: 'senior-product-designer',
+    stage: 'Final',
+    evidence: [],
+    interviewStatus: 'Final evaluation complete',
+  },
+  {
+    id: 'neha-kapoor',
+    name: 'Neha Kapoor',
+    openingId: 'senior-product-designer',
+    stage: 'Final',
+    evidence: [],
+    interviewStatus: 'Final interview scheduled',
+  },
 ]
 
 export function getCandidatesForOpening(openingId: OpeningId): Candidate[] {
@@ -237,3 +306,22 @@ export function getCandidate(candidateId: string | undefined): Candidate | undef
 
 /** The three candidates surfaced by "Who should I review?" / the Home insight. */
 export const recommendedCandidateIds = ['ananya-rao', 'rahul-mehta', 'meera-shah']
+
+/**
+ * Merges a stage/hold/reject/etc. override on top of a base candidate record.
+ * This is the single point where "current state" is derived — every screen and
+ * Copilot both read candidates through this, never the raw static array alone.
+ */
+export function applyCandidateOverride(candidate: Candidate, override?: CandidateOverride): Candidate {
+  if (!override) return candidate
+  return {
+    ...candidate,
+    stage: override.stage ?? candidate.stage,
+    hold: override.hold ?? candidate.hold,
+    rejected: override.rejected ?? candidate.rejected,
+    selected: override.selected ?? candidate.selected,
+    interviewStatus: override.interviewStatus ?? candidate.interviewStatus,
+    waitingOn: override.waitingOn ?? candidate.waitingOn,
+    waitingDays: override.waitingDays ?? candidate.waitingDays,
+  }
+}

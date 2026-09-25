@@ -46,16 +46,20 @@ export interface CriterionEvidence {
 
 export type RecommendationLabel = 'Strong match' | 'Good match' | 'Potential match' | 'Promising' | 'Needs more information'
 
+/** Who a stalled Interview-stage candidate is currently waiting on. */
+export type WaitingOn = 'priya' | 'other'
+
 export interface Candidate {
   id: string
   name: string
   openingId: OpeningId
   stage: CandidateStage
-  experienceYears: number
-  location: string
+  /** Detailed-evidence candidates always have these; lightweight pipeline-only records may not. */
+  experienceYears?: number
+  location?: string
   currentRole?: string
   currentCompany?: string
-  recommendation: RecommendationLabel
+  recommendation?: RecommendationLabel
   /** Only present when the source data states an explicit count, e.g. "4 / 5". */
   prioritiesSupported?: number
   screeningScore?: number
@@ -63,6 +67,28 @@ export interface Candidate {
   /** The "Why <name>?" narrative, when the prototype data defines one. */
   summary?: string
   notableGap?: string
+
+  /** Flagged on hold — stays in its current stage, never a separate pipeline column. */
+  hold?: boolean
+  /** Left the active pipeline. Excluded from pipeline/stage views once true. */
+  rejected?: boolean
+  /** Marked as the chosen candidate after a Finalize action. */
+  selected?: boolean
+  /** Short human-readable status shown on Interview/Final-stage pipeline cards. */
+  interviewStatus?: string
+  waitingOn?: WaitingOn
+  waitingDays?: number
+}
+
+/** Fields Priya's actions (manual or Copilot) can override on top of the base candidate record. */
+export interface CandidateOverride {
+  stage?: CandidateStage
+  hold?: boolean
+  rejected?: boolean
+  selected?: boolean
+  interviewStatus?: string
+  waitingOn?: WaitingOn
+  waitingDays?: number
 }
 
 export type FilterSource = 'manual' | 'ai'

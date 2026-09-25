@@ -1,6 +1,6 @@
 import { ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { getPipelineStages } from '../../data/pipeline'
+import { usePipelineStages } from '../../store/candidateSelectors'
 import type { Opening } from '../../types/domain'
 import { cn } from '../../lib/cn'
 
@@ -19,6 +19,8 @@ function PriorityTag({ priority }: { priority: Opening['priority'] }) {
 }
 
 export function OpeningCard({ opening, compact = false }: { opening: Opening; compact?: boolean }) {
+  const stages = usePipelineStages(opening.id).filter((stage) => stage.count > 0)
+
   if (compact) {
     return (
       <Link
@@ -34,8 +36,6 @@ export function OpeningCard({ opening, compact = false }: { opening: Opening; co
       </Link>
     )
   }
-
-  const stages = getPipelineStages(opening.id).filter((stage) => stage.count > 0)
 
   return (
     <Link

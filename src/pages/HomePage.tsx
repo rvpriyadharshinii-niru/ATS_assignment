@@ -2,9 +2,9 @@ import { Briefcase, Calendar, CircleAlert, MessageSquare, Search, Users } from '
 import { useEffect } from 'react'
 import { InsightCard } from '../components/home/InsightCard'
 import { OpeningCard } from '../components/openings/OpeningCard'
-import { getPipelineStages } from '../data/pipeline'
 import { globalMetrics, openings } from '../data/openings'
 import { homeInsights } from '../data/insights'
+import { usePipelineStages } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
 
 const METRICS = [
@@ -22,7 +22,7 @@ const UPCOMING = [
 
 export function HomePage() {
   const setSelectedOpening = useAppStore((state) => state.setSelectedOpening)
-  const spdStages = getPipelineStages('senior-product-designer')
+  const spdStages = usePipelineStages('senior-product-designer')
 
   useEffect(() => {
     setSelectedOpening(null)

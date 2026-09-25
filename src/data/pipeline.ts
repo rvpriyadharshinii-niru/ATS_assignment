@@ -1,28 +1,37 @@
-import type { CandidateStage, OpeningId } from '../types/domain'
+import type { Candidate, CandidateStage } from '../types/domain'
 
 /**
- * Stage-count snapshot from PROTOTYPE_DATA.md section 9. Candidate-level
- * pipeline board data (interview-stage/final-stage named candidates) is
- * introduced in a later slice — this slice only needs the real counts.
+ * Stage-count snapshot from PROTOTYPE_DATA.md section 9 decomposed into
+ * "named" (the candidates we have individual records for) vs "other" (the
+ * remaining untracked bulk of the real aggregate count). Pipeline totals are
+ * then live: baseline other + however many named/tracked candidates are
+ * currently, after overrides, sitting in that stage. This is the only opening
+ * with a modeled pipeline — Product Manager / UX Researcher stay aggregate-only.
  */
+export const STAGE_BASELINE_OTHER: Record<CandidateStage, number> = {
+  Applied: 45, // 46 total − 1 named (Sana)
+  'AI Screened': 14, // 18 − 4 named (Arjun, Kavya, Vikram, Dev)
+  'HM Review': 5, // 8 − 3 named (Ananya, Rahul, Meera)
+  Interview: 0, // 5 − 5 named (Nisha, Rohan, Tara, Ishaan, Pooja)
+  Final: 0, // 2 − 2 named (Aditya, Neha)
+  Offer: 0,
+}
+
+const STAGES: CandidateStage[] = ['Applied', 'AI Screened', 'HM Review', 'Interview', 'Final', 'Offer']
+
 export interface PipelineStageCount {
   stage: CandidateStage
   count: number
 }
 
-const seniorProductDesignerPipeline: PipelineStageCount[] = [
-  { stage: 'Applied', count: 46 },
-  { stage: 'AI Screened', count: 18 },
-  { stage: 'HM Review', count: 8 },
-  { stage: 'Interview', count: 5 },
-  { stage: 'Final', count: 2 },
-  { stage: 'Offer', count: 0 },
-]
-
-const pipelineByOpening: Partial<Record<OpeningId, PipelineStageCount[]>> = {
-  'senior-product-designer': seniorProductDesignerPipeline,
-}
-
-export function getPipelineStages(openingId: OpeningId): PipelineStageCount[] {
-  return pipelineByOpening[openingId] ?? []
+/**
+ * `candidates` must already be the effective (override-applied) set for a
+ * single opening. Rejected candidates have left the active pipeline and are
+ * excluded from every stage's count, not just their former one.
+ */
+export function computeLiveStageCounts(candidates: Candidate[]): PipelineStageCount[] {
+  return STAGES.map((stage) => {
+    const namedActive = candidates.filter((candidate) => candidate.stage === stage && !candidate.rejected).length
+    return { stage, count: STAGE_BASELINE_OTHER[stage] + namedActive }
+  })
 }

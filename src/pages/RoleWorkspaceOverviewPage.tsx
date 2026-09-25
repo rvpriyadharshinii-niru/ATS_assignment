@@ -1,14 +1,17 @@
 import { Link, useParams } from 'react-router-dom'
 import { CandidateCard } from '../components/candidates/CandidateCard'
-import { getCandidatesForOpening, recommendedCandidateIds } from '../data/candidates'
+import { recommendedCandidateIds } from '../data/candidates'
 import { getCriteria } from '../data/criteria'
 import { getOpening } from '../data/openings'
-import { getPipelineStages } from '../data/pipeline'
+import { useEffectiveCandidatesForOpening, usePipelineStages } from '../store/candidateSelectors'
 import type { OpeningId } from '../types/domain'
 
 export function RoleWorkspaceOverviewPage() {
   const { openingId } = useParams<{ openingId: string }>()
   const opening = getOpening(openingId)
+  const pool = useEffectiveCandidatesForOpening(opening?.hasDetailedData ? (opening.id as OpeningId) : undefined)
+  const stages = usePipelineStages(opening?.hasDetailedData ? (opening.id as OpeningId) : undefined)
+
   if (!opening) return null
 
   if (!opening.hasDetailedData) {
@@ -24,8 +27,7 @@ export function RoleWorkspaceOverviewPage() {
 
   const id = opening.id as OpeningId
   const criteria = getCriteria(id)
-  const recommended = getCandidatesForOpening(id).filter((candidate) => recommendedCandidateIds.includes(candidate.id))
-  const stages = getPipelineStages(id)
+  const recommended = pool.filter((candidate) => recommendedCandidateIds.includes(candidate.id))
 
   return (
     <div className="grid grid-cols-3 gap-6 p-8">

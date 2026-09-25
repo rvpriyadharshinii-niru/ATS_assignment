@@ -1,6 +1,6 @@
 import type { Candidate, CandidateFilter, EvidenceStrength } from '../types/domain'
 
-const STRENGTH_RANK: Record<EvidenceStrength, number> = {
+export const STRENGTH_RANK: Record<EvidenceStrength, number> = {
   Strong: 5,
   Good: 4,
   Moderate: 3,
