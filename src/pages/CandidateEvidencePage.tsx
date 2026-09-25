@@ -1,4 +1,4 @@
-import { ArrowLeft } from 'lucide-react'
+import { Activity, ArrowLeft, ClipboardList } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
@@ -11,8 +11,32 @@ import { isUncertainStrength } from '../lib/evidence'
 import { advanceConsequences, nextStage } from '../lib/stage'
 import { useEffectiveCandidate } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
+import type { Candidate } from '../types/domain'
+import { cn } from '../lib/cn'
 
 type OpenDialog = 'advance' | 'hold' | 'reject' | null
+type DetailTab = 'evidence' | 'activity'
+
+interface ActivityEntry {
+  label: string
+  detail?: string
+}
+
+function buildActivityEntries(candidate: Candidate): ActivityEntry[] {
+  const entries: ActivityEntry[] = []
+  if (candidate.source) {
+    entries.push({
+      label: `Application received via ${candidate.source}`,
+      detail: candidate.updatedLabel ? (candidate.updatedLabel === 'Today' ? 'Today' : `${candidate.updatedLabel} ago`) : undefined,
+    })
+  }
+  entries.push({ label: `Currently in ${candidate.stage}` })
+  if (candidate.interviewStatus) entries.push({ label: candidate.interviewStatus })
+  if (candidate.hold) entries.push({ label: 'Flagged on hold' })
+  if (candidate.selected) entries.push({ label: 'Marked as the selected candidate' })
+  if (candidate.rejected) entries.push({ label: 'Rejected — removed from the active pipeline' })
+  return entries
+}
 
 export function CandidateEvidencePage() {
   const { candidateId } = useParams<{ candidateId: string }>()
@@ -22,6 +46,7 @@ export function CandidateEvidencePage() {
   const holdCandidates = useAppStore((state) => state.holdCandidates)
   const rejectCandidates = useAppStore((state) => state.rejectCandidates)
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
+  const [activeTab, setActiveTab] = useState<DetailTab>('evidence')
 
   useEffect(() => {
     if (candidate) setSelectedCandidate(candidate.id, candidate.openingId)
@@ -42,6 +67,7 @@ export function CandidateEvidencePage() {
   const hasUncertainty = candidate.evidence.some((evidence) => isUncertainStrength(evidence.strength))
   const statusNote = buildStatusNote(candidate)
   const upcomingStage = nextStage(candidate.stage)
+  const activityEntries = buildActivityEntries(candidate)
 
   return (
     <div className="space-y-6 p-8">
@@ -126,16 +152,53 @@ export function CandidateEvidencePage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
-        <h2 className="text-sm font-semibold text-palette-neutral-900">Criteria &amp; evidence</h2>
-        <div className="mt-3">
-          <CriterionEvidenceList criteria={criteria} evidence={candidate.evidence} />
-        </div>
-        {hasUncertainty && (
-          <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
-            Criteria marked <span className="font-medium text-palette-warning-700">Unclear</span> or{' '}
-            <span className="font-medium text-palette-warning-700">Not available</span> reflect missing information, not a negative finding.
-          </p>
+      <div>
+        <nav className="-mb-px flex items-center gap-5 border-b border-border" aria-label="Candidate sections">
+          {(
+            [
+              { key: 'evidence', label: 'Evidence', icon: ClipboardList },
+              { key: 'activity', label: 'Activity', icon: Activity },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                'flex items-center gap-1.5 border-b-2 pb-3 text-sm font-medium transition-colors focus-visible:outline-none',
+                activeTab === tab.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
+              )}
+            >
+              <tab.icon className="h-4 w-4" aria-hidden="true" />
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+
+        {activeTab === 'evidence' ? (
+          <div className="mt-5 rounded-xl border border-border bg-card p-6 shadow-xs">
+            <CriterionEvidenceList criteria={criteria} evidence={candidate.evidence} />
+            {hasUncertainty && (
+              <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
+                Criteria marked <span className="font-medium text-palette-warning-700">Unclear</span> or{' '}
+                <span className="font-medium text-palette-warning-700">Not available</span> reflect missing information, not a negative finding.
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="mt-5 rounded-xl border border-border bg-card p-6 shadow-xs">
+            <ul className="space-y-4">
+              {activityEntries.map((entry, index) => (
+                <li key={`${entry.label}-${index}`} className="flex gap-3">
+                  <span className="mt-1.5 flex h-2 w-2 shrink-0 rounded-full bg-primary" aria-hidden="true" />
+                  <div>
+                    <p className="text-sm text-foreground">{entry.label}</p>
+                    {entry.detail && <p className="text-xs text-muted-foreground">{entry.detail}</p>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
       </div>
 

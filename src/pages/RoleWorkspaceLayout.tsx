@@ -1,4 +1,4 @@
-import { ArrowLeft, Calendar, ChevronRight, Home, LayoutGrid, SlidersHorizontal, Users, Workflow } from 'lucide-react'
+import { ArrowLeft, Calendar, ChevronRight, CircleAlert, Home, LayoutGrid, Sparkles, SlidersHorizontal, Users, Workflow } from 'lucide-react'
 import { useEffect } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useParams } from 'react-router-dom'
 import { PriorityTag } from '../components/openings/OpeningCard'
@@ -39,7 +39,7 @@ export function RoleWorkspaceLayout() {
 
   return (
     <div>
-      <div className="border-b border-border bg-card px-8 py-5">
+      <div className="border-b border-border bg-card px-8 pt-5">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <button
             type="button"
@@ -63,14 +63,29 @@ export function RoleWorkspaceLayout() {
         <div className="mt-2 flex items-start justify-between gap-4">
           <div>
             <h1 className="text-xl font-semibold tracking-tight text-palette-neutral-900">{opening.title}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {opening.totalCandidates} candidates · {opening.situationSummary}
-            </p>
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5" aria-hidden="true" />
+                {opening.totalCandidates} candidates
+              </span>
+              {opening.needsAttention > 0 && (
+                <span className="inline-flex items-center gap-1.5 text-palette-warning-700">
+                  <CircleAlert className="h-3.5 w-3.5" aria-hidden="true" />
+                  {opening.needsAttention} need attention
+                </span>
+              )}
+              {opening.newSinceLastReview !== undefined && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                  {opening.newSinceLastReview} new since last review
+                </span>
+              )}
+            </div>
           </div>
           <PriorityTag priority={opening.priority} />
         </div>
 
-        <nav className="mt-4 flex items-center gap-5 border-b border-border" aria-label="Role sections">
+        <nav className="mt-4 -mb-px flex items-center gap-5" aria-label="Role sections">
           {TABS.map((tab) => {
             const count = tab.to === 'candidates' ? opening.totalCandidates : tab.to === 'criteria' ? criteriaCount : undefined
             return (
@@ -80,7 +95,7 @@ export function RoleWorkspaceLayout() {
                 end={tab.end}
                 className={({ isActive }) =>
                   cn(
-                    'flex items-center gap-1.5 border-b-2 pb-2.5 text-sm font-medium transition-colors focus-visible:outline-none',
+                    'flex items-center gap-1.5 border-b-2 pb-3 text-sm font-medium transition-colors focus-visible:outline-none',
                     isActive ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
                   )
                 }

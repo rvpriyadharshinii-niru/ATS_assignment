@@ -49,6 +49,9 @@ export type RecommendationLabel = 'Strong match' | 'Good match' | 'Potential mat
 /** Who a stalled Interview-stage candidate is currently waiting on. */
 export type WaitingOn = 'priya' | 'other'
 
+/** Where a candidate's application came from — lets Priya filter by acquisition channel. */
+export type CandidateSource = 'LinkedIn' | 'Career site' | 'Referral' | 'Agency'
+
 export interface Candidate {
   id: string
   name: string
@@ -80,6 +83,8 @@ export interface Candidate {
   waitingDays?: number
   /** Relative "last activity" label for the Candidates table, e.g. "Today", "2d". */
   updatedLabel?: string
+  /** Acquisition channel, shown on the candidate card/table and filterable. */
+  source?: CandidateSource
 }
 
 /** Fields Priya's actions (manual or Copilot) can override on top of the base candidate record. */

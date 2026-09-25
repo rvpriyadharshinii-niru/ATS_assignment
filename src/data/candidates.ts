@@ -13,6 +13,7 @@ export const candidates: Candidate[] = [
     openingId: 'senior-product-designer',
     stage: 'HM Review',
     updatedLabel: 'Today',
+    source: 'LinkedIn',
     experienceYears: 7,
     location: 'Bengaluru',
     currentRole: 'Senior Product Designer',
@@ -60,6 +61,7 @@ export const candidates: Candidate[] = [
     openingId: 'senior-product-designer',
     stage: 'HM Review',
     updatedLabel: '1d',
+    source: 'Referral',
     experienceYears: 8,
     location: 'Bengaluru',
     currentRole: 'Lead Product Designer',
@@ -103,6 +105,7 @@ export const candidates: Candidate[] = [
     openingId: 'senior-product-designer',
     stage: 'HM Review',
     updatedLabel: '2d',
+    source: 'Career site',
     experienceYears: 5,
     location: 'Mumbai',
     currentRole: 'Product Designer II',
@@ -145,6 +148,7 @@ export const candidates: Candidate[] = [
     openingId: 'senior-product-designer',
     stage: 'AI Screened',
     updatedLabel: '3d',
+    source: 'LinkedIn',
     experienceYears: 9,
     location: 'Hyderabad',
     recommendation: 'Potential match',
@@ -164,6 +168,7 @@ export const candidates: Candidate[] = [
     openingId: 'senior-product-designer',
     stage: 'AI Screened',
     updatedLabel: '4d',
+    source: 'Career site',
     experienceYears: 6,
     location: 'Bengaluru',
     recommendation: 'Potential match',
@@ -183,6 +188,7 @@ export const candidates: Candidate[] = [
     openingId: 'senior-product-designer',
     stage: 'AI Screened',
     updatedLabel: '4d',
+    source: 'Agency',
     experienceYears: 8,
     location: 'Pune',
     recommendation: 'Potential match',
@@ -202,6 +208,7 @@ export const candidates: Candidate[] = [
     openingId: 'senior-product-designer',
     stage: 'AI Screened',
     updatedLabel: '5d',
+    source: 'LinkedIn',
     experienceYears: 7,
     location: 'Delhi',
     recommendation: 'Potential match',
@@ -221,6 +228,7 @@ export const candidates: Candidate[] = [
     openingId: 'senior-product-designer',
     stage: 'Applied',
     updatedLabel: '6d',
+    source: 'Career site',
     experienceYears: 6,
     location: 'Bengaluru',
     recommendation: 'Needs more information',
@@ -250,6 +258,7 @@ export const candidates: Candidate[] = [
     waitingOn: 'priya',
     waitingDays: 5,
     updatedLabel: '5d',
+    source: 'LinkedIn',
   },
   {
     id: 'rohan-das',
@@ -261,6 +270,7 @@ export const candidates: Candidate[] = [
     waitingOn: 'other',
     waitingDays: 4,
     updatedLabel: '4d',
+    source: 'Referral',
   },
   {
     id: 'tara-menon',
@@ -272,6 +282,7 @@ export const candidates: Candidate[] = [
     waitingOn: 'other',
     waitingDays: 4,
     updatedLabel: '4d',
+    source: 'Career site',
   },
   {
     id: 'ishaan-kapoor',
@@ -281,6 +292,7 @@ export const candidates: Candidate[] = [
     evidence: [],
     interviewStatus: 'Interview scheduled',
     updatedLabel: '2d',
+    source: 'Agency',
   },
   {
     id: 'pooja-reddy',
@@ -290,6 +302,7 @@ export const candidates: Candidate[] = [
     evidence: [],
     interviewStatus: 'Interview scheduled',
     updatedLabel: '2d',
+    source: 'LinkedIn',
   },
   {
     id: 'aditya-bose',
@@ -299,6 +312,7 @@ export const candidates: Candidate[] = [
     evidence: [],
     interviewStatus: 'Final evaluation complete',
     updatedLabel: '6d',
+    source: 'Referral',
   },
   {
     id: 'neha-kapoor',
@@ -308,6 +322,7 @@ export const candidates: Candidate[] = [
     evidence: [],
     interviewStatus: 'Final interview scheduled',
     updatedLabel: '3d',
+    source: 'Career site',
   },
 
   /** Product Manager's one named record, from PROTOTYPE_DATA.md section 27. */
@@ -319,6 +334,7 @@ export const candidates: Candidate[] = [
     evidence: [],
     interviewStatus: 'Awaiting Hiring Manager decision',
     updatedLabel: '1d',
+    source: 'Referral',
   },
 ]
 

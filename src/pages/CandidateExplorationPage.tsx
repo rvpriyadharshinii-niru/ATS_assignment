@@ -3,7 +3,7 @@ import { Search, X } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { BulkMoveStageDialog } from '../components/candidates/BulkMoveStageDialog'
-import { CandidatesTable } from '../components/candidates/CandidatesTable'
+import { CandidatesTable, type SortDirection, type SortKey } from '../components/candidates/CandidatesTable'
 import { ComparisonView } from '../components/candidates/ComparisonView'
 import { FilterChips } from '../components/candidates/FilterChips'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
@@ -12,19 +12,34 @@ import { getCriteria } from '../data/criteria'
 import { getOpening } from '../data/openings'
 import { buildComparisonSummary } from '../lib/comparison'
 import { candidateMatchesFilters } from '../lib/evidence'
+import { STAGE_ORDER } from '../lib/stage'
 import { useEffectiveCandidatesForOpening } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
-import type { Candidate, CandidateStage, OpeningId } from '../types/domain'
+import type { Candidate, CandidateSource, CandidateStage, OpeningId } from '../types/domain'
 
-type SortKey = 'recommended' | 'experience' | 'score'
 type ViewFilter = 'all' | 'recommended' | CandidateStage
+type SourceFilter = 'all' | CandidateSource
 const MAX_COMPARE = 3
 const STAGE_OPTIONS: CandidateStage[] = ['Applied', 'AI Screened', 'HM Review', 'Interview', 'Final', 'Offer']
+const SOURCE_OPTIONS: CandidateSource[] = ['LinkedIn', 'Career site', 'Referral', 'Agency']
+const DEFAULT_DIRECTION: Record<SortKey, SortDirection> = { name: 'asc', score: 'desc', stage: 'asc', updated: 'asc' }
 
-function sortCandidates(list: Candidate[], sortKey: SortKey): Candidate[] {
-  if (sortKey === 'experience') return [...list].sort((a, b) => (b.experienceYears ?? 0) - (a.experienceYears ?? 0))
-  if (sortKey === 'score') return [...list].sort((a, b) => (b.screeningScore ?? -1) - (a.screeningScore ?? -1))
-  return list
+function parseUpdatedDays(label?: string): number {
+  if (!label) return Number.POSITIVE_INFINITY
+  if (label === 'Today') return 0
+  const match = /^(\d+)d$/.exec(label)
+  return match ? Number(match[1]) : Number.POSITIVE_INFINITY
+}
+
+function sortCandidates(list: Candidate[], sortKey: SortKey | null, direction: SortDirection): Candidate[] {
+  if (!sortKey) return list
+  const factor = direction === 'asc' ? 1 : -1
+  return [...list].sort((a, b) => {
+    if (sortKey === 'name') return a.name.localeCompare(b.name) * factor
+    if (sortKey === 'score') return ((a.screeningScore ?? -1) - (b.screeningScore ?? -1)) * factor
+    if (sortKey === 'stage') return (STAGE_ORDER.indexOf(a.stage) - STAGE_ORDER.indexOf(b.stage)) * factor
+    return (parseUpdatedDays(a.updatedLabel) - parseUpdatedDays(b.updatedLabel)) * factor
+  })
 }
 
 export function CandidateExplorationPage() {
@@ -36,8 +51,10 @@ export function CandidateExplorationPage() {
   const rejectCandidates = useAppStore((state) => state.rejectCandidates)
   const pool = useEffectiveCandidatesForOpening(opening?.hasDetailedData ? (opening.id as OpeningId) : undefined)
   const [viewFilter, setViewFilter] = useState<ViewFilter>('all')
+  const [sourceFilter, setSourceFilter] = useState<SourceFilter>('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const [sortKey, setSortKey] = useState<SortKey>('recommended')
+  const [sortKey, setSortKey] = useState<SortKey | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
   const [compareOpen, setCompareOpen] = useState(false)
   const [moveStageOpen, setMoveStageOpen] = useState(false)
@@ -73,7 +90,17 @@ export function CandidateExplorationPage() {
         [candidate.name, candidate.currentRole, candidate.currentCompany].some((value) => value?.toLowerCase().includes(query)),
       )
     : filtered
-  const visibleCandidates = sortCandidates(searched, sortKey)
+  const sourceFiltered = sourceFilter === 'all' ? searched : searched.filter((candidate) => candidate.source === sourceFilter)
+  const visibleCandidates = sortCandidates(sourceFiltered, sortKey, sortDirection)
+
+  function handleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDirection((current) => (current === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortKey(key)
+      setSortDirection(DEFAULT_DIRECTION[key])
+    }
+  }
 
   function toggleRow(candidateId: string) {
     setSelectedIds((current) => (current.includes(candidateId) ? current.filter((cid) => cid !== candidateId) : [...current, candidateId]))
@@ -101,26 +128,29 @@ export function CandidateExplorationPage() {
               className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm text-palette-neutral-900 placeholder:text-palette-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40"
             />
           </div>
-          <label className="flex items-center gap-2 text-sm text-muted-foreground">
-            Sort
-            <select
-              value={sortKey}
-              onChange={(event) => setSortKey(event.target.value as SortKey)}
-              className="rounded-lg border border-border bg-card py-2 pl-2.5 pr-8 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40"
-            >
-              <option value="recommended">Recommended</option>
-              <option value="experience">Experience</option>
-              <option value="score">AI Screening Score</option>
-            </select>
-          </label>
-          <span className="text-sm text-muted-foreground">{visibleCandidates.length} of {opening.totalCandidates}</span>
+          <span className="text-sm text-muted-foreground">
+            {visibleCandidates.length} of {opening.totalCandidates}
+          </span>
         </div>
-        <label className="flex items-center gap-2 text-sm text-muted-foreground">
-          Show
+        <div className="flex items-center gap-2">
+          <select
+            value={sourceFilter}
+            onChange={(event) => setSourceFilter(event.target.value as SourceFilter)}
+            aria-label="Filter by source"
+            className="rounded-lg border border-border bg-card py-2 pl-2.5 pr-8 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40"
+          >
+            <option value="all">All sources</option>
+            {SOURCE_OPTIONS.map((source) => (
+              <option key={source} value={source}>
+                {source}
+              </option>
+            ))}
+          </select>
           <select
             value={viewFilter}
             onChange={(event) => setViewFilter(event.target.value as ViewFilter)}
             disabled={hasFilters}
+            aria-label="Filter candidates"
             className="rounded-lg border border-border bg-card py-2 pl-2.5 pr-8 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <optgroup label="Filter">
@@ -135,7 +165,7 @@ export function CandidateExplorationPage() {
               ))}
             </optgroup>
           </select>
-        </label>
+        </div>
       </div>
 
       <FilterChips />
@@ -155,7 +185,15 @@ export function CandidateExplorationPage() {
         </div>
       ) : (
         <div className="pb-16">
-          <CandidatesTable candidates={visibleCandidates} selectedIds={selectedIds} onToggleRow={toggleRow} onToggleAll={toggleAll} />
+          <CandidatesTable
+            candidates={visibleCandidates}
+            selectedIds={selectedIds}
+            onToggleRow={toggleRow}
+            onToggleAll={toggleAll}
+            sortKey={sortKey}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+          />
         </div>
       )}
 

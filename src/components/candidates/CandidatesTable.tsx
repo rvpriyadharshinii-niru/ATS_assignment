@@ -1,9 +1,13 @@
+import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { buildStatusNote } from '../../lib/candidateStatus'
 import { cn } from '../../lib/cn'
 import type { Candidate } from '../../types/domain'
 import { CandidateActionsMenu } from './CandidateActionsMenu'
 import { RecommendationBadge } from './RecommendationBadge'
+
+export type SortKey = 'name' | 'score' | 'stage' | 'updated'
+export type SortDirection = 'asc' | 'desc'
 
 const STAGE_TONE: Record<string, string> = {
   Applied: 'bg-palette-neutral-150 text-palette-neutral-600',
@@ -14,8 +18,45 @@ const STAGE_TONE: Record<string, string> = {
   Offer: 'bg-palette-success-150 text-palette-success-700',
 }
 
-function TableHeaderCell({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <th className={cn('px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700', className)}>{children}</th>
+function SortableHeaderCell({
+  children,
+  sortKey,
+  activeSortKey,
+  sortDirection,
+  onSort,
+  className,
+}: {
+  children: React.ReactNode
+  sortKey?: SortKey
+  activeSortKey: SortKey | null
+  sortDirection: SortDirection
+  onSort: (key: SortKey) => void
+  className?: string
+}) {
+  if (!sortKey) {
+    return <th className={cn('px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700', className)}>{children}</th>
+  }
+  const isActive = activeSortKey === sortKey
+  return (
+    <th className={cn('px-3 py-2.5 text-left', className)}>
+      <button
+        type="button"
+        onClick={() => onSort(sortKey)}
+        className={cn(
+          'inline-flex items-center gap-0.5 text-xs font-semibold uppercase tracking-wide hover:text-palette-brand-800 focus-visible:outline-none',
+          isActive ? 'text-palette-brand-800' : 'text-palette-brand-700',
+        )}
+      >
+        {children}
+        {isActive &&
+          (sortDirection === 'asc' ? (
+            <ChevronUp className="h-3 w-3" aria-hidden="true" />
+          ) : (
+            <ChevronDown className="h-3 w-3" aria-hidden="true" />
+          ))}
+      </button>
+    </th>
+  )
 }
 
 export function CandidatesTable({
@@ -23,17 +64,23 @@ export function CandidatesTable({
   selectedIds,
   onToggleRow,
   onToggleAll,
+  sortKey,
+  sortDirection,
+  onSort,
 }: {
   candidates: Candidate[]
   selectedIds: string[]
   onToggleRow: (id: string) => void
   onToggleAll: () => void
+  sortKey: SortKey | null
+  sortDirection: SortDirection
+  onSort: (key: SortKey) => void
 }) {
   const allSelected = candidates.length > 0 && candidates.every((candidate) => selectedIds.includes(candidate.id))
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-xs">
-      <table className="w-full min-w-[760px] border-collapse text-sm">
+      <table className="w-full min-w-[860px] border-collapse text-sm">
         <thead>
           <tr className="border-b border-border bg-palette-brand-100/50">
             <th className="w-10 px-3 py-2.5">
@@ -45,12 +92,30 @@ export function CandidatesTable({
                 className="h-4 w-4 rounded border-border text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               />
             </th>
-            <TableHeaderCell>Candidate</TableHeaderCell>
-            <TableHeaderCell>Role / Company</TableHeaderCell>
-            <TableHeaderCell>Recommendation</TableHeaderCell>
-            <TableHeaderCell>Evidence</TableHeaderCell>
-            <TableHeaderCell>Stage</TableHeaderCell>
-            <TableHeaderCell>Updated</TableHeaderCell>
+            <SortableHeaderCell sortKey="name" activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
+              Candidate
+            </SortableHeaderCell>
+            <SortableHeaderCell activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
+              Role / Company
+            </SortableHeaderCell>
+            <SortableHeaderCell activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
+              Recommendation
+            </SortableHeaderCell>
+            <SortableHeaderCell activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
+              Evidence
+            </SortableHeaderCell>
+            <SortableHeaderCell sortKey="score" activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
+              Score
+            </SortableHeaderCell>
+            <SortableHeaderCell activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
+              Source
+            </SortableHeaderCell>
+            <SortableHeaderCell sortKey="stage" activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
+              Stage
+            </SortableHeaderCell>
+            <SortableHeaderCell sortKey="updated" activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
+              Updated
+            </SortableHeaderCell>
             <th className="w-10 px-3 py-2.5" />
           </tr>
         </thead>
@@ -115,8 +180,9 @@ export function CandidatesTable({
                   ) : (
                     <span className="text-muted-foreground">{candidate.notableGap ? 'Partial' : '—'}</span>
                   )}
-                  {candidate.screeningScore !== undefined && <span className="block text-xs text-palette-neutral-400">Score {candidate.screeningScore}</span>}
                 </td>
+                <td className="px-3 py-2.5 align-top text-foreground">{candidate.screeningScore ?? <span className="text-muted-foreground">—</span>}</td>
+                <td className="px-3 py-2.5 align-top text-muted-foreground">{candidate.source ?? '—'}</td>
                 <td className="px-3 py-2.5 align-top">
                   <span className={cn('inline-flex rounded-full px-2 py-0.5 text-xs font-medium', STAGE_TONE[candidate.stage])}>{candidate.stage}</span>
                 </td>
