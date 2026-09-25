@@ -13,8 +13,8 @@ export function OpeningsPage() {
 
   return (
     <div>
-      <PageHeader title="My Openings" description="Roles you own and their current hiring status." />
-      <div className="grid grid-cols-3 gap-4 p-8">
+      <PageHeader title="My Openings" description="Roles you own and their current hiring status." backTo="/" />
+      <div className="grid grid-cols-2 gap-5 p-8">
         {openings.map((opening) => (
           <OpeningCard key={opening.id} opening={opening} />
         ))}

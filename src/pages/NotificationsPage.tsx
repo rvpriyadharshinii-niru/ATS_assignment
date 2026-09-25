@@ -4,7 +4,7 @@ import { homeInsights } from '../data/insights'
 export function NotificationsPage() {
   return (
     <div>
-      <PageHeader title="Notifications" description="Hiring updates across your openings." />
+      <PageHeader title="Notifications" description="Hiring updates across your openings." backTo="/" />
       <div className="p-8">
         <div className="divide-y divide-border rounded-xl border border-border bg-card shadow-xs">
           {homeInsights.map((insight) => (

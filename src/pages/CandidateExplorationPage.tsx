@@ -14,10 +14,12 @@ import { buildComparisonSummary } from '../lib/comparison'
 import { candidateMatchesFilters } from '../lib/evidence'
 import { useEffectiveCandidatesForOpening } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
-import type { Candidate, OpeningId } from '../types/domain'
+import type { Candidate, CandidateStage, OpeningId } from '../types/domain'
 
 type SortKey = 'recommended' | 'experience' | 'score'
+type ViewFilter = 'all' | 'recommended' | CandidateStage
 const MAX_COMPARE = 3
+const STAGE_OPTIONS: CandidateStage[] = ['Applied', 'AI Screened', 'HM Review', 'Interview', 'Final', 'Offer']
 
 function sortCandidates(list: Candidate[], sortKey: SortKey): Candidate[] {
   if (sortKey === 'experience') return [...list].sort((a, b) => (b.experienceYears ?? 0) - (a.experienceYears ?? 0))
@@ -33,7 +35,7 @@ export function CandidateExplorationPage() {
   const holdCandidates = useAppStore((state) => state.holdCandidates)
   const rejectCandidates = useAppStore((state) => state.rejectCandidates)
   const pool = useEffectiveCandidatesForOpening(opening?.hasDetailedData ? (opening.id as OpeningId) : undefined)
-  const [showAll, setShowAll] = useState(false)
+  const [viewFilter, setViewFilter] = useState<ViewFilter>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [sortKey, setSortKey] = useState<SortKey>('recommended')
   const [selectedIds, setSelectedIds] = useState<string[]>([])
@@ -58,7 +60,13 @@ export function CandidateExplorationPage() {
   const isSearching = searchQuery.trim().length > 0
   const query = searchQuery.trim().toLowerCase()
 
-  const baseCandidates = hasFilters || showAll || isSearching ? pool : pool.filter((candidate) => recommendedCandidateIds.includes(candidate.id))
+  const baseCandidates = hasFilters
+    ? pool
+    : viewFilter === 'all'
+      ? pool
+      : viewFilter === 'recommended'
+        ? pool.filter((candidate) => recommendedCandidateIds.includes(candidate.id))
+        : pool.filter((candidate) => candidate.stage === viewFilter)
   const filtered = baseCandidates.filter((candidate) => candidateMatchesFilters(candidate, filters))
   const searched = isSearching
     ? filtered.filter((candidate) =>
@@ -107,15 +115,27 @@ export function CandidateExplorationPage() {
           </label>
           <span className="text-sm text-muted-foreground">{visibleCandidates.length} of {opening.totalCandidates}</span>
         </div>
-        {!hasFilters && !isSearching && (
-          <button
-            type="button"
-            onClick={() => setShowAll((current) => !current)}
-            className="text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        <label className="flex items-center gap-2 text-sm text-muted-foreground">
+          Show
+          <select
+            value={viewFilter}
+            onChange={(event) => setViewFilter(event.target.value as ViewFilter)}
+            disabled={hasFilters}
+            className="rounded-lg border border-border bg-card py-2 pl-2.5 pr-8 text-sm text-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {showAll ? 'Show recommended' : 'View all candidates'}
-          </button>
-        )}
+            <optgroup label="Filter">
+              <option value="all">All candidates</option>
+              <option value="recommended">Recommended</option>
+            </optgroup>
+            <optgroup label="By stage">
+              {STAGE_OPTIONS.map((stage) => (
+                <option key={stage} value={stage}>
+                  {stage}
+                </option>
+              ))}
+            </optgroup>
+          </select>
+        </label>
       </div>
 
       <FilterChips />

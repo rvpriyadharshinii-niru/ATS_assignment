@@ -67,7 +67,7 @@ export function Sidebar() {
   const openCopilot = useAppStore((state) => state.openCopilot)
 
   return (
-    <aside className="flex h-full w-60 shrink-0 flex-col rounded-3xl bg-card shadow-sm">
+    <aside className="flex h-full w-60 shrink-0 flex-col border-r border-border bg-card">
       <div className="flex h-16 items-center gap-2.5 border-b border-border px-4">
         <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[image:var(--gradient-brand_wash)] text-sm font-semibold text-background shadow-sm">
           H

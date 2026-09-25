@@ -15,7 +15,7 @@ const STAGE_TONE: Record<string, string> = {
 }
 
 function TableHeaderCell({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <th className={cn('px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-400', className)}>{children}</th>
+  return <th className={cn('px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700', className)}>{children}</th>
 }
 
 export function CandidatesTable({

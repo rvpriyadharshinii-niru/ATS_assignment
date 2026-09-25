@@ -3,7 +3,7 @@ import { PageHeader } from '../components/layout/PageHeader'
 export function SettingsPage() {
   return (
     <div>
-      <PageHeader title="Settings" description="Account and profile information." />
+      <PageHeader title="Settings" description="Account and profile information." backTo="/" />
       <div className="p-8">
         <div className="max-w-md rounded-xl border border-border bg-card p-6 shadow-xs">
           <div className="flex items-center gap-3">
