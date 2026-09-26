@@ -60,7 +60,7 @@ export function HomePage() {
       value: globalMetrics.interviewsThisWeek,
       icon: Calendar,
       color: 'plum',
-      secondary: upcomingInterviews.length > 0 ? `${upcomingInterviews.length} scheduled for Senior Product Designer` : undefined,
+      secondary: upcomingInterviews.length > 0 ? `${upcomingInterviews.length} scheduled this week` : undefined,
     },
   ]
 
@@ -79,11 +79,15 @@ export function HomePage() {
 
       <div className="grid grid-cols-4 gap-4">
         {METRICS.map((metric) => (
-          <div key={metric.label} className="rounded-2xl border border-border bg-card p-5 shadow-xs transition-shadow hover:shadow-sm">
-            <IconBadge icon={metric.icon} color={metric.color} />
-            <p className="mt-3.5 text-3xl font-bold tracking-tight text-palette-neutral-900">{metric.value}</p>
-            <p className="mt-0.5 text-sm font-medium text-muted-foreground">{metric.label}</p>
-            {metric.secondary && <TrendPill label={metric.secondary} color={metric.color} className="mt-2.5" />}
+          <div key={metric.label} className="rounded-2xl border border-border bg-card p-4 shadow-xs transition-shadow hover:shadow-sm">
+            <div className="flex items-center gap-2.5">
+              <IconBadge icon={metric.icon} color={metric.color} size="sm" />
+              <div className="min-w-0">
+                <p className="text-2xl font-bold leading-tight tracking-tight text-palette-neutral-900">{metric.value}</p>
+                <p className="truncate text-xs font-medium text-muted-foreground">{metric.label}</p>
+              </div>
+            </div>
+            {metric.secondary && <TrendPill label={metric.secondary} color={metric.color} className="mt-2 max-w-full truncate" />}
           </div>
         ))}
       </div>
