@@ -9,10 +9,12 @@ import {
   Download,
   FileText,
   Home,
+  Info,
   Mail,
   MoreHorizontal,
   PauseCircle,
   Sparkles,
+  UserRound,
   XCircle,
 } from 'lucide-react'
 import { useEffect, useState, type ComponentType } from 'react'
@@ -40,11 +42,12 @@ import { needsValidationCriteriaNames, strongCriteriaNames } from '../lib/criter
 import { isUncertainStrength } from '../lib/evidence'
 import { downloadResumePdf } from '../lib/generateResumePdf'
 import { advanceConsequences, advanceCtaLabel, nextStage } from '../lib/stage'
+import { STAGE_TONE } from '../lib/stageTone'
 import { useEffectiveCandidate } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
 
 type OpenDialog = 'advance' | 'hold' | 'reject' | 'email' | null
-type DetailTab = 'evidence' | 'resume' | 'activity'
+type DetailTab = 'evidence' | 'resume' | 'profile' | 'details' | 'activity'
 
 function initialsFor(name: string): string {
   return name
@@ -193,7 +196,10 @@ export function CandidateEvidencePage() {
               {initialsFor(candidate.name)}
             </span>
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-semibold tracking-tight text-palette-neutral-900">{candidate.name}</h1>
+              <div className="flex flex-wrap items-center gap-2">
+                <h1 className="truncate text-lg font-semibold tracking-tight text-palette-neutral-900">{candidate.name}</h1>
+                <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium', STAGE_TONE[candidate.stage])}>{candidate.stage}</span>
+              </div>
               <p className="mt-0.5 truncate text-sm text-muted-foreground">
                 {candidate.currentRole && candidate.currentCompany ? `${candidate.currentRole} · ${candidate.currentCompany}` : opening?.title}
               </p>
@@ -209,7 +215,6 @@ export function CandidateEvidencePage() {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">{candidate.stage}</span>
             <button
               type="button"
               onClick={() => downloadResumePdf(candidate)}
@@ -220,6 +225,15 @@ export function CandidateEvidencePage() {
             </button>
             {!candidate.rejected && (
               <>
+                {!candidate.hold && (
+                  <button
+                    type="button"
+                    onClick={() => setOpenDialog('hold')}
+                    className="rounded-lg border border-palette-danger-300 px-3.5 py-2 text-sm font-medium text-palette-danger-700 hover:bg-palette-danger-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    Hold
+                  </button>
+                )}
                 {upcomingStage && (
                   <button
                     type="button"
@@ -227,15 +241,6 @@ export function CandidateEvidencePage() {
                     className="rounded-lg bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     {advanceCtaLabel(upcomingStage)}
-                  </button>
-                )}
-                {!candidate.hold && (
-                  <button
-                    type="button"
-                    onClick={() => setOpenDialog('hold')}
-                    className="rounded-lg border border-border px-3.5 py-2 text-sm font-medium text-palette-neutral-700 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    Hold
                   </button>
                 )}
                 <OverflowMenu onEmail={() => setOpenDialog('email')} onReject={() => setOpenDialog('reject')} rejected={!!candidate.rejected} />
@@ -304,63 +309,14 @@ export function CandidateEvidencePage() {
             </div>
           )}
 
-          <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
-            <div>
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Skills</h3>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {skills.map((skill) => (
-                  <span key={skill} className="rounded-full bg-palette-neutral-100 px-2.5 py-1 text-xs font-medium text-palette-neutral-700">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-4 border-t border-border pt-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Experience</h3>
-              <div className="mt-2.5 space-y-4">
-                {experience.map((entry) => (
-                  <div key={`${entry.company}-${entry.dateRange}`}>
-                    <p className="text-sm font-semibold text-foreground">{entry.company}</p>
-                    <p className="text-sm text-foreground">{entry.role}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {entry.dateRange} · {entry.duration}
-                      {entry.location && ` · ${entry.location}`}
-                    </p>
-                    <ul className="mt-1.5 space-y-1">
-                      {entry.bullets.map((bullet) => (
-                        <li key={bullet} className="flex gap-2 text-sm leading-relaxed text-foreground/90">
-                          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-palette-neutral-300" aria-hidden="true" />
-                          {bullet}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-4 border-t border-border pt-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Education</h3>
-              <p className="mt-1.5 text-sm text-foreground">{education.degree}</p>
-              <p className="text-xs text-muted-foreground">
-                {education.school} · {education.dateRange}
-              </p>
-            </div>
-
-            <div className="mt-4 border-t border-border pt-4">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Links</h3>
-              <p className="mt-1.5 text-xs text-muted-foreground">LinkedIn: {links.linkedin}</p>
-              <p className="text-xs text-muted-foreground">Portfolio: {links.portfolio}</p>
-            </div>
-          </div>
-
           <div>
             <nav className="-mb-px flex items-center gap-5 border-b border-border" aria-label="Candidate sections">
               {(
                 [
                   { key: 'evidence', label: 'Evidence', icon: ClipboardList },
                   { key: 'resume', label: 'Resume', icon: FileText },
+                  { key: 'profile', label: 'Profile', icon: UserRound },
+                  { key: 'details', label: 'Details', icon: Info },
                   { key: 'activity', label: 'Activity', icon: Activity },
                 ] as const
               ).map((tab) => (
@@ -415,7 +371,7 @@ export function CandidateEvidencePage() {
                 </div>
 
                 <div className="mt-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Experience</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Experience</p>
                   <div className="mt-2 space-y-3">
                     {experience.map((entry) => (
                       <div key={`${entry.company}-${entry.dateRange}`}>
@@ -439,12 +395,12 @@ export function CandidateEvidencePage() {
                 </div>
 
                 <div className="mt-4 border-t border-border pt-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Skills</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Skills</p>
                   <p className="mt-1.5 text-sm text-foreground">{skills.join(', ')}</p>
                 </div>
 
                 <div className="mt-4 border-t border-border pt-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Education</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Education</p>
                   <p className="mt-1.5 text-sm text-foreground">{education.degree}</p>
                   <p className="text-xs text-muted-foreground">
                     {education.school} · {education.dateRange}
@@ -455,6 +411,98 @@ export function CandidateEvidencePage() {
                   Representative summary compiled from the application. Source: Resume · Application form.
                 </p>
               </div>
+            ) : activeTab === 'profile' ? (
+              <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-xs">
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Skills</h3>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {skills.map((skill) => (
+                      <span key={skill} className="rounded-full bg-palette-neutral-100 px-2.5 py-1 text-xs font-medium text-palette-neutral-700">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 border-t border-border pt-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Experience</h3>
+                  <div className="mt-2.5 space-y-4">
+                    {experience.map((entry) => (
+                      <div key={`${entry.company}-${entry.dateRange}`}>
+                        <p className="text-sm font-semibold text-foreground">{entry.company}</p>
+                        <p className="text-sm text-foreground">{entry.role}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {entry.dateRange} · {entry.duration}
+                          {entry.location && ` · ${entry.location}`}
+                        </p>
+                        <ul className="mt-1.5 space-y-1">
+                          {entry.bullets.map((bullet) => (
+                            <li key={bullet} className="flex gap-2 text-sm leading-relaxed text-foreground/90">
+                              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-palette-neutral-300" aria-hidden="true" />
+                              {bullet}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 border-t border-border pt-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Education</h3>
+                  <p className="mt-1.5 text-sm text-foreground">{education.degree}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {education.school} · {education.dateRange}
+                  </p>
+                </div>
+
+                <div className="mt-4 border-t border-border pt-4">
+                  <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Links</h3>
+                  <p className="mt-1.5 text-xs text-muted-foreground">LinkedIn: {links.linkedin}</p>
+                  <p className="text-xs text-muted-foreground">Portfolio: {links.portfolio}</p>
+                </div>
+              </div>
+            ) : activeTab === 'details' ? (
+              <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-xs">
+                <dl className="space-y-2.5 text-sm">
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-muted-foreground">Stage</dt>
+                    <dd className="font-medium text-foreground">{candidate.stage}</dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-muted-foreground">Email</dt>
+                    <dd className="truncate font-medium text-foreground">{deriveCandidateEmail(candidate)}</dd>
+                  </div>
+                  {candidate.phone && (
+                    <div className="flex items-center justify-between gap-3">
+                      <dt className="text-muted-foreground">Phone</dt>
+                      <dd className="font-medium text-foreground">{candidate.phone}</dd>
+                    </div>
+                  )}
+                  {candidate.location && (
+                    <div className="flex items-center justify-between gap-3">
+                      <dt className="text-muted-foreground">Location</dt>
+                      <dd className="font-medium text-foreground">{candidate.location}</dd>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-muted-foreground">Source</dt>
+                    <dd className="font-medium text-foreground">{candidate.source ?? '—'}</dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-muted-foreground">Applied</dt>
+                    <dd className="font-medium text-foreground">{deriveAppliedDate(candidate)}</dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-muted-foreground">Owner</dt>
+                    <dd className="font-medium text-foreground">Priya Sharma</dd>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <dt className="text-muted-foreground">Last activity</dt>
+                    <dd className="font-medium text-foreground">{candidate.updatedLabel ?? '—'}</dd>
+                  </div>
+                </dl>
+              </div>
             ) : (
               <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-xs">
                 {activityGroups.length === 0 ? (
@@ -463,7 +511,7 @@ export function CandidateEvidencePage() {
                   <div className="space-y-5">
                     {activityGroups.map((group) => (
                       <div key={group.dayLabel}>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">{group.dayLabel}</p>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">{group.dayLabel}</p>
                         <ul className="mt-2 space-y-3">
                           {group.items.map((item) => {
                             const Icon = activityIcon(item.label)
@@ -491,51 +539,6 @@ export function CandidateEvidencePage() {
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-            <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">
-              <IconBadge icon={ClipboardList} color="info" size="sm" />
-              Details
-            </h3>
-            <dl className="mt-2.5 space-y-2.5 text-sm">
-              <div className="flex items-center justify-between gap-3">
-                <dt className="text-muted-foreground">Stage</dt>
-                <dd className="font-medium text-foreground">{candidate.stage}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <dt className="text-muted-foreground">Email</dt>
-                <dd className="truncate font-medium text-foreground">{deriveCandidateEmail(candidate)}</dd>
-              </div>
-              {candidate.phone && (
-                <div className="flex items-center justify-between gap-3">
-                  <dt className="text-muted-foreground">Phone</dt>
-                  <dd className="font-medium text-foreground">{candidate.phone}</dd>
-                </div>
-              )}
-              {candidate.location && (
-                <div className="flex items-center justify-between gap-3">
-                  <dt className="text-muted-foreground">Location</dt>
-                  <dd className="font-medium text-foreground">{candidate.location}</dd>
-                </div>
-              )}
-              <div className="flex items-center justify-between gap-3">
-                <dt className="text-muted-foreground">Source</dt>
-                <dd className="font-medium text-foreground">{candidate.source ?? '—'}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <dt className="text-muted-foreground">Applied</dt>
-                <dd className="font-medium text-foreground">{deriveAppliedDate(candidate)}</dd>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <dt className="text-muted-foreground">Owner</dt>
-                <dd className="font-medium text-foreground">Priya Sharma</dd>
-              </div>
-              <div className="flex items-center justify-between gap-3">
-                <dt className="text-muted-foreground">Last activity</dt>
-                <dd className="font-medium text-foreground">{candidate.updatedLabel ?? '—'}</dd>
-              </div>
-            </dl>
-          </div>
-
           {opening && (
             <Link
               to={`/openings/${opening.id}/criteria`}
@@ -548,7 +551,7 @@ export function CandidateEvidencePage() {
 
           {candidate.notes && (
             <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-              <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">
+              <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">
                 <IconBadge icon={FileText} color="neutral" size="sm" />
                 Notes
               </h3>

@@ -2,21 +2,13 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { buildStatusNote } from '../../lib/candidateStatus'
 import { cn } from '../../lib/cn'
+import { STAGE_TONE } from '../../lib/stageTone'
 import type { Candidate } from '../../types/domain'
 import { CandidateActionsMenu } from './CandidateActionsMenu'
 import { RecommendationBadge } from './RecommendationBadge'
 
 export type SortKey = 'name' | 'score' | 'stage' | 'updated'
 export type SortDirection = 'asc' | 'desc'
-
-const STAGE_TONE: Record<string, string> = {
-  Applied: 'bg-palette-neutral-150 text-palette-neutral-600',
-  'AI Screened': 'bg-palette-info-150 text-palette-info-700',
-  'HM Review': 'bg-palette-brand-100 text-palette-brand-700',
-  Interview: 'bg-palette-warning-150 text-palette-warning-700',
-  Final: 'bg-palette-plum-150 text-palette-plum-700',
-  Offer: 'bg-palette-success-150 text-palette-success-700',
-}
 
 function SortableHeaderCell({
   children,
