@@ -52,7 +52,9 @@
     --accent: var(--palette-brand-100);
     --accent-foreground: var(--palette-brand-700);
     --ring: var(--palette-brand-500);
-    --border: var(--palette-neutral-200);
+    /* neutral-200 read as almost invisible against white cards — one step darker gives every
+       card, table and divider a visible edge instead of the flat, borderless look. */
+    --border: var(--palette-neutral-300);
     /* Fuzzy Prism's muted-foreground (neutral-700, #3E353F) is darker than the default body
        text (--foreground, #5D5D5D), so "muted" secondary text reads no lighter than primary
        text — the app-wide flat-black look. neutral-550 sits meaningfully lighter than both. */
