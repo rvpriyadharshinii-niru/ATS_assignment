@@ -1,6 +1,6 @@
 import { CircleHelp } from 'lucide-react'
 import { useState } from 'react'
-import { isUncertainStrength } from '../../lib/evidence'
+import { displayStrength, isUncertainStrength, STRENGTH_BAR_TONE } from '../../lib/evidence'
 import type { ExperienceEntry } from '../../lib/candidateStatus'
 import type { CriterionEvidence as CriterionEvidenceItem, EvidenceStrength, HiringCriterion } from '../../types/domain'
 import { cn } from '../../lib/cn'
@@ -13,21 +13,6 @@ const STRENGTH_TONE: Record<EvidenceStrength, string> = {
   Possible: 'bg-palette-warning-150 text-palette-warning-700 ring-palette-warning-400/30',
   Unclear: 'bg-palette-warning-150 text-palette-warning-700 ring-palette-warning-400/30',
   'Not available': 'bg-palette-warning-150 text-palette-warning-700 ring-palette-warning-400/30',
-}
-
-const STRENGTH_BAR_TONE: Record<EvidenceStrength, string> = {
-  Strong: 'bg-palette-success-450',
-  Good: 'bg-palette-info-450',
-  Moderate: 'bg-palette-neutral-300',
-  Limited: 'bg-palette-neutral-300',
-  Possible: 'bg-palette-warning-450',
-  Unclear: 'bg-palette-warning-450',
-  'Not available': 'bg-palette-warning-450',
-}
-
-/** Display-only relabel — the underlying EvidenceStrength value stays "Not available" everywhere else. */
-function displayStrength(strength: EvidenceStrength): string {
-  return strength === 'Not available' ? 'Insufficient evidence' : strength
 }
 
 function StrengthBadge({ strength }: { strength: EvidenceStrength }) {

@@ -19,6 +19,22 @@ export function isUncertainStrength(strength: EvidenceStrength): boolean {
   return strength === 'Unclear' || strength === 'Not available' || strength === 'Possible'
 }
 
+/** Display-only relabel — the underlying EvidenceStrength value stays "Not available" everywhere else. */
+export function displayStrength(strength: EvidenceStrength): string {
+  return strength === 'Not available' ? 'Insufficient evidence' : strength
+}
+
+/** Shared strength → fill-bar color, used by both the evidence list's left-edge bar and the criteria-match visual. */
+export const STRENGTH_BAR_TONE: Record<EvidenceStrength, string> = {
+  Strong: 'bg-palette-success-450',
+  Good: 'bg-palette-info-450',
+  Moderate: 'bg-palette-neutral-300',
+  Limited: 'bg-palette-neutral-300',
+  Possible: 'bg-palette-warning-450',
+  Unclear: 'bg-palette-warning-450',
+  'Not available': 'bg-palette-warning-450',
+}
+
 export function candidateMatchesFilter(candidate: Candidate, filter: CandidateFilter): boolean {
   if (filter.kind === 'criterion') {
     const evidence = candidate.evidence.find((item) => item.criterionKey === filter.criterionKey)

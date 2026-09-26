@@ -21,6 +21,7 @@ import { useEffect, useState, type ComponentType } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { IconBadge } from '../components/ui/IconBadge'
+import { CriteriaMatchVisual } from '../components/candidates/CriteriaMatchVisual'
 import { CriterionEvidenceList } from '../components/candidates/CriterionEvidence'
 import { EmailComposeDialog } from '../components/candidates/EmailComposeDialog'
 import { RecommendationBadge } from '../components/candidates/RecommendationBadge'
@@ -47,7 +48,7 @@ import { useEffectiveCandidate } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
 
 type OpenDialog = 'advance' | 'hold' | 'reject' | 'email' | null
-type DetailTab = 'evidence' | 'resume' | 'profile' | 'details' | 'activity'
+type DetailTab = 'assessment' | 'evidence' | 'resume' | 'profile' | 'details' | 'criteria' | 'activity'
 
 function initialsFor(name: string): string {
   return name
@@ -128,7 +129,7 @@ export function CandidateEvidencePage() {
   const pushToast = useAppStore((state) => state.pushToast)
   const undoLastMutation = useAppStore((state) => state.undoLastMutation)
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
-  const [activeTab, setActiveTab] = useState<DetailTab>('evidence')
+  const [activeTab, setActiveTab] = useState<DetailTab>('assessment')
 
   useEffect(() => {
     if (candidate) setSelectedCandidate(candidate.id, candidate.openingId)
@@ -270,10 +271,37 @@ export function CandidateEvidencePage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-5">
-        <div className="col-span-2 space-y-4">
-          {hasAssessment ? (
-            <div className="rounded-xl border border-palette-brand-200 bg-palette-brand-100/30 p-5 shadow-xs">
+      <div>
+        <nav className="-mb-px flex items-center gap-5 border-b border-border" aria-label="Candidate sections">
+          {(
+            [
+              { key: 'assessment', label: 'AI Assessment', icon: Sparkles },
+              { key: 'evidence', label: 'Evidence', icon: ClipboardList },
+              { key: 'resume', label: 'Resume', icon: FileText },
+              { key: 'profile', label: 'Profile', icon: UserRound },
+              { key: 'details', label: 'Details', icon: Info },
+              { key: 'criteria', label: 'Criteria', icon: Briefcase },
+              { key: 'activity', label: 'Activity', icon: Activity },
+            ] as const
+          ).map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                'flex items-center gap-1.5 border-b-2 pb-3 text-sm font-medium transition-colors focus-visible:outline-none',
+                activeTab === tab.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
+              )}
+            >
+              <tab.icon className="h-4 w-4" aria-hidden="true" />
+              {tab.label}
+            </button>
+          ))}
+        </nav>
+
+        {activeTab === 'assessment' ? (
+          hasAssessment ? (
+            <div className="mt-4 rounded-xl border border-palette-brand-200 bg-palette-brand-100/30 p-5 shadow-xs">
               <div className="flex items-center gap-2">
                 <IconBadge icon={Sparkles} color="brand" size="sm" />
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-primary">AI assessment</h2>
@@ -285,8 +313,16 @@ export function CandidateEvidencePage() {
                   {candidate.prioritiesSupported !== undefined && `${candidate.prioritiesSupported} of 5 priorities supported`}
                 </p>
               )}
+
+              {criteria.length > 0 && (
+                <div className="mt-4 border-t border-border pt-3.5">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">How the profile matches each criterion</p>
+                  <CriteriaMatchVisual criteria={criteria} evidence={candidate.evidence} />
+                </div>
+              )}
+
               {strengths.length > 0 && (
-                <div className="mt-3">
+                <div className="mt-4 border-t border-border pt-3.5">
                   <p className="text-xs font-semibold uppercase tracking-wide text-palette-success-700">Strongest evidence</p>
                   <p className="mt-1 text-sm text-foreground">{strengths.join(', ')}</p>
                 </div>
@@ -304,38 +340,11 @@ export function CandidateEvidencePage() {
               {!candidate.summary && candidate.notableGap && <p className="mt-3 text-sm leading-relaxed text-foreground/90">{candidate.notableGap}</p>}
             </div>
           ) : (
-            <div className="rounded-xl border border-border bg-muted p-5 text-sm text-muted-foreground shadow-xs">
+            <div className="mt-4 rounded-xl border border-border bg-muted p-5 text-sm text-muted-foreground shadow-xs">
               A detailed AI assessment isn&rsquo;t available for this candidate yet.
             </div>
-          )}
-
-          <div>
-            <nav className="-mb-px flex items-center gap-5 border-b border-border" aria-label="Candidate sections">
-              {(
-                [
-                  { key: 'evidence', label: 'Evidence', icon: ClipboardList },
-                  { key: 'resume', label: 'Resume', icon: FileText },
-                  { key: 'profile', label: 'Profile', icon: UserRound },
-                  { key: 'details', label: 'Details', icon: Info },
-                  { key: 'activity', label: 'Activity', icon: Activity },
-                ] as const
-              ).map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setActiveTab(tab.key)}
-                  className={cn(
-                    'flex items-center gap-1.5 border-b-2 pb-3 text-sm font-medium transition-colors focus-visible:outline-none',
-                    activeTab === tab.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
-                  )}
-                >
-                  <tab.icon className="h-4 w-4" aria-hidden="true" />
-                  {tab.label}
-                </button>
-              ))}
-            </nav>
-
-            {activeTab === 'evidence' ? (
+          )
+        ) : activeTab === 'evidence' ? (
               <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-xs">
                 <CriterionEvidenceList criteria={criteria} evidence={candidate.evidence} experience={experience} />
                 {hasUncertainty && (
@@ -502,6 +511,41 @@ export function CandidateEvidencePage() {
                     <dd className="font-medium text-foreground">{candidate.updatedLabel ?? '—'}</dd>
                   </div>
                 </dl>
+                {candidate.notes && (
+                  <div className="mt-4 border-t border-border pt-4">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Notes</h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-foreground">{candidate.notes}</p>
+                  </div>
+                )}
+              </div>
+            ) : activeTab === 'criteria' ? (
+              <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-xs">
+                {criteria.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No hiring criteria are configured for this role yet.</p>
+                ) : (
+                  <ul className="space-y-3">
+                    {criteria.map((criterion) => (
+                      <li key={criterion.key} className="flex items-start justify-between gap-3 border-b border-border pb-3 last:border-0 last:pb-0">
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{criterion.name}</p>
+                          {criterion.description && <p className="mt-0.5 text-xs text-muted-foreground">{criterion.description}</p>}
+                        </div>
+                        <span className="shrink-0 rounded-md bg-palette-neutral-100 px-2 py-0.5 text-xs font-medium text-palette-neutral-700">
+                          {criterion.priority}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {opening && (
+                  <Link
+                    to={`/openings/${opening.id}/criteria`}
+                    className="mt-4 inline-flex items-center gap-1.5 border-t border-border pt-3 text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    Manage {opening.title} hiring criteria
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                  </Link>
+                )}
               </div>
             ) : (
               <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-xs">
@@ -535,30 +579,6 @@ export function CandidateEvidencePage() {
                 )}
               </div>
             )}
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          {opening && (
-            <Link
-              to={`/openings/${opening.id}/criteria`}
-              className="flex items-center gap-2.5 rounded-xl border border-border bg-card p-4 text-sm font-medium text-foreground shadow-xs hover:border-palette-brand-250 hover:bg-accent"
-            >
-              <IconBadge icon={Briefcase} color="plum" size="sm" />
-              View {opening.title} hiring criteria
-            </Link>
-          )}
-
-          {candidate.notes && (
-            <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-              <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">
-                <IconBadge icon={FileText} color="neutral" size="sm" />
-                Notes
-              </h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-foreground">{candidate.notes}</p>
-            </div>
-          )}
-        </div>
       </div>
 
       {upcomingStage && (
