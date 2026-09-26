@@ -97,34 +97,34 @@ export function RoleWorkspaceOverviewPage() {
               <p className="text-sm text-muted-foreground">Nobody is currently recommended for a closer look.</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[700px] border-collapse text-sm">
+                <table className="w-full min-w-[700px] border-collapse overflow-hidden rounded-lg text-sm">
                   <thead>
-                    <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">
-                      <th className="whitespace-nowrap py-2 pr-3">Candidate</th>
-                      <th className="whitespace-nowrap py-2 pr-3">Match</th>
-                      <th className="whitespace-nowrap py-2 pr-3">Priorities met</th>
-                      <th className="whitespace-nowrap py-2 pr-3">Current title</th>
-                      <th className="whitespace-nowrap py-2 pr-3">Experience</th>
-                      <th className="whitespace-nowrap py-2 pr-3">Stage</th>
-                      <th className="py-2" />
+                    <tr className="border-b border-border bg-palette-neutral-200 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700">
+                      <th className="whitespace-nowrap px-3 py-2.5 first:pl-3">Candidate</th>
+                      <th className="whitespace-nowrap px-3 py-2.5">Match</th>
+                      <th className="whitespace-nowrap px-3 py-2.5">Priorities met</th>
+                      <th className="whitespace-nowrap px-3 py-2.5">Current title</th>
+                      <th className="whitespace-nowrap px-3 py-2.5">Experience</th>
+                      <th className="whitespace-nowrap px-3 py-2.5">Stage</th>
+                      <th className="py-2.5 pr-3" />
                     </tr>
                   </thead>
                   <tbody>
                     {recommended.map((candidate) => (
                       <tr key={candidate.id} className="border-b border-border last:border-0 hover:bg-muted/60">
-                        <td className="whitespace-nowrap py-2.5 pr-3">
+                        <td className="whitespace-nowrap px-3 py-2.5">
                           <Link to={`/candidates/${candidate.id}`} className="font-semibold text-palette-neutral-900 hover:text-primary focus-visible:outline-none focus-visible:underline">
                             {candidate.name}
                           </Link>
                         </td>
-                        <td className="whitespace-nowrap py-2.5 pr-3">{candidate.recommendation ? <RecommendationBadge label={candidate.recommendation} /> : '—'}</td>
-                        <td className="whitespace-nowrap py-2.5 pr-3 text-foreground">{candidate.prioritiesSupported !== undefined ? `${candidate.prioritiesSupported}/5` : '—'}</td>
-                        <td className="whitespace-nowrap py-2.5 pr-3 text-muted-foreground">{candidate.currentRole ?? '—'}</td>
-                        <td className="whitespace-nowrap py-2.5 pr-3 text-muted-foreground">{candidate.experienceYears !== undefined ? `${candidate.experienceYears} yrs` : '—'}</td>
-                        <td className="py-2.5 pr-3">
+                        <td className="whitespace-nowrap px-3 py-2.5">{candidate.recommendation ? <RecommendationBadge label={candidate.recommendation} /> : '—'}</td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-foreground">{candidate.prioritiesSupported !== undefined ? `${candidate.prioritiesSupported}/5` : '—'}</td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">{candidate.currentRole ?? '—'}</td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">{candidate.experienceYears !== undefined ? `${candidate.experienceYears} yrs` : '—'}</td>
+                        <td className="px-3 py-2.5">
                           <span className="whitespace-nowrap rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">{candidate.stage}</span>
                         </td>
-                        <td className="py-2.5 text-right">
+                        <td className="py-2.5 pr-3 text-right">
                           <Link to={`/candidates/${candidate.id}`} className="text-sm font-medium text-palette-neutral-600 hover:text-primary">
                             Review
                           </Link>

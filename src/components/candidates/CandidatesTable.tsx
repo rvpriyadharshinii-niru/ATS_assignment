@@ -29,7 +29,7 @@ function SortableHeaderCell({
     return (
       <th
         className={cn(
-          'sticky top-0 z-10 whitespace-nowrap border-b border-border bg-palette-neutral-100 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700',
+          'sticky top-0 z-10 whitespace-nowrap border-b border-border bg-palette-neutral-200 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700',
           className,
         )}
       >
@@ -39,7 +39,7 @@ function SortableHeaderCell({
   }
   const isActive = activeSortKey === sortKey
   return (
-    <th className={cn('sticky top-0 z-10 whitespace-nowrap border-b border-border bg-palette-neutral-100 px-3 py-2.5 text-left', className)}>
+    <th className={cn('sticky top-0 z-10 whitespace-nowrap border-b border-border bg-palette-neutral-200 px-3 py-2.5 text-left', className)}>
       <button
         type="button"
         onClick={() => onSort(sortKey)}
@@ -84,7 +84,7 @@ export function CandidatesTable({
       <table className="w-full min-w-[960px] border-collapse text-sm">
         <thead>
           <tr>
-            <th className="sticky top-0 z-10 w-10 border-b border-border bg-palette-neutral-100 px-3 py-2.5">
+            <th className="sticky top-0 z-10 w-10 border-b border-border bg-palette-neutral-200 px-3 py-2.5">
               <input
                 type="checkbox"
                 checked={allSelected}
@@ -120,7 +120,7 @@ export function CandidatesTable({
             <SortableHeaderCell sortKey="updated" activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
               Updated
             </SortableHeaderCell>
-            <th className="sticky top-0 z-10 w-10 border-b border-border bg-palette-neutral-100 px-3 py-2.5" />
+            <th className="sticky top-0 z-10 w-10 border-b border-border bg-palette-neutral-200 px-3 py-2.5" />
           </tr>
         </thead>
         <tbody>

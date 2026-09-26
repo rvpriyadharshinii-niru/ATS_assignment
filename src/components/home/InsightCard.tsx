@@ -36,8 +36,7 @@ export function InsightCard({ insight }: { insight: HomeInsight }) {
           <p className="mt-1 max-w-xl text-sm leading-relaxed text-muted-foreground">{insight.detail}</p>
         </div>
       </div>
-      <div className="flex shrink-0 flex-col items-end gap-1.5">
-        {insight.action && <InsightAction action={insight.action} />}
+      <div className="flex shrink-0 items-center gap-3">
         {insight.secondaryAction && (
           <Link
             to={insight.secondaryAction.to}
@@ -47,6 +46,7 @@ export function InsightCard({ insight }: { insight: HomeInsight }) {
             <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
           </Link>
         )}
+        {insight.action && <InsightAction action={insight.action} />}
       </div>
     </div>
   )

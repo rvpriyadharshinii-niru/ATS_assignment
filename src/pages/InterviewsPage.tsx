@@ -101,7 +101,7 @@ function QueueTable({ candidates, emptyMessage }: { candidates: Candidate[]; emp
     <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-xs">
       <table className="w-full min-w-[1040px] border-collapse text-sm">
         <thead>
-          <tr className="border-b border-border bg-palette-neutral-100">
+          <tr className="border-b border-border bg-palette-neutral-200">
             <th className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700">Candidate</th>
             <th className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700">Interview</th>
             <th className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700">Interviewers</th>

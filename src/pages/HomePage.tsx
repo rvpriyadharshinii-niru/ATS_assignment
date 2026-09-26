@@ -86,27 +86,27 @@ export function HomePage() {
               <div className="min-w-0">
                 <p className="text-2xl font-bold leading-tight tracking-tight text-palette-neutral-900">{metric.value}</p>
                 <p className="truncate text-xs font-medium text-muted-foreground">{metric.label}</p>
+                {metric.secondary && <p className="mt-1 truncate text-xs text-palette-neutral-500">{metric.secondary}</p>}
               </div>
             </div>
-            {metric.secondary && <p className="mt-2 truncate text-xs text-palette-neutral-500">{metric.secondary}</p>}
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-3 gap-6">
-        <section className="col-span-2">
+      <div className="grid grid-cols-3 items-stretch gap-6">
+        <section className="col-span-2 flex flex-col">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
             <IconBadge icon={CircleAlert} color="warning" size="sm" />
             Needs your attention
           </h2>
-          <div className="mt-3 rounded-xl border border-border bg-card p-2 shadow-xs">
+          <div className="mt-3 flex-1 rounded-xl border border-border bg-card p-2 shadow-xs">
             {homeInsights.map((insight) => (
               <InsightCard key={insight.id} insight={insight} />
             ))}
           </div>
         </section>
 
-        <div className="space-y-6">
+        <div className="flex flex-col gap-6">
           <section>
             <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
               <IconBadge icon={Calendar} color="plum" size="sm" />
@@ -136,12 +136,12 @@ export function HomePage() {
             </div>
           </section>
 
-          <section>
+          <section className="flex flex-1 flex-col">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
               <IconBadge icon={TrendingUp} color="success" size="sm" />
               Pipeline snapshot
             </h2>
-            <div className="mt-3 rounded-xl border border-border bg-card p-4 shadow-xs">
+            <div className="mt-3 flex-1 rounded-xl border border-border bg-card p-4 shadow-xs">
               <p className="text-xs font-medium text-muted-foreground">Senior Product Designer</p>
               <div className="mt-3 space-y-2.5">
                 {(() => {
@@ -173,7 +173,7 @@ export function HomePage() {
         <div className="mt-3 overflow-hidden rounded-xl border border-border bg-card shadow-xs">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-border bg-palette-neutral-100 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700">
+              <tr className="border-b border-border bg-palette-neutral-200 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700">
                 <th className="px-4 py-2.5">Role</th>
                 <th className="px-4 py-2.5">Candidates</th>
                 <th className="px-4 py-2.5">Needs attention</th>

@@ -11,7 +11,7 @@ const COLOR_CLASSES: Record<IconBadgeColor, string> = {
   success: 'bg-palette-success-150 text-palette-success-700',
   warning: 'bg-palette-warning-150 text-palette-warning-700',
   danger: 'bg-palette-danger-150 text-palette-danger-600',
-  neutral: 'bg-palette-neutral-150 text-palette-neutral-600',
+  neutral: 'bg-palette-neutral-200 text-palette-neutral-700',
 }
 
 const SIZE_CLASSES: Record<'sm' | 'md' | 'lg', string> = {
