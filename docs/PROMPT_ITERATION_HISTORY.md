@@ -9,10 +9,7 @@ and minor spacing fixes are intentionally omitted.
 
 > **Scope note.** This is not the complete working transcript. ChatGPT
 > entries are condensed from the design working session; Claude Code
-> entries preserve the key wording from the build history. The full,
-> unabridged Claude Code build transcript for the portion of the project
-> done in this environment is also in this repo, at
-> [`docs/CLAUDE_CODE_HISTORY.md`](./CLAUDE_CODE_HISTORY.md).
+> entries preserve the key wording from the build history.
 
 A rendered copy of this same document is also included as
 [`HireFlow_Selected_AI_Prompt_History.pdf`](./HireFlow_Selected_AI_Prompt_History.pdf).
