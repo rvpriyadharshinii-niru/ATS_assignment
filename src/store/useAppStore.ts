@@ -1,6 +1,11 @@
 import { create } from 'zustand'
-import { addManualCandidate, applyCandidateOverride, candidates, getCandidate, slugifyCandidateId } from '../data/candidates'
-import { addCriterionToOpening, removeCriterionFromOpening, setCriterionPriority as setCriterionPriorityData } from '../data/criteria'
+import { addManualCandidate, applyCandidateOverride, candidates, getCandidate, resetCandidatesToSeed, slugifyCandidateId } from '../data/candidates'
+import {
+  addCriterionToOpening,
+  removeCriterionFromOpening,
+  resetCriteriaToSeed,
+  setCriterionPriority as setCriterionPriorityData,
+} from '../data/criteria'
 import { seedConversationOrder, seedConversationsById } from '../data/seedConversations'
 import { resolveOpeningOverride, runCopilotQuery } from '../copilot/engine'
 import type {
@@ -112,6 +117,9 @@ interface AppState {
   pushToast: (message: string, options?: { actionLabel?: string; onAction?: () => void }) => void
   dismissToast: (id: string) => void
   undoLastMutation: () => void
+
+  /** Restores every mutable demo state — candidates, criteria, overrides, filters, activity, conversations — to the original seed. */
+  resetDemoData: () => void
 
   resolveCopilotTurn: (turnId: string, result: CopilotResult) => void
   confirmPendingAction: (turnId: string, action: PendingAction) => void
@@ -428,6 +436,27 @@ export const useAppStore = create<AppState>((set, get) => ({
   removeCriterion: (openingId, criterionKey) => {
     removeCriterionFromOpening(openingId, criterionKey)
     set((state) => ({ criteriaVersion: state.criteriaVersion + 1 }))
+  },
+
+  resetDemoData: () => {
+    resetCandidatesToSeed()
+    resetCriteriaToSeed()
+    set({
+      selectedOpeningId: null,
+      selectedCandidateId: null,
+      filters: [],
+      copilotExpanded: false,
+      copilotExpandedFrom: null,
+      conversations: seedConversationsById,
+      conversationOrder: seedConversationOrder,
+      activeConversationId: null,
+      candidateOverrides: {},
+      sentEmails: [],
+      activityLog: [],
+      criteriaVersion: 0,
+      toasts: [],
+      lastUndo: null,
+    })
   },
 
   resolveCopilotTurn: (turnId, result) =>

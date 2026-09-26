@@ -10,7 +10,7 @@ export const crossRoleAttention: CrossRoleAttentionItem[] = [
   {
     openingId: 'senior-product-designer',
     openingTitle: 'Senior Product Designer',
-    headline: '3 interviews waiting for your feedback.',
+    headline: '3 interviews waiting for feedback.',
     action: { label: 'Review interviews', query: 'Review interviews for Senior Product Designer' },
   },
   {

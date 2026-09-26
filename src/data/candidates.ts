@@ -397,6 +397,14 @@ export function addManualCandidate(candidate: Candidate): void {
   candidates.push(candidate)
 }
 
+/** The prototype's original named record count — every candidate added after this point (Add Candidate, CSV Import) is demo-session-only. */
+const SEED_CANDIDATE_COUNT = candidates.length
+
+/** Drops every candidate added during this session, restoring the original named records — used by Settings' "Reset demo data". */
+export function resetCandidatesToSeed(): void {
+  candidates.length = SEED_CANDIDATE_COUNT
+}
+
 export function slugifyCandidateId(name: string): string {
   const base = name
     .trim()

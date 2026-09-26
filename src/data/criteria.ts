@@ -86,3 +86,14 @@ export function removeCriterionFromOpening(openingId: OpeningId, criterionKey: C
   const index = list.findIndex((entry) => entry.key === criterionKey)
   if (index >= 0) list.splice(index, 1)
 }
+
+/** A frozen copy of the original configured criteria, taken before any session mutation. */
+const DEFAULT_SPD_CRITERIA: HiringCriterion[] = seniorProductDesignerCriteria.map((criterion) => ({ ...criterion }))
+
+/** Restores priorities, added and removed criteria back to the original configuration — used by Settings' "Reset demo data". */
+export function resetCriteriaToSeed(): void {
+  const list = criteriaByOpening['senior-product-designer']
+  if (!list) return
+  list.length = 0
+  list.push(...DEFAULT_SPD_CRITERIA.map((criterion) => ({ ...criterion })))
+}

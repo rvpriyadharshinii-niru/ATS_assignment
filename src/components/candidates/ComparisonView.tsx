@@ -63,7 +63,7 @@ export function ComparisonView({ candidates, criteria, summary }: { candidates: 
               ))}
             </tr>
             <tr className="border-b border-border">
-              <td className="px-3 py-2.5 text-foreground">Screening score</td>
+              <td className="px-3 py-2.5 text-foreground">AI score</td>
               {candidates.map((candidate) => (
                 <td key={candidate.id} className="px-3 py-2.5 text-foreground">
                   {candidate.screeningScore ?? '—'}

@@ -1,3 +1,4 @@
+import { Sparkles } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { CandidateCard } from '../components/candidates/CandidateCard'
 import { FilterChips } from '../components/candidates/FilterChips'
@@ -35,6 +36,8 @@ export function PipelinePage() {
   const candidates = useEffectiveCandidatesForOpening(opening?.id as OpeningId | undefined)
   const stageCounts = usePipelineStages(opening?.id as OpeningId | undefined)
   const filters = useAppStore((state) => state.filters)
+  const addFilter = useAppStore((state) => state.addFilter)
+  const submitCopilotMessage = useAppStore((state) => state.submitCopilotMessage)
 
   if (!opening) return null
 
@@ -52,12 +55,54 @@ export function PipelinePage() {
 
   const hasFilters = filters.length > 0
 
+  const interviewCandidates = active.filter((candidate) => candidate.stage === 'Interview')
+  const waitingOnYou = interviewCandidates.filter((candidate) => candidate.waitingOn === 'priya')
+  const waitingOnOthers = interviewCandidates.filter((candidate) => candidate.waitingOn === 'other')
+  const totalWaiting = waitingOnYou.length + waitingOnOthers.length
+  const minWaitingDays = totalWaiting > 0 ? Math.min(...[...waitingOnYou, ...waitingOnOthers].map((c) => c.waitingDays ?? 0)) : 0
+  const longestWaitingOnYou = waitingOnYou.length > 0 ? waitingOnYou.reduce((a, b) => ((a.waitingDays ?? 0) >= (b.waitingDays ?? 0) ? a : b)) : undefined
+
   return (
     <div className="space-y-4 p-6">
       <div>
         <h1 className="text-lg font-semibold text-palette-neutral-900">Pipeline</h1>
         <p className="text-sm text-muted-foreground">Where every active candidate for this role stands right now.</p>
       </div>
+
+      {totalWaiting > 0 && (
+        <div className="rounded-xl border border-palette-brand-200 bg-palette-brand-100/40 p-4 shadow-xs">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-palette-brand-150 text-primary">
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Pipeline insight</p>
+              <p className="mt-1 text-sm font-semibold text-palette-neutral-900">Interview is the current bottleneck.</p>
+              <p className="mt-1 text-sm text-foreground">
+                {totalWaiting} candidate{totalWaiting > 1 ? 's have' : ' has'} been waiting for feedback for {minWaitingDays}+ days.
+                {longestWaitingOnYou && ` Your feedback on ${longestWaitingOnYou.name} has been pending for ${longestWaitingOnYou.waitingDays} days.`}
+              </p>
+              <div className="mt-2.5 flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => addFilter({ id: 'ai-stalled', label: 'Waiting in Interview', source: 'ai', kind: 'stalled' })}
+                  className="text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Review blockers
+                </button>
+                <button
+                  type="button"
+                  onClick={() => submitCopilotMessage("What's blocking this role?")}
+                  className="text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  Ask Copilot
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {hasFilters && <FilterChips />}
       <div className="flex gap-4 overflow-x-auto pb-2">
         {STAGES.map((stage) => {

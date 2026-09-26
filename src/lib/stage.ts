@@ -7,6 +7,11 @@ export function nextStage(stage: CandidateStage): CandidateStage | undefined {
   return index >= 0 && index < STAGE_ORDER.length - 1 ? STAGE_ORDER[index + 1] : undefined
 }
 
+/** "Move to Offer" reads as a decision, not just an evaluation step — every other transition stays "Advance to X". */
+export function advanceCtaLabel(toStage: CandidateStage): string {
+  return toStage === 'Offer' ? 'Move to Offer' : `Advance to ${toStage}`
+}
+
 /** Shared with the manual Advance dialog and the Copilot advance confirmation card. */
 export function advanceConsequences(toStage: CandidateStage): string[] {
   if (toStage === 'Interview') {

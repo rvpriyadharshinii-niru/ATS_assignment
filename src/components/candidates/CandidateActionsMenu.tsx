@@ -1,6 +1,6 @@
 import { MoreHorizontal } from 'lucide-react'
 import { useState } from 'react'
-import { advanceConsequences, nextStage } from '../../lib/stage'
+import { advanceConsequences, advanceCtaLabel, nextStage } from '../../lib/stage'
 import { useAppStore } from '../../store/useAppStore'
 import type { Candidate } from '../../types/domain'
 import { ConfirmDialog } from '../ui/ConfirmDialog'
@@ -48,7 +48,7 @@ export function CandidateActionsMenu({ candidate }: { candidate: Candidate }) {
                 }}
                 className="block w-full px-3 py-1.5 text-left text-sm text-foreground hover:bg-muted"
               >
-                Advance to {upcoming}
+                {advanceCtaLabel(upcoming)}
               </button>
             )}
             {!candidate.hold && (

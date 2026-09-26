@@ -1,61 +1,67 @@
-import { Briefcase, Calendar, ChevronRight, CircleAlert, MessageSquare, Search, Users } from 'lucide-react'
-import { useEffect } from 'react'
+import { Briefcase, Calendar, ChevronRight, CircleAlert, Users } from 'lucide-react'
+import { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { InsightCard } from '../components/home/InsightCard'
 import { PriorityTag } from '../components/openings/OpeningCard'
 import { globalMetrics, openings } from '../data/openings'
 import { homeInsights } from '../data/insights'
-import { usePipelineStages } from '../store/candidateSelectors'
+import { deriveInterviewDayLabel, deriveInterviewType } from '../lib/candidateStatus'
+import { useEffectiveCandidatesForOpening, usePipelineStages } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
 
 const highPriorityRoles = openings.filter((opening) => opening.priority === 'High').length
 const highPriorityAttention = openings.filter((opening) => opening.priority === 'High').reduce((sum, opening) => sum + opening.needsAttention, 0)
 const newThisWeek = openings.reduce((sum, opening) => sum + (opening.newSinceLastReview ?? 0), 0)
 
-const METRICS = [
-  {
-    label: 'Active Roles',
-    value: globalMetrics.activeRoles,
-    icon: Briefcase,
-    tint: 'bg-palette-neutral-150 text-palette-neutral-600',
-    secondary: highPriorityRoles > 0 ? `${highPriorityRoles} high priority` : undefined,
-  },
-  {
-    label: 'Candidates',
-    value: globalMetrics.totalCandidates,
-    icon: Users,
-    tint: 'bg-palette-info-150 text-palette-info-600',
-    secondary: newThisWeek > 0 ? `${newThisWeek} new this week` : undefined,
-  },
-  {
-    label: 'Need Attention',
-    value: globalMetrics.needAttention,
-    icon: CircleAlert,
-    tint: 'bg-palette-warning-150 text-palette-warning-600',
-    secondary: highPriorityAttention > 0 ? `${highPriorityAttention} high priority` : undefined,
-  },
-  {
-    label: 'Interviews This Week',
-    value: globalMetrics.interviewsThisWeek,
-    icon: Calendar,
-    tint: 'bg-palette-brand-100 text-palette-brand-600',
-    secondary: '2 waiting on your feedback',
-  },
-]
-
-const UPCOMING = [
-  { openingTitle: 'Senior Product Designer', text: '2 interviews waiting on your feedback', icon: MessageSquare },
-  { openingTitle: 'Product Manager', text: '1 interview this week', icon: Calendar },
-  { openingTitle: 'UX Researcher', text: 'Screening in progress', icon: Search },
-]
-
 export function HomePage() {
   const setSelectedOpening = useAppStore((state) => state.setSelectedOpening)
   const spdStages = usePipelineStages('senior-product-designer')
+  const spdCandidates = useEffectiveCandidatesForOpening('senior-product-designer')
 
   useEffect(() => {
     setSelectedOpening(null)
   }, [setSelectedOpening])
+
+  // "Upcoming" is time-based scheduled events only — interviews that haven't happened yet. Candidates
+  // already interviewed and waiting on feedback belong in "Needs your attention" instead, never both.
+  const upcomingInterviews = useMemo(
+    () =>
+      spdCandidates
+        .filter((candidate) => candidate.stage === 'Interview' && !candidate.waitingOn && !candidate.rejected)
+        .map((candidate) => ({ candidate, ...deriveInterviewDayLabel(candidate) })),
+    [spdCandidates],
+  )
+
+  const METRICS = [
+    {
+      label: 'Active Roles',
+      value: globalMetrics.activeRoles,
+      icon: Briefcase,
+      tint: 'bg-palette-neutral-150 text-palette-neutral-600',
+      secondary: highPriorityRoles > 0 ? `${highPriorityRoles} high priority` : undefined,
+    },
+    {
+      label: 'Candidates',
+      value: globalMetrics.totalCandidates,
+      icon: Users,
+      tint: 'bg-palette-info-150 text-palette-info-600',
+      secondary: newThisWeek > 0 ? `${newThisWeek} new this week` : undefined,
+    },
+    {
+      label: 'Need Attention',
+      value: globalMetrics.needAttention,
+      icon: CircleAlert,
+      tint: 'bg-palette-warning-150 text-palette-warning-600',
+      secondary: highPriorityAttention > 0 ? `${highPriorityAttention} high priority` : undefined,
+    },
+    {
+      label: 'Interviews This Week',
+      value: globalMetrics.interviewsThisWeek,
+      icon: Calendar,
+      tint: 'bg-palette-brand-100 text-palette-brand-600',
+      secondary: upcomingInterviews.length > 0 ? `${upcomingInterviews.length} scheduled for Senior Product Designer` : undefined,
+    },
+  ]
 
   return (
     <div className="space-y-5 p-6">
@@ -93,17 +99,30 @@ export function HomePage() {
           <section>
             <h2 className="text-sm font-semibold text-palette-neutral-900">Upcoming</h2>
             <div className="mt-3 divide-y divide-border rounded-xl border border-border bg-card shadow-xs">
-              {UPCOMING.map((item) => (
-                <div key={item.text} className="flex items-start gap-3 px-4 py-3.5">
-                  <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-palette-neutral-100 text-palette-neutral-500">
-                    <item.icon className="h-3.5 w-3.5" aria-hidden="true" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium text-muted-foreground">{item.openingTitle}</p>
-                    <p className="text-sm text-foreground">{item.text}</p>
-                  </div>
-                </div>
-              ))}
+              {upcomingInterviews.length === 0 ? (
+                <p className="px-4 py-3.5 text-sm text-muted-foreground">No interviews scheduled right now.</p>
+              ) : (
+                upcomingInterviews.map(({ candidate, dayLabel, time }) => (
+                  <Link
+                    key={candidate.id}
+                    to={`/candidates/${candidate.id}`}
+                    className="flex items-start gap-3 px-4 py-3.5 hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+                  >
+                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-palette-neutral-100 text-palette-neutral-500">
+                      <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-medium text-muted-foreground">
+                        {dayLabel} · {time}
+                      </p>
+                      <p className="text-sm font-medium text-foreground">
+                        Senior Product Designer {deriveInterviewType(candidate).toLowerCase()}
+                      </p>
+                      <p className="text-sm text-muted-foreground">{candidate.name}</p>
+                    </div>
+                  </Link>
+                ))
+              )}
             </div>
           </section>
 

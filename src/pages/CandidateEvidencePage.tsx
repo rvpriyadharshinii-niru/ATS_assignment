@@ -22,17 +22,17 @@ import { EmailComposeDialog } from '../components/candidates/EmailComposeDialog'
 import { RecommendationBadge } from '../components/candidates/RecommendationBadge'
 import { getCriteria } from '../data/criteria'
 import { getOpening } from '../data/openings'
-import { buildStatusNote } from '../lib/candidateStatus'
+import { buildStatusNote, deriveAppliedDate, deriveCandidateEmail } from '../lib/candidateStatus'
 import { cn } from '../lib/cn'
 import { needsValidationCriteriaNames, strongCriteriaNames } from '../lib/criteriaSummary'
 import { isUncertainStrength } from '../lib/evidence'
-import { advanceConsequences, nextStage } from '../lib/stage'
+import { advanceConsequences, advanceCtaLabel, nextStage } from '../lib/stage'
 import { useEffectiveCandidate } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
 import type { ActivityEvent, Candidate } from '../types/domain'
 
 type OpenDialog = 'advance' | 'hold' | 'reject' | 'email' | null
-type DetailTab = 'evidence' | 'activity'
+type DetailTab = 'evidence' | 'resume' | 'activity'
 
 function initialsFor(name: string): string {
   return name
@@ -55,7 +55,7 @@ function activityIcon(message: string): ComponentType<{ className?: string }> {
 }
 
 function formatEventTime(timestamp: number): string {
-  return new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  return new Date(timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
 }
 
 /** Base context entries every candidate has, shown under the real (timestamped) activity log. */
@@ -203,7 +203,7 @@ export function CandidateEvidencePage() {
                     onClick={() => setOpenDialog('advance')}
                     className="rounded-lg bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    Advance to {upcomingStage}
+                    {advanceCtaLabel(upcomingStage)}
                   </button>
                 )}
                 {!candidate.hold && (
@@ -286,6 +286,7 @@ export function CandidateEvidencePage() {
               {(
                 [
                   { key: 'evidence', label: 'Evidence', icon: ClipboardList },
+                  { key: 'resume', label: 'Resume', icon: FileText },
                   { key: 'activity', label: 'Activity', icon: Activity },
                 ] as const
               ).map((tab) => (
@@ -314,6 +315,45 @@ export function CandidateEvidencePage() {
                     finding.
                   </p>
                 )}
+              </div>
+            ) : activeTab === 'resume' ? (
+              <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-xs">
+                <div className="border-b border-border pb-3">
+                  <p className="text-sm font-semibold text-palette-neutral-900">{candidate.name}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">
+                    {[deriveCandidateEmail(candidate), candidate.phone, candidate.location].filter(Boolean).join(' · ')}
+                  </p>
+                </div>
+                {candidate.currentRole || candidate.currentCompany || candidate.evidence.length > 0 ? (
+                  <div className="mt-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Experience</p>
+                    <p className="mt-1.5 text-sm font-medium text-foreground">
+                      {candidate.currentRole ?? 'Role not specified'}
+                      {candidate.currentCompany && ` · ${candidate.currentCompany}`}
+                    </p>
+                    {candidate.experienceYears !== undefined && (
+                      <p className="text-xs text-muted-foreground">{candidate.experienceYears} years of experience</p>
+                    )}
+                    {candidate.evidence.length > 0 && (
+                      <ul className="mt-2.5 space-y-1.5 text-sm leading-relaxed text-foreground/90">
+                        {candidate.evidence
+                          .filter((item) => item.detail)
+                          .slice(0, 4)
+                          .map((item) => (
+                            <li key={item.criterionKey} className="flex gap-2">
+                              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-palette-neutral-300" aria-hidden="true" />
+                              {item.detail}
+                            </li>
+                          ))}
+                      </ul>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-3 text-sm text-muted-foreground">A resume isn&rsquo;t available for this candidate yet.</p>
+                )}
+                <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
+                  Representative summary compiled from the application. Source: Resume · Application form.
+                </p>
               </div>
             ) : (
               <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-xs">
@@ -365,28 +405,36 @@ export function CandidateEvidencePage() {
                 <dd className="font-medium text-foreground">{candidate.stage}</dd>
               </div>
               <div className="flex items-center justify-between gap-3">
-                <dt className="text-muted-foreground">Source</dt>
-                <dd className="font-medium text-foreground">{candidate.source ?? '—'}</dd>
+                <dt className="text-muted-foreground">Email</dt>
+                <dd className="truncate font-medium text-foreground">{deriveCandidateEmail(candidate)}</dd>
               </div>
-              {candidate.email && (
-                <div className="flex items-center justify-between gap-3">
-                  <dt className="text-muted-foreground">Email</dt>
-                  <dd className="truncate font-medium text-foreground">{candidate.email}</dd>
-                </div>
-              )}
               {candidate.phone && (
                 <div className="flex items-center justify-between gap-3">
                   <dt className="text-muted-foreground">Phone</dt>
                   <dd className="font-medium text-foreground">{candidate.phone}</dd>
                 </div>
               )}
+              {candidate.location && (
+                <div className="flex items-center justify-between gap-3">
+                  <dt className="text-muted-foreground">Location</dt>
+                  <dd className="font-medium text-foreground">{candidate.location}</dd>
+                </div>
+              )}
               <div className="flex items-center justify-between gap-3">
-                <dt className="text-muted-foreground">Last activity</dt>
-                <dd className="font-medium text-foreground">{candidate.updatedLabel ?? '—'}</dd>
+                <dt className="text-muted-foreground">Source</dt>
+                <dd className="font-medium text-foreground">{candidate.source ?? '—'}</dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground">Applied</dt>
+                <dd className="font-medium text-foreground">{deriveAppliedDate(candidate)}</dd>
               </div>
               <div className="flex items-center justify-between gap-3">
                 <dt className="text-muted-foreground">Owner</dt>
                 <dd className="font-medium text-foreground">Priya Sharma</dd>
+              </div>
+              <div className="flex items-center justify-between gap-3">
+                <dt className="text-muted-foreground">Last activity</dt>
+                <dd className="font-medium text-foreground">{candidate.updatedLabel ?? '—'}</dd>
               </div>
             </dl>
           </div>

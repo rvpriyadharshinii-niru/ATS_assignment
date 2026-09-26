@@ -118,6 +118,7 @@ export function HiringCriteriaPage() {
   const { openingId } = useParams<{ openingId: string }>()
   const opening = getOpening(openingId)
   const filters = useAppStore((state) => state.filters)
+  const clearFilters = useAppStore((state) => state.clearFilters)
   const setCriterionPriority = useAppStore((state) => state.setCriterionPriority)
   const removeCriterion = useAppStore((state) => state.removeCriterion)
   const pushToast = useAppStore((state) => state.pushToast)
@@ -199,25 +200,35 @@ export function HiringCriteriaPage() {
 
       <div className="space-y-5">
         <section className="rounded-xl border border-palette-brand-200 bg-palette-brand-100 p-5 shadow-xs">
-          <h2 className="text-sm font-semibold text-palette-brand-700">Temporary exploration lens</h2>
+          <h2 className="text-sm font-semibold text-palette-brand-700">Exploration lens</h2>
           <p className="mt-1 text-sm text-palette-brand-700/80">
-            Priya can temporarily change how Copilot prioritizes candidates through conversation or manual filters. This never
-            changes the official criteria above.
+            Temporarily prioritize different qualities while exploring candidates. Your hiring criteria won&rsquo;t change.
           </p>
           {filters.length > 0 ? (
-            <ul className="mt-3 space-y-1.5">
-              {filters.map((filter) => (
-                <li key={filter.id} className="text-sm font-medium text-palette-brand-700">
-                  {filter.label}
-                </li>
-              ))}
-            </ul>
+            <>
+              <ul className="mt-3 space-y-1.5">
+                {filters.map((filter) => (
+                  <li key={filter.id} className="text-sm font-medium text-palette-brand-700">
+                    {filter.label} prioritized
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-3 text-sm font-medium text-palette-brand-700 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                Clear lens
+              </button>
+            </>
           ) : (
-            <p className="mt-3 text-sm text-palette-brand-700/70">No temporary lens is currently active.</p>
+            <>
+              <p className="mt-3 text-sm text-palette-brand-700/70">No exploration lens applied.</p>
+              <Link to={`/openings/${opening.id}/candidates`} className="mt-3 inline-block text-sm font-medium text-palette-brand-700 underline">
+                Explore candidates
+              </Link>
+            </>
           )}
-          <Link to={`/openings/${opening.id}/candidates`} className="mt-3 inline-block text-sm font-medium text-palette-brand-700 underline">
-            Open candidate exploration
-          </Link>
         </section>
       </div>
 

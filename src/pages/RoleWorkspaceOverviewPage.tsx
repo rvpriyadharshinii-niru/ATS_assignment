@@ -123,7 +123,7 @@ export function RoleWorkspaceOverviewPage() {
                     <tr className="border-b border-border text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">
                       <th className="py-2 pr-3">Candidate</th>
                       <th className="py-2 pr-3">Match</th>
-                      <th className="py-2 pr-3">Priorities</th>
+                      <th className="py-2 pr-3">Priorities met</th>
                       <th className="py-2 pr-3">Current title</th>
                       <th className="py-2 pr-3">Experience</th>
                       <th className="py-2 pr-3">Stage</th>
@@ -188,6 +188,7 @@ export function RoleWorkspaceOverviewPage() {
                 View all
               </Link>
             </div>
+            {criteria.length === 0 && <p className="text-sm text-muted-foreground">No criteria configured yet.</p>}
             <ul className="space-y-2">
               {criteria.map((criterion) => (
                 <li key={criterion.key} className="flex items-center justify-between text-sm">

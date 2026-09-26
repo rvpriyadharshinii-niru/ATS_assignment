@@ -8,7 +8,7 @@ import { needsValidationCriteriaNames, strongCriteriaNames } from '../lib/criter
 import { CRITERION_KEYWORDS } from '../lib/criterionKeywords'
 import { buildDefaultEmail } from '../lib/email'
 import { STRENGTH_RANK, isUncertainStrength } from '../lib/evidence'
-import { advanceConsequences } from '../lib/stage'
+import { advanceConsequences, nextStage } from '../lib/stage'
 import type { Candidate, CandidateStage, CriterionKey, CriterionPriority, OpeningId } from '../types/domain'
 import type { CopilotContext, CopilotResult, PendingAction } from '../types/copilot'
 
@@ -44,32 +44,36 @@ const INTERVIEW_PROBES: Partial<Record<CriterionKey, string>> = {
   enterpriseSaas: 'Tell me about designing for a demanding enterprise customer with conflicting needs.',
 }
 
-const WHY_PATTERN = /\bwhy\b/i
-const TOP_CANDIDATES_PATTERN = /who should i review|top candidates|which candidates/i
-const LENS_TRIGGER_PATTERN = /strongest|strong in|prioriti[sz]e|show candidates/i
+const WHY_PATTERN = /\bwhy\b|\bwhat evidence\b|\bwhat.*support/i
+const TOP_CANDIDATES_PATTERN = /who should i review|top candidates|which candidates|strongest.*candidates/i
+const LENS_TRIGGER_PATTERN = /strongest|strong in|show strong|prioriti[sz]e|show candidates|who has strong|filter for|only show/i
 const FINALIZE_PATTERN = /\bfinalize\b/i
 const REJECT_PATTERN = /\breject\b/i
 const HOLD_PATTERN = /\bhold\b/i
 const EMAIL_PATTERN = /\bemail\b/i
 const REVIEW_PATTERN = /\breview\b/i
-const COMPARE_PATTERN = /\bcompare\b/i
-const BLOCKING_PATTERN = /\bblocking\b|\bblocked\b|\bslowing down\b|\bbottleneck\b/i
-const WAITING_FEEDBACK_PATTERN = /waiting (for|on) feedback|pending feedback|review.*feedback/i
+const COMPARE_PATTERN = /\bcompare\b|\bvs\.?\b|\bversus\b/i
+const BLOCKING_PATTERN = /\bblocking\b|\bblocked\b|\bslowing down\b|\bbottleneck\b|\bstuck\b|\bstalled\b/i
+const WAITING_FEEDBACK_PATTERN = /waiting (for|on) feedback|pending feedback|review.*feedback|who.*\bwaiting\b|been waiting|needs?\b[\s\S]*\bfeedback\b/i
 const SHOW_THEM_PATTERN = /^show (them|these|those)\b|^show$/i
 const FINALISTS_PATTERN = /\bfinalists?\b/i
 const WHO_PATTERN = /\bwho\b/i
 const IN_PATTERN = /\bin\b/i
-const ADVANCE_PATTERN = /\b(move|advance)\b/i
+const STRONG_ADVANCE_VERB_PATTERN = /\b(advance|progress|shortlist)\b/i
+const MOVE_VERB_PATTERN = /\bmove\b/i
+const TAKE_FORWARD_PATTERN = /\btake\b[\s\S]*\bforward\b/i
+const NEXT_STAGE_HINT_PATTERN = /\bnext (round|stage)\b|\bforward\b/i
 const PRONOUN_PATTERN = /\bher\b|\bhim\b|\bthem\b|\bthis candidate\b/i
 const COLLECTIVE_PATTERN = /\bboth\b|\ball of them\b|\bthem\b/i
-const CONCERN_PATTERN = /biggest concern|main concern|biggest uncertainty|main uncertainty|what.*concern|what.*uncertaint/i
+const CONCERN_PATTERN = /biggest concern|main concern|biggest uncertainty|main uncertainty|what.*concern|what.*uncertaint|\bgaps?\b/i
 const GLOBAL_ATTENTION_PATTERN = /what needs my attention|needs my attention today|catch me up/i
 /** Splits a compound instruction like "Move Nisha to Final and hold Rohan" into per-candidate clauses. */
 const AND_SPLIT_PATTERN = /\s+and\s+/i
 const MAKE_PATTERN = /\bmake\b/i
+const INCREASE_PRIORITY_PATTERN = /\bincrease\b[\s\S]*\bpriority\b/i
 const PRIORITY_WORD_PATTERN = /\b(high|medium)\b/i
 const WAITING_DAYS_PATTERN = /waiting.*?(?:more than|over|at least|>\s*)?\s*(\d+)\+?\s*days?/i
-const SELECT_SHOW_PATTERN = /^(select|show)\b/i
+const SELECT_SHOW_PATTERN = /^(select|show|open)\b|\btell me about\b/i
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -77,6 +81,18 @@ function escapeRegExp(value: string): string {
 
 function findStageKeyword(input: string): CandidateStage | undefined {
   return STAGE_KEYWORDS.find((keyword) => keyword.pattern.test(input))?.stage
+}
+
+/**
+ * "advance/progress/shortlist X" and "take X forward" always mean moving to the next stage, even
+ * with no other qualifying words. Bare "move X" is ambiguous on its own — it only counts as an
+ * advance instruction when paired with an explicit stage name or a "forward"/"next stage" hint;
+ * otherwise the caller should ask where to move them instead of guessing.
+ */
+function isExplicitAdvanceIntent(input: string): boolean {
+  if (STRONG_ADVANCE_VERB_PATTERN.test(input) || TAKE_FORWARD_PATTERN.test(input)) return true
+  if (MOVE_VERB_PATTERN.test(input)) return !!findStageKeyword(input) || NEXT_STAGE_HINT_PATTERN.test(input)
+  return false
 }
 
 /** An explicit role name in the query text always overrides whatever opening the current page/conversation is scoped to. */
@@ -198,7 +214,7 @@ function handleLensChange(input: string, context: CopilotContext): CopilotResult
   if (!context.openingId) {
     return {
       kind: 'clarify',
-      message: `Which opening should I apply that to? Select Senior Product Designer and ask again.`,
+      message: 'Which opening would you like to review — Senior Product Designer, Product Manager or UX Researcher?',
     }
   }
 
@@ -249,13 +265,15 @@ function handleCompare(input: string, context: CopilotContext): CopilotResult {
 }
 
 function handleAdvance(input: string, context: CopilotContext): CopilotResult {
-  const toStage = findStageKeyword(input)
-  if (!toStage) {
-    return { kind: 'clarify', message: 'Which stage should I move them to — e.g. "Move Ananya to Interview"?' }
-  }
   const targets = resolveCandidates(input, context)
   if (targets.length === 0) {
-    return { kind: 'clarify', message: 'Who should I move? Try naming them, e.g. "Move Ananya to Interview".' }
+    return { kind: 'clarify', message: 'Who should I advance? Try naming them, e.g. "Advance Ananya".' }
+  }
+  // An explicit stage name always wins; otherwise "next round"/"forward"/bare advance verbs
+  // resolve relative to the first target's current stage — the shared destination for the batch.
+  const toStage = findStageKeyword(input) ?? nextStage(targets[0].stage)
+  if (!toStage) {
+    return { kind: 'text', message: `${targets[0].name} is already at the final stage — there's nowhere further to advance them.` }
   }
 
   const isBatch = targets.length > 1
@@ -408,11 +426,12 @@ function handleReview(input: string, context: CopilotContext): CopilotResult | u
   if (/\binterviews?\b/i.test(input)) return handleReviewInterviews(context)
   if (/\bfinalists?\b/i.test(input)) return handleReviewFinalists(context)
   if (/\bfeedback\b/i.test(input)) return handleReviewInterviews(context)
-  if (/\bcandidates?\b/i.test(input)) return handleTopCandidates(context)
   if (context.level === 'candidate' && context.candidateId) {
     const current = context.candidates.find((candidate) => candidate.id === context.candidateId)
     if (current) return handleCandidateReview(current)
   }
+  // "Review Product Manager" — a bare role mention with no other qualifier — falls back to that role's candidates.
+  if (context.openingId) return handleTopCandidates(context)
   return undefined
 }
 
@@ -450,25 +469,29 @@ function parseActionClause(clause: string, context: CopilotContext): { action: A
       consequences: [`Mark ${target.name} as the selected candidate`],
     }
   }
-  const stage = findStageKeyword(trimmed)
-  if (stage && ADVANCE_PATTERN.test(trimmed)) {
+  if (isExplicitAdvanceIntent(trimmed)) {
     const targets = matchCandidatesByName(trimmed, context)
     if (targets.length === 0) return undefined
+    const toStage = findStageKeyword(trimmed) ?? nextStage(targets[0].stage)
+    if (!toStage) return undefined
     return {
-      action: { kind: 'advance', candidateIds: targets.map((candidate) => candidate.id), toStage: stage },
-      lines: targets.map((candidate) => `${candidate.name} — ${candidate.stage} → ${stage}`),
-      consequences: targets.map((candidate) => `Update ${candidate.name}'s stage to ${stage}`),
+      action: { kind: 'advance', candidateIds: targets.map((candidate) => candidate.id), toStage },
+      lines: targets.map((candidate) => `${candidate.name} — ${candidate.stage} → ${toStage}`),
+      consequences: targets.map((candidate) => `Update ${candidate.name}'s stage to ${toStage}`),
     }
   }
   return undefined
 }
 
-/** "Make Design Systems High priority" — a role-configuration mutation, previewed like any other consequential change. */
+/** "Make Design Systems High priority" / "Increase Design Systems priority" — a role-configuration mutation, previewed like any other consequential change. */
 function handleCriterionPriorityChange(input: string, context: CopilotContext): CopilotResult | undefined {
-  if (!MAKE_PATTERN.test(input) || !context.openingId) return undefined
+  const isMakeForm = MAKE_PATTERN.test(input)
+  const isIncreaseForm = INCREASE_PRIORITY_PATTERN.test(input)
+  if (!context.openingId || (!isMakeForm && !isIncreaseForm)) return undefined
   const priorityMatch = PRIORITY_WORD_PATTERN.exec(input)
-  if (!priorityMatch) return undefined
-  const priority = (priorityMatch[1][0].toUpperCase() + priorityMatch[1].slice(1).toLowerCase()) as CriterionPriority
+  if (!priorityMatch && !isIncreaseForm) return undefined
+  // "Increase" with no explicit tier named always means High — there's no tier above it.
+  const priority = priorityMatch ? ((priorityMatch[1][0].toUpperCase() + priorityMatch[1].slice(1).toLowerCase()) as CriterionPriority) : 'High'
   const criterion = getCriteria(context.openingId).find((entry) => new RegExp(escapeRegExp(entry.name), 'i').test(input))
   if (!criterion) return undefined
 
@@ -675,7 +698,24 @@ export function runCopilotQuery(rawInput: string, context: CopilotContext): Copi
   if (HOLD_PATTERN.test(input)) return handleHold(input, effectiveContext)
   if (EMAIL_PATTERN.test(input)) return handleEmail(input, effectiveContext)
 
-  // "Select Ananya" / "Show Ananya" — a bare candidate name jumps straight to their review, same as "Review Ananya".
+  // "Advance/progress/shortlist Ananya", "advance Ananya to next round", "take Ananya forward" —
+  // every phrasing that unambiguously means "move to the next stage", resolved without requiring
+  // an exact scripted stage name.
+  if (isExplicitAdvanceIntent(input)) return handleAdvance(input, effectiveContext)
+  // A bare "move X" with no destination and no forward/next-stage hint is genuinely ambiguous —
+  // ask rather than guess, instead of falling through to the generic fallback.
+  if (MOVE_VERB_PATTERN.test(input)) {
+    const targets = resolveCandidates(input, effectiveContext)
+    if (targets.length > 0) {
+      const isBatch = targets.length > 1
+      const label = isBatch ? `${targets.length} candidates` : targets[0].name
+      const example = isBatch ? 'them to Interview' : `${targets[0].name.split(' ')[0]} to Interview`
+      return { kind: 'clarify', message: `Where would you like to move ${label}? Try naming a stage, e.g. "Move ${example}".` }
+    }
+  }
+
+  // "Select Ananya" / "Show Ananya" / "Open Ananya" / "Tell me about Ananya" — a bare candidate
+  // name jumps straight to their review, same as "Review Ananya".
   const selectShowResult = handleSelectOrShowName(input, effectiveContext)
   if (selectShowResult) return selectShowResult
 
@@ -688,6 +728,9 @@ export function runCopilotQuery(rawInput: string, context: CopilotContext): Copi
 
   if (CONCERN_PATTERN.test(input)) return handleBiggestConcern(input, effectiveContext)
   if (COMPARE_PATTERN.test(input)) return handleCompare(input, effectiveContext)
+  // "Who has stronger design systems evidence, Ananya or Rahul?" — no "compare"/"vs" keyword, but
+  // exactly two candidates are named, which is itself a strong comparison signal.
+  if (matchCandidatesByName(input, effectiveContext).length === 2) return handleCompare(input, effectiveContext)
 
   if (SHOW_THEM_PATTERN.test(input)) {
     const showResult = handleShowRecent(effectiveContext)
@@ -705,12 +748,26 @@ export function runCopilotQuery(rawInput: string, context: CopilotContext): Copi
   if (whoInStageResult) return whoInStageResult
 
   if (TOP_CANDIDATES_PATTERN.test(input)) return handleTopCandidates(effectiveContext)
-  if (ADVANCE_PATTERN.test(input) && findStageKeyword(input)) return handleAdvance(input, effectiveContext)
 
   const lensResult = handleLensChange(input, effectiveContext)
   if (lensResult) return lensResult
 
   if (WHY_PATTERN.test(input)) return handleWhy(input, effectiveContext)
+
+  // "Show Product Manager candidates" — an explicit role mention plus a bare "candidates" word,
+  // with nothing more specific matched above.
+  if (effectiveContext.openingId && /\bcandidates?\b/i.test(input)) return handleTopCandidates(effectiveContext)
+
+  // We can identify who this is about but not what to do — ask instead of returning generic help.
+  const namedFallback = matchCandidatesByName(input, effectiveContext)
+  if (namedFallback.length === 1) {
+    const candidate = namedFallback[0]
+    const firstName = candidate.name.split(' ')[0]
+    return {
+      kind: 'clarify',
+      message: `I understood that you want to take action on ${candidate.name}, but I'm not sure which action you mean. Try "Advance ${firstName}", "Hold ${firstName}", "Compare ${firstName} and another candidate", or "Why ${firstName}?"`,
+    }
+  }
 
   return handleFallback(effectiveContext)
 }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getInterviewFeedback } from '../data/interviewFeedback'
 import { getOpening } from '../data/openings'
+import { deriveInterviewDateTime, deriveInterviewType } from '../lib/candidateStatus'
 import { cn } from '../lib/cn'
 import { useEffectiveCandidatesForOpening } from '../store/candidateSelectors'
 import type { Candidate, OpeningId } from '../types/domain'
@@ -35,7 +36,9 @@ function QueueRow({ candidate }: { candidate: Candidate }) {
         </Link>
         {candidate.source && <p className="text-xs text-muted-foreground">Source: {candidate.source}</p>}
       </td>
+      <td className="px-3 py-2.5 align-top text-foreground">{deriveInterviewType(candidate)}</td>
       <td className="px-3 py-2.5 align-top text-muted-foreground">{interviewersFor(candidate)}</td>
+      <td className="px-3 py-2.5 align-top text-muted-foreground">{deriveInterviewDateTime(candidate)}</td>
       <td className="px-3 py-2.5 align-top text-foreground">{candidate.interviewStatus ?? candidate.stage}</td>
       <td className="px-3 py-2.5 align-top">
         <span
@@ -74,11 +77,13 @@ function QueueTable({ candidates, emptyMessage }: { candidates: Candidate[]; emp
   }
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-xs">
-      <table className="w-full min-w-[720px] border-collapse text-sm">
+      <table className="w-full min-w-[960px] border-collapse text-sm">
         <thead>
           <tr className="border-b border-border bg-palette-brand-100/50">
             <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Candidate</th>
+            <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Interview type</th>
             <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Interviewers</th>
+            <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Date &amp; time</th>
             <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Status</th>
             <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Feedback</th>
             <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Waiting</th>

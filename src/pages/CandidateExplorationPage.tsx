@@ -1,7 +1,7 @@
 import * as Dialog from '@radix-ui/react-dialog'
 import { Download, Plus, Search, SlidersHorizontal, Sparkles, Star, Upload, X } from 'lucide-react'
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { AddCandidateDialog } from '../components/candidates/AddCandidateDialog'
 import { AdvancedFiltersDrawer } from '../components/candidates/AdvancedFiltersDrawer'
 import { BulkMoveStageDialog } from '../components/candidates/BulkMoveStageDialog'
@@ -53,7 +53,8 @@ export function CandidateExplorationPage() {
   const openCopilot = useAppStore((state) => state.openCopilot)
   const pushToast = useAppStore((state) => state.pushToast)
   const pool = useEffectiveCandidatesForOpening(opening?.hasDetailedData ? (opening.id as OpeningId) : undefined)
-  const [recommendedOnly, setRecommendedOnly] = useState(false)
+  const [searchParams] = useSearchParams()
+  const [recommendedOnly, setRecommendedOnly] = useState(() => searchParams.get('view') === 'recommended')
   const [searchQuery, setSearchQuery] = useState('')
   const [sortKey, setSortKey] = useState<SortKey | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
@@ -123,7 +124,9 @@ export function CandidateExplorationPage() {
         <div>
           <h1 className="text-lg font-semibold text-palette-neutral-900">Candidates</h1>
           <p className="text-sm text-muted-foreground">
-            {visibleCandidates.length} of {opening.totalCandidates}
+            {hasFilters || isSearching || recommendedOnly
+              ? `${visibleCandidates.length} result${visibleCandidates.length === 1 ? '' : 's'} · ${opening.totalCandidates} total applicants`
+              : `Showing ${pool.length} of ${opening.totalCandidates} total applicants`}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -178,6 +181,8 @@ export function CandidateExplorationPage() {
         <button
           type="button"
           onClick={() => setRecommendedOnly((current) => !current)}
+          aria-pressed={recommendedOnly}
+          title="Candidates surfaced based on configured hiring criteria"
           className={cn(
             'flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             recommendedOnly ? 'border-palette-brand-300 bg-accent text-accent-foreground' : 'border-border text-foreground hover:bg-muted',
@@ -186,6 +191,15 @@ export function CandidateExplorationPage() {
           <Star className="h-4 w-4" aria-hidden="true" />
           Recommended
         </button>
+        {recommendedOnly && (
+          <button
+            type="button"
+            onClick={() => setRecommendedOnly(false)}
+            className="text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            View all {opening.totalCandidates} candidates
+          </button>
+        )}
       </div>
 
       <FilterChips />

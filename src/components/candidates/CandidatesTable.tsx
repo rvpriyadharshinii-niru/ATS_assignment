@@ -102,10 +102,10 @@ export function CandidatesTable({
               Recommendation
             </SortableHeaderCell>
             <SortableHeaderCell activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
-              Evidence
+              Priorities met
             </SortableHeaderCell>
             <SortableHeaderCell sortKey="score" activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
-              Score
+              AI score
             </SortableHeaderCell>
             <SortableHeaderCell activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
               Source
@@ -178,10 +178,12 @@ export function CandidatesTable({
                   {candidate.prioritiesSupported !== undefined ? (
                     <span className="font-medium text-palette-neutral-700">{candidate.prioritiesSupported}/5</span>
                   ) : (
-                    <span className="text-muted-foreground">{candidate.notableGap ? 'Partial' : '—'}</span>
+                    <span className="text-muted-foreground">{candidate.notableGap ? 'Partial' : 'Needs info'}</span>
                   )}
                 </td>
-                <td className="px-3 py-2.5 align-top text-foreground">{candidate.screeningScore ?? <span className="text-muted-foreground">—</span>}</td>
+                <td className="px-3 py-2.5 align-top text-sm text-muted-foreground">
+                  {candidate.screeningScore ?? '—'}
+                </td>
                 <td className="px-3 py-2.5 align-top text-muted-foreground">{candidate.source ?? '—'}</td>
                 <td className="px-3 py-2.5 align-top">
                   <span className={cn('inline-flex rounded-full px-2 py-0.5 text-xs font-medium', STAGE_TONE[candidate.stage])}>{candidate.stage}</span>

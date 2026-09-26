@@ -54,7 +54,9 @@ function groupLabel(timestamp: number): string {
 }
 
 function formatTime(timestamp: number): string {
-  return new Date(timestamp).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+  const minutesAgo = Math.round((Date.now() - timestamp) / 60000)
+  if (minutesAgo < 60) return minutesAgo <= 0 ? 'Just now' : `${minutesAgo} min ago`
+  return new Date(timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
 }
 
 export function NotificationsPage() {
@@ -107,7 +109,6 @@ export function NotificationsPage() {
       <PageHeader
         title="Notifications"
         description={unreadCount > 0 ? `${unreadCount} unread` : 'You’re all caught up.'}
-        backTo="/"
         actions={
           unreadCount > 0 ? (
             <button

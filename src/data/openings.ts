@@ -15,7 +15,7 @@ export const openings: Opening[] = [
     newSinceLastReview: 12,
     needsAttention: 5,
     priority: 'High',
-    situationSummary: '12 new applications since last review · 3 recommended for closer review · 2 interviews waiting for feedback',
+    situationSummary: '12 new applications since last review · 3 recommended for closer review · 3 interviews waiting for feedback',
     hasDetailedData: true,
   },
   {

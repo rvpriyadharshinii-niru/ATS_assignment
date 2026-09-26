@@ -9,7 +9,7 @@ import type { Candidate, CandidateStage } from '../types/domain'
  * with a modeled pipeline — Product Manager / UX Researcher stay aggregate-only.
  */
 export const STAGE_BASELINE_OTHER: Record<CandidateStage, number> = {
-  Applied: 45, // 46 total − 1 named (Sana)
+  Applied: 12, // 13 currently in Applied − 1 named (Sana)
   'AI Screened': 14, // 18 − 4 named (Arjun, Kavya, Vikram, Dev)
   'HM Review': 5, // 8 − 3 named (Ananya, Rahul, Meera)
   Interview: 0, // 5 − 5 named (Nisha, Rohan, Tara, Ishaan, Pooja)
