@@ -6,6 +6,7 @@ import { getCriteria } from '../data/criteria'
 import { getOpening } from '../data/openings'
 import { cn } from '../lib/cn'
 import { RecommendationBadge } from '../components/candidates/RecommendationBadge'
+import { IconBadge } from '../components/ui/IconBadge'
 import { useEffectiveCandidatesForOpening, usePipelineStages } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
 import type { CandidateStage, OpeningId } from '../types/domain'
@@ -106,8 +107,8 @@ export function RoleWorkspaceOverviewPage() {
         <div className="col-span-2 space-y-4">
           <section className="rounded-xl border border-border bg-card p-5 shadow-xs">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-palette-neutral-900">
-                <Users className="h-4 w-4 text-primary" aria-hidden="true" />
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
+                <IconBadge icon={Users} color="brand" size="sm" />
                 Recommended for review
               </h2>
               <Link to={`/openings/${id}/candidates`} className="text-sm font-medium text-primary hover:text-palette-brand-600">
@@ -161,8 +162,8 @@ export function RoleWorkspaceOverviewPage() {
 
         <div className="space-y-4">
           <section className="rounded-xl border border-border bg-card p-5 shadow-xs">
-            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-palette-neutral-900">
-              <CircleAlert className="h-4 w-4 text-palette-warning-600" aria-hidden="true" />
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
+              <IconBadge icon={CircleAlert} color="warning" size="sm" />
               Role health
             </h2>
             <dl className="mt-2.5 space-y-1.5 text-sm">
@@ -180,8 +181,8 @@ export function RoleWorkspaceOverviewPage() {
 
           <section className="rounded-xl border border-border bg-card p-5 shadow-xs">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="flex items-center gap-1.5 text-sm font-semibold text-palette-neutral-900">
-                <SlidersHorizontal className="h-4 w-4 text-primary" aria-hidden="true" />
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
+                <IconBadge icon={SlidersHorizontal} color="info" size="sm" />
                 Configured criteria
               </h2>
               <Link to={`/openings/${id}/criteria`} className="text-sm font-medium text-primary hover:text-palette-brand-600">
@@ -200,8 +201,8 @@ export function RoleWorkspaceOverviewPage() {
           </section>
 
           <section className="rounded-xl border border-border bg-card p-5 shadow-xs">
-            <h2 className="flex items-center gap-1.5 text-sm font-semibold text-palette-neutral-900">
-              <Activity className="h-4 w-4 text-primary" aria-hidden="true" />
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
+              <IconBadge icon={Activity} color="plum" size="sm" />
               Recent activity
             </h2>
             {recentActivity.length === 0 ? (

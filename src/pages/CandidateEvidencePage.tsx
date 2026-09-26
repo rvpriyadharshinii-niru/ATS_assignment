@@ -17,6 +17,7 @@ import {
 import { useEffect, useState, type ComponentType } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
+import { IconBadge } from '../components/ui/IconBadge'
 import { CriterionEvidenceList } from '../components/candidates/CriterionEvidence'
 import { EmailComposeDialog } from '../components/candidates/EmailComposeDialog'
 import { RecommendationBadge } from '../components/candidates/RecommendationBadge'
@@ -246,8 +247,8 @@ export function CandidateEvidencePage() {
         <div className="col-span-2 space-y-4">
           {hasAssessment ? (
             <div className="rounded-xl border border-palette-brand-200 bg-palette-brand-100/30 p-5 shadow-xs">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+              <div className="flex items-center gap-2">
+                <IconBadge icon={Sparkles} color="brand" size="sm" />
                 <h2 className="text-xs font-semibold uppercase tracking-wide text-primary">AI assessment</h2>
               </div>
               {(candidate.recommendation || candidate.prioritiesSupported !== undefined) && (
@@ -398,7 +399,10 @@ export function CandidateEvidencePage() {
 
         <div className="space-y-4">
           <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Details</h3>
+            <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">
+              <IconBadge icon={ClipboardList} color="info" size="sm" />
+              Details
+            </h3>
             <dl className="mt-2.5 space-y-2.5 text-sm">
               <div className="flex items-center justify-between gap-3">
                 <dt className="text-muted-foreground">Stage</dt>
@@ -442,16 +446,19 @@ export function CandidateEvidencePage() {
           {opening && (
             <Link
               to={`/openings/${opening.id}/criteria`}
-              className="flex items-center gap-2 rounded-xl border border-border bg-card p-4 text-sm font-medium text-foreground shadow-xs hover:border-palette-brand-250 hover:bg-accent"
+              className="flex items-center gap-2.5 rounded-xl border border-border bg-card p-4 text-sm font-medium text-foreground shadow-xs hover:border-palette-brand-250 hover:bg-accent"
             >
-              <Briefcase className="h-4 w-4 shrink-0 text-palette-neutral-400" aria-hidden="true" />
+              <IconBadge icon={Briefcase} color="plum" size="sm" />
               View {opening.title} hiring criteria
             </Link>
           )}
 
           {candidate.notes && (
             <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Notes</h3>
+              <h3 className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">
+                <IconBadge icon={FileText} color="neutral" size="sm" />
+                Notes
+              </h3>
               <p className="mt-1.5 text-sm leading-relaxed text-foreground">{candidate.notes}</p>
             </div>
           )}

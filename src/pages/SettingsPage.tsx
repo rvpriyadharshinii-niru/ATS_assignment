@@ -2,6 +2,7 @@ import { RotateCcw } from 'lucide-react'
 import { useState } from 'react'
 import { PageHeader } from '../components/layout/PageHeader'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
+import { IconBadge } from '../components/ui/IconBadge'
 import { useAppStore } from '../store/useAppStore'
 
 export function SettingsPage() {
@@ -26,7 +27,10 @@ export function SettingsPage() {
         </div>
 
         <div className="max-w-md rounded-xl border border-border bg-card p-6 shadow-xs">
-          <h2 className="text-sm font-semibold text-palette-neutral-900">Demo data</h2>
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
+            <IconBadge icon={RotateCcw} color="plum" size="sm" />
+            Demo data
+          </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Undo every change made during this session — candidate moves, added candidates, criteria edits and Copilot actions —
             and restore the prototype to its original state.

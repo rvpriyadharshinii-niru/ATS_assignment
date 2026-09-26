@@ -1,7 +1,8 @@
-import { MoreHorizontal, Plus } from 'lucide-react'
+import { FileText, MoreHorizontal, Plus, SlidersHorizontal, Sparkles } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
+import { IconBadge } from '../components/ui/IconBadge'
 import { AVAILABLE_CRITERIA_CATALOG } from '../data/criteria'
 import { getOpening } from '../data/openings'
 import { useAppStore } from '../store/useAppStore'
@@ -146,14 +147,20 @@ export function HiringCriteriaPage() {
     <div className="grid grid-cols-3 gap-5 p-6">
       <div className="col-span-2 space-y-5">
         <section className="rounded-xl border border-border bg-card p-5 shadow-xs">
-          <h2 className="text-sm font-semibold text-palette-neutral-900">Job description</h2>
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
+            <IconBadge icon={FileText} color="neutral" size="sm" />
+            Job description
+          </h2>
           <p className="mt-2 text-sm leading-relaxed text-foreground">{SPD_DESCRIPTION}</p>
         </section>
 
         <section className="rounded-xl border border-border bg-card p-5 shadow-xs">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-sm font-semibold text-palette-neutral-900">Configured hiring criteria</h2>
+              <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
+                <IconBadge icon={SlidersHorizontal} color="brand" size="sm" />
+                Configured hiring criteria
+              </h2>
               <p className="mt-1 text-sm text-muted-foreground">These are the persistent criteria Copilot uses when evaluating candidates for this role.</p>
             </div>
             <button
@@ -200,7 +207,10 @@ export function HiringCriteriaPage() {
 
       <div className="space-y-5">
         <section className="rounded-xl border border-palette-brand-200 bg-palette-brand-100 p-5 shadow-xs">
-          <h2 className="text-sm font-semibold text-palette-brand-700">Exploration lens</h2>
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-brand-700">
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            Exploration lens
+          </h2>
           <p className="mt-1 text-sm text-palette-brand-700/80">
             Temporarily prioritize different qualities while exploring candidates. Your hiring criteria won&rsquo;t change.
           </p>

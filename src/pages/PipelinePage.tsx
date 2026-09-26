@@ -1,7 +1,9 @@
-import { Sparkles } from 'lucide-react'
+import { CheckCircle2, Flag, Inbox, MessageSquare, Sparkles, UserCheck } from 'lucide-react'
+import type { ComponentType } from 'react'
 import { useParams } from 'react-router-dom'
 import { CandidateCard } from '../components/candidates/CandidateCard'
 import { FilterChips } from '../components/candidates/FilterChips'
+import { IconBadge, type IconBadgeColor } from '../components/ui/IconBadge'
 import { getOpening } from '../data/openings'
 import { STAGE_BASELINE_OTHER } from '../data/pipeline'
 import { cn } from '../lib/cn'
@@ -28,6 +30,24 @@ const COLUMN_HEADER_TEXT: Record<CandidateStage, string> = {
   Interview: 'text-palette-warning-700',
   Final: 'text-palette-plum-700',
   Offer: 'text-palette-success-700',
+}
+
+const STAGE_ICON: Record<CandidateStage, ComponentType<{ className?: string; 'aria-hidden'?: boolean }>> = {
+  Applied: Inbox,
+  'AI Screened': Sparkles,
+  'HM Review': UserCheck,
+  Interview: MessageSquare,
+  Final: Flag,
+  Offer: CheckCircle2,
+}
+
+const STAGE_BADGE_COLOR: Record<CandidateStage, IconBadgeColor> = {
+  Applied: 'neutral',
+  'AI Screened': 'info',
+  'HM Review': 'brand',
+  Interview: 'warning',
+  Final: 'plum',
+  Offer: 'success',
 }
 
 export function PipelinePage() {
@@ -72,9 +92,7 @@ export function PipelinePage() {
       {totalWaiting > 0 && (
         <div className="rounded-xl border border-palette-brand-200 bg-palette-brand-100/40 p-4 shadow-xs">
           <div className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-palette-brand-150 text-primary">
-              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-            </span>
+            <IconBadge icon={Sparkles} color="brand" size="sm" className="mt-0.5" />
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase tracking-wide text-primary">Pipeline insight</p>
               <p className="mt-1 text-sm font-semibold text-palette-neutral-900">Interview is the current bottleneck.</p>
@@ -114,8 +132,11 @@ export function PipelinePage() {
           return (
             <div key={stage} className={cn('w-[280px] shrink-0 rounded-xl', COLUMN_TINT[stage])}>
               <div className="px-3 py-3">
-                <div className="flex items-baseline justify-between">
-                  <p className={cn('text-xs font-semibold uppercase tracking-wide', COLUMN_HEADER_TEXT[stage])}>{stage}</p>
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <IconBadge icon={STAGE_ICON[stage]} color={STAGE_BADGE_COLOR[stage]} size="sm" />
+                    <p className={cn('text-xs font-semibold uppercase tracking-wide', COLUMN_HEADER_TEXT[stage])}>{stage}</p>
+                  </span>
                   <p className="text-lg font-semibold text-palette-neutral-900">{count}</p>
                 </div>
                 {waitingOnPriya > 0 && (

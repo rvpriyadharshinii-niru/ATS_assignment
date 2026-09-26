@@ -1,8 +1,9 @@
-import { Briefcase, Calendar, ChevronRight, CircleAlert, Users } from 'lucide-react'
+import { Briefcase, Calendar, ChevronRight, CircleAlert, ListChecks, Sparkles, TrendingUp, Users } from 'lucide-react'
 import { useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { InsightCard } from '../components/home/InsightCard'
 import { PriorityTag } from '../components/openings/OpeningCard'
+import { IconBadge, TrendPill, type IconBadgeColor } from '../components/ui/IconBadge'
 import { globalMetrics, openings } from '../data/openings'
 import { homeInsights } from '../data/insights'
 import { deriveInterviewDayLabel, deriveInterviewType } from '../lib/candidateStatus'
@@ -32,62 +33,67 @@ export function HomePage() {
     [spdCandidates],
   )
 
-  const METRICS = [
+  const METRICS: { label: string; value: number; icon: typeof Briefcase; color: IconBadgeColor; secondary?: string }[] = [
     {
       label: 'Active Roles',
       value: globalMetrics.activeRoles,
       icon: Briefcase,
-      tint: 'bg-palette-neutral-150 text-palette-neutral-600',
+      color: 'info',
       secondary: highPriorityRoles > 0 ? `${highPriorityRoles} high priority` : undefined,
     },
     {
       label: 'Candidates',
       value: globalMetrics.totalCandidates,
       icon: Users,
-      tint: 'bg-palette-info-150 text-palette-info-600',
+      color: 'brand',
       secondary: newThisWeek > 0 ? `${newThisWeek} new this week` : undefined,
     },
     {
       label: 'Need Attention',
       value: globalMetrics.needAttention,
       icon: CircleAlert,
-      tint: 'bg-palette-warning-150 text-palette-warning-600',
+      color: 'warning',
       secondary: highPriorityAttention > 0 ? `${highPriorityAttention} high priority` : undefined,
     },
     {
       label: 'Interviews This Week',
       value: globalMetrics.interviewsThisWeek,
       icon: Calendar,
-      tint: 'bg-palette-brand-100 text-palette-brand-600',
+      color: 'plum',
       secondary: upcomingInterviews.length > 0 ? `${upcomingInterviews.length} scheduled for Senior Product Designer` : undefined,
     },
   ]
 
   return (
-    <div className="space-y-5 p-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-palette-neutral-900">Good morning, Priya</h1>
-        <p className="mt-1 text-muted-foreground">Here&rsquo;s what needs your attention today.</p>
+    <div className="space-y-6 p-6">
+      <div className="relative overflow-hidden rounded-3xl bg-[image:var(--gradient-brand_wash)] px-8 py-7 text-white shadow-md">
+        <Sparkles className="absolute right-12 top-7 h-5 w-5 text-white/25" aria-hidden="true" />
+        <Sparkles className="absolute right-28 top-16 h-3 w-3 text-white/20" aria-hidden="true" />
+        <Sparkles className="absolute right-8 bottom-8 h-4 w-4 text-white/20" aria-hidden="true" />
+        <p className="text-sm font-medium text-white/75">Good morning</p>
+        <h1 className="mt-1 text-3xl font-semibold tracking-tight">Priya, here&rsquo;s what needs you today</h1>
+        <p className="mt-2 max-w-xl text-sm leading-relaxed text-white/80">
+          3 candidates deserve a closer look, 3 interviews are waiting on feedback, and 1 decision needs you.
+        </p>
       </div>
 
       <div className="grid grid-cols-4 gap-4">
         {METRICS.map((metric) => (
-          <div key={metric.label} className="flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-4 shadow-xs">
-            <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${metric.tint}`}>
-              <metric.icon className="h-[18px] w-[18px]" aria-hidden="true" />
-            </span>
-            <div className="min-w-0">
-              <p className="text-2xl font-semibold text-palette-neutral-900">{metric.value}</p>
-              <p className="truncate text-xs text-muted-foreground">{metric.label}</p>
-              {metric.secondary && <p className="mt-0.5 truncate text-[11px] text-palette-neutral-400">{metric.secondary}</p>}
-            </div>
+          <div key={metric.label} className="rounded-2xl border border-border bg-card p-5 shadow-xs transition-shadow hover:shadow-sm">
+            <IconBadge icon={metric.icon} color={metric.color} />
+            <p className="mt-3.5 text-3xl font-bold tracking-tight text-palette-neutral-900">{metric.value}</p>
+            <p className="mt-0.5 text-sm font-medium text-muted-foreground">{metric.label}</p>
+            {metric.secondary && <TrendPill label={metric.secondary} color={metric.color} className="mt-2.5" />}
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-3 gap-6">
         <section className="col-span-2">
-          <h2 className="text-sm font-semibold text-palette-neutral-900">Needs your attention</h2>
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
+            <IconBadge icon={CircleAlert} color="warning" size="sm" />
+            Needs your attention
+          </h2>
           <div className="mt-3 space-y-1 rounded-xl border border-border bg-card p-2 shadow-xs">
             {homeInsights.map((insight, index) => (
               <InsightCard key={insight.id} insight={insight} primary={index === 0} />
@@ -97,7 +103,10 @@ export function HomePage() {
 
         <div className="space-y-6">
           <section>
-            <h2 className="text-sm font-semibold text-palette-neutral-900">Upcoming</h2>
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
+              <IconBadge icon={Calendar} color="plum" size="sm" />
+              Upcoming
+            </h2>
             <div className="mt-3 divide-y divide-border rounded-xl border border-border bg-card shadow-xs">
               {upcomingInterviews.length === 0 ? (
                 <p className="px-4 py-3.5 text-sm text-muted-foreground">No interviews scheduled right now.</p>
@@ -108,9 +117,7 @@ export function HomePage() {
                     to={`/candidates/${candidate.id}`}
                     className="flex items-start gap-3 px-4 py-3.5 hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
                   >
-                    <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-palette-neutral-100 text-palette-neutral-500">
-                      <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
-                    </span>
+                    <IconBadge icon={Calendar} color="plum" size="sm" className="mt-0.5" />
                     <div className="min-w-0">
                       <p className="text-xs font-medium text-muted-foreground">
                         {dayLabel} · {time}
@@ -127,22 +134,28 @@ export function HomePage() {
           </section>
 
           <section>
-            <h2 className="text-sm font-semibold text-palette-neutral-900">Pipeline snapshot</h2>
+            <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
+              <IconBadge icon={TrendingUp} color="success" size="sm" />
+              Pipeline snapshot
+            </h2>
             <div className="mt-3 rounded-xl border border-border bg-card p-4 shadow-xs">
               <p className="text-xs font-medium text-muted-foreground">Senior Product Designer</p>
               <div className="mt-3 space-y-2.5">
-                {spdStages.map((stage) => (
-                  <div key={stage.stage} className="flex items-center gap-3">
-                    <span className="w-20 shrink-0 text-xs text-muted-foreground">{stage.stage}</span>
-                    <div className="h-1.5 flex-1 rounded-full bg-palette-neutral-100">
-                      <div
-                        className="h-1.5 rounded-full bg-palette-brand-350"
-                        style={{ width: `${Math.max((stage.count / spdStages[0].count) * 100, stage.count > 0 ? 4 : 0)}%` }}
-                      />
+                {(() => {
+                  const maxCount = Math.max(...spdStages.map((stage) => stage.count), 1)
+                  return spdStages.map((stage) => (
+                    <div key={stage.stage} className="flex items-center gap-3">
+                      <span className="w-20 shrink-0 text-xs text-muted-foreground">{stage.stage}</span>
+                      <div className="h-1.5 flex-1 rounded-full bg-palette-neutral-100">
+                        <div
+                          className="h-1.5 rounded-full bg-[image:var(--gradient-brand_wash)]"
+                          style={{ width: `${Math.max((stage.count / maxCount) * 100, stage.count > 0 ? 4 : 0)}%` }}
+                        />
+                      </div>
+                      <span className="w-5 shrink-0 text-right text-xs font-medium text-palette-neutral-700">{stage.count}</span>
                     </div>
-                    <span className="w-5 shrink-0 text-right text-xs font-medium text-palette-neutral-700">{stage.count}</span>
-                  </div>
-                ))}
+                  ))
+                })()}
               </div>
             </div>
           </section>
@@ -150,7 +163,10 @@ export function HomePage() {
       </div>
 
       <section>
-        <h2 className="text-sm font-semibold text-palette-neutral-900">My Openings</h2>
+        <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
+          <IconBadge icon={ListChecks} color="info" size="sm" />
+          My Openings
+        </h2>
         <div className="mt-3 overflow-hidden rounded-xl border border-border bg-card shadow-xs">
           <table className="w-full border-collapse text-sm">
             <thead>

@@ -2,6 +2,7 @@ import { Bell, Calendar, SlidersHorizontal, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../components/layout/PageHeader'
+import { IconBadge, type IconBadgeColor } from '../components/ui/IconBadge'
 import { getCandidate } from '../data/candidates'
 import { staticNotifications, type NotificationCategory } from '../data/notifications'
 import { cn } from '../lib/cn'
@@ -33,10 +34,10 @@ const CATEGORY_ICON: Record<NotificationCategory, typeof Bell> = {
   hiring: SlidersHorizontal,
 }
 
-const CATEGORY_TINT: Record<NotificationCategory, string> = {
-  candidates: 'bg-palette-info-150 text-palette-info-700',
-  interviews: 'bg-palette-warning-150 text-palette-warning-700',
-  hiring: 'bg-palette-brand-100 text-palette-brand-700',
+const CATEGORY_COLOR: Record<NotificationCategory, IconBadgeColor> = {
+  candidates: 'info',
+  interviews: 'warning',
+  hiring: 'brand',
 }
 
 function startOfDay(timestamp: number): number {
@@ -150,7 +151,6 @@ export function NotificationsPage() {
               <p className="px-1 pb-1.5 text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">{group.label}</p>
               <div className="divide-y divide-border rounded-xl border border-border bg-card shadow-xs">
                 {group.items.map((item) => {
-                  const Icon = CATEGORY_ICON[item.category]
                   const isRead = readIds.has(item.id)
                   return (
                     <div
@@ -166,9 +166,7 @@ export function NotificationsPage() {
                         if (event.key === 'Enter' || event.key === ' ') setReadIds((current) => new Set(current).add(item.id))
                       }}
                     >
-                      <span className={cn('mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full', CATEGORY_TINT[item.category])}>
-                        <Icon className="h-4 w-4" aria-hidden="true" />
-                      </span>
+                      <IconBadge icon={CATEGORY_ICON[item.category]} color={CATEGORY_COLOR[item.category]} className="mt-0.5" />
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
                           <p className="text-xs font-medium text-muted-foreground">{item.eyebrow}</p>
