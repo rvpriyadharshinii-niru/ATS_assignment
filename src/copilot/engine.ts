@@ -74,6 +74,12 @@ const INCREASE_PRIORITY_PATTERN = /\bincrease\b[\s\S]*\bpriority\b/i
 const PRIORITY_WORD_PATTERN = /\b(high|medium)\b/i
 const WAITING_DAYS_PATTERN = /waiting.*?(?:more than|over|at least|>\s*)?\s*(\d+)\+?\s*days?/i
 const SELECT_SHOW_PATTERN = /^(select|show|open)\b|\btell me about\b/i
+/**
+ * "Tell me information about the candidate" / "more details on this candidate" — no name, referring
+ * back to whoever Copilot just surfaced. Matches on the "candi…" prefix rather than the full word so
+ * a typo like "canditae" still resolves instead of falling through to the generic fallback.
+ */
+const CANDIDATE_REFERENCE_PATTERN = /\b(this|that|the)\s+\w*candi\w*\b/i
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
@@ -639,6 +645,17 @@ function handleSelectOrShowName(input: string, context: CopilotContext): Copilot
   return handleCandidateReview(named[0])
 }
 
+/** No name given, but "the/this/that candidate" refers back to whoever Copilot most recently surfaced in this thread. */
+function handleCandidateReference(input: string, context: CopilotContext): CopilotResult | undefined {
+  if (!CANDIDATE_REFERENCE_PATTERN.test(input)) return undefined
+  if (matchCandidatesByName(input, context).length > 0) return undefined
+  const recent = (context.recentCandidateIds ?? [])
+    .map((id) => context.candidates.find((candidate) => candidate.id === id))
+    .filter((candidate): candidate is Candidate => candidate !== undefined)
+  if (recent.length !== 1) return undefined
+  return handleCandidateReview(recent[0])
+}
+
 function handleWaitingFeedback(context: CopilotContext): CopilotResult {
   const openingId = context.openingId ?? 'senior-product-designer'
   const pool = context.candidates.filter(
@@ -718,6 +735,10 @@ export function runCopilotQuery(rawInput: string, context: CopilotContext): Copi
   // name jumps straight to their review, same as "Review Ananya".
   const selectShowResult = handleSelectOrShowName(input, effectiveContext)
   if (selectShowResult) return selectShowResult
+
+  // "Tell me information about the candidate" — no name, but refers back to whoever was just shown.
+  const candidateReferenceResult = handleCandidateReference(input, effectiveContext)
+  if (candidateReferenceResult) return candidateReferenceResult
 
   // "Review …" (interviews, finalist(s), a named candidate, or a role's candidates) stays inside the
   // conversation — it takes priority over the plainer list-style handlers below.
