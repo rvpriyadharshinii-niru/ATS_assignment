@@ -69,7 +69,7 @@ function ConfirmCard({ turnId, result }: { turnId: string; result: Extract<Copil
           {line}
         </p>
       ))}
-      <p className="mt-2.5 text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">This will</p>
+      <p className="mt-2.5 text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">This will</p>
       <ul className="mt-1 space-y-0.5">
         {result.consequences.map((consequence) => (
           <li key={consequence} className="text-sm text-foreground">
@@ -160,7 +160,7 @@ function PipelineDiagnosisCard({ result }: { result: Extract<CopilotResult, { ki
       <p className="mt-1 text-sm leading-relaxed text-foreground">{result.message}</p>
       {result.waitingOnYou.length > 0 && (
         <div className="mt-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Waiting on you</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Waiting on you</p>
           <ul className="mt-1 space-y-0.5">
             {result.waitingOnYou.map((entry) => (
               <li key={entry.candidateId} className="text-sm text-foreground">
@@ -172,7 +172,7 @@ function PipelineDiagnosisCard({ result }: { result: Extract<CopilotResult, { ki
       )}
       {result.waitingOnOthers.length > 0 && (
         <div className="mt-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Waiting on others</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Waiting on others</p>
           <ul className="mt-1 space-y-0.5">
             {result.waitingOnOthers.map((entry) => (
               <li key={entry.candidateId} className="text-sm text-foreground">
@@ -285,7 +285,7 @@ function CandidateReviewCard({ result }: { result: Extract<CopilotResult, { kind
         <div className="mt-3 space-y-3">
           {result.experience.length > 0 && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Experience</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Experience</p>
               <div className="mt-1 space-y-0.5">
                 {result.experience.map((entry) => (
                   <p key={`${entry.company}-${entry.dateRange}`} className="text-sm text-foreground">
@@ -320,7 +320,7 @@ function CandidateReviewCard({ result }: { result: Extract<CopilotResult, { kind
 
           {result.feedback.length > 0 && (
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Interviewer feedback</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Interviewer feedback</p>
               <div className="mt-1.5 space-y-2">
                 {result.feedback.map((entry) => (
                   <div key={`${entry.reviewer}-${entry.quote}`} className="rounded-lg border border-border p-3">
@@ -339,7 +339,7 @@ function CandidateReviewCard({ result }: { result: Extract<CopilotResult, { kind
           )}
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Scorecard</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Scorecard</p>
             <div className="mt-1 rounded-lg border border-border bg-muted p-2">
               <CriterionEvidenceList criteria={criteria} evidence={candidate.evidence} compact />
             </div>

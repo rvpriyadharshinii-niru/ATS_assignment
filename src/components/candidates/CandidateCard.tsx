@@ -65,21 +65,17 @@ export function CandidateCard({ candidate, variant = 'row', highlighted = false,
           <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
             {candidate.recommendation && <RecommendationBadge label={candidate.recommendation} />}
             {candidate.prioritiesSupported !== undefined && <span>{candidate.prioritiesSupported}/5</span>}
+            <StatusTags candidate={candidate} />
           </div>
-          {metaParts.length > 0 && <p className="mt-1 text-xs text-palette-neutral-500">{metaParts.join(' · ')}</p>}
-          <p className="mt-1 text-xs text-palette-neutral-500">Time in stage: {candidate.updatedLabel ?? '—'}</p>
-          {(candidate.hold || candidate.rejected || candidate.selected) && (
-            <div className="mt-1 flex flex-wrap gap-1">
-              <StatusTags candidate={candidate} />
-            </div>
-          )}
-          {statusNote && (
-            <p className={cn('mt-1 text-xs', feedbackNeeded ? 'font-medium text-palette-warning-700' : 'text-palette-neutral-500')}>{statusNote}</p>
-          )}
-          {feedbackNeeded && (
+          <p className="mt-1 truncate text-xs text-palette-neutral-500">
+            {[...metaParts, candidate.updatedLabel ? `${candidate.updatedLabel} in stage` : undefined].filter(Boolean).join(' · ')}
+          </p>
+          {feedbackNeeded ? (
             <span className="mt-1.5 inline-flex items-center rounded-full bg-palette-warning-150 px-2 py-0.5 text-[11px] font-semibold text-palette-warning-700">
               Feedback needed
             </span>
+          ) : (
+            statusNote && <p className="mt-1 text-xs font-medium text-palette-warning-700">{statusNote}</p>
           )}
         </div>
       </div>
@@ -114,13 +110,13 @@ export function CandidateCard({ candidate, variant = 'row', highlighted = false,
             ) : (
               candidate.notableGap
             )}
-            {candidate.screeningScore !== undefined && <span className="text-palette-neutral-400"> · AI Screening Score: {candidate.screeningScore}</span>}
+            {candidate.screeningScore !== undefined && <span className="text-palette-neutral-500"> · AI Screening Score: {candidate.screeningScore}</span>}
           </p>
         )}
         {statusNote && <p className="mt-1.5 text-sm font-medium text-palette-warning-700">{statusNote}</p>}
       </div>
       <div className="flex shrink-0 items-center gap-3">
-        <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">{candidate.stage}</span>
+        <span className="whitespace-nowrap rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">{candidate.stage}</span>
         <ChevronRight className="h-4 w-4 text-palette-neutral-300 transition-colors group-hover:text-palette-neutral-500" aria-hidden="true" />
       </div>
     </Link>

@@ -18,13 +18,13 @@ export function AppShell() {
     <div className="flex h-svh bg-palette-brand-100">
       <Sidebar />
       <div className="flex min-w-0 flex-1 gap-3 p-3">
-        <main className="h-full min-w-0 flex-1 overflow-hidden rounded-3xl bg-background shadow-sm">
+        <main className="h-full min-w-0 flex-1 overflow-hidden rounded-2xl bg-background shadow-sm">
           <div className="h-full overflow-y-auto">
             <Outlet />
           </div>
         </main>
         {showDock && (
-          <aside className="h-full w-[420px] shrink-0 overflow-hidden rounded-3xl border border-border bg-background shadow-sm">
+          <aside className="h-full w-[420px] shrink-0 overflow-hidden rounded-2xl border border-border bg-background shadow-md">
             <CopilotPanel />
           </aside>
         )}

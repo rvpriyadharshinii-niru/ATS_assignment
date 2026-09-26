@@ -69,21 +69,21 @@ export function RoleWorkspaceLayout() {
                 Active
               </span>
             </div>
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5" aria-hidden="true" />
                 {opening.totalCandidates} candidates
               </span>
-              {opening.needsAttention > 0 && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-palette-warning-150 px-2.5 py-1 text-xs font-medium text-palette-warning-700">
-                  <CircleAlert className="h-3.5 w-3.5" aria-hidden="true" />
-                  {opening.needsAttention} need attention
-                </span>
-              )}
               {opening.newSinceLastReview !== undefined && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5">
                   <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
                   {opening.newSinceLastReview} new since last review
+                </span>
+              )}
+              {opening.needsAttention > 0 && (
+                <span className="inline-flex items-center gap-1.5 font-medium text-palette-warning-700">
+                  <CircleAlert className="h-3.5 w-3.5" aria-hidden="true" />
+                  {opening.needsAttention} need attention
                 </span>
               )}
             </div>

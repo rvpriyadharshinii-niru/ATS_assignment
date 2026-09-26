@@ -1,4 +1,4 @@
-import { ArrowLeft, MessageSquarePlus, Search, Sparkles } from 'lucide-react'
+import { ArrowLeft, MessageSquarePlus, Sparkles } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CopilotResultView } from '../components/copilot/CopilotResultView'
@@ -80,7 +80,7 @@ export function CopilotWorkspacePage() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-3">
-          <p className="px-1.5 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-palette-neutral-400">Recent</p>
+          <p className="px-1.5 pb-1.5 text-[11px] font-semibold uppercase tracking-wide text-palette-neutral-600">Recent</p>
           {groups.map((group) => (
             <div key={group.label} className="mb-3">
               <p className="px-1.5 pb-1 pt-2 text-xs font-medium text-muted-foreground">{group.label}</p>
@@ -90,6 +90,7 @@ export function CopilotWorkspacePage() {
                     key={id}
                     type="button"
                     onClick={() => selectConversation(id)}
+                    title={conversations[id]?.title}
                     className={cn(
                       'block w-full truncate rounded-lg px-2.5 py-1.5 text-left text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                       id === activeConversationId
@@ -106,7 +107,7 @@ export function CopilotWorkspacePage() {
         </div>
       </aside>
 
-      <div className="flex min-w-0 flex-1 flex-col bg-palette-brand-100/30">
+      <div className="flex min-w-0 flex-1 flex-col bg-palette-neutral-100/40">
         {copilotExpandedFrom && (
           <div className="flex items-center justify-between gap-3 border-b border-border bg-card px-6 py-2.5">
             <button
@@ -123,21 +124,20 @@ export function CopilotWorkspacePage() {
           </div>
         )}
         {turns.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center px-8">
+          <div className="flex flex-1 flex-col items-center px-8 pt-24">
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[image:var(--gradient-brand_wash)] text-background shadow-sm">
               <Sparkles className="h-6 w-6" aria-hidden="true" />
             </span>
             <h1 className="mt-4 text-xl font-semibold text-palette-neutral-900">What can I help you with?</h1>
             <p className="mt-1 text-sm text-muted-foreground">Ask across every role you own — candidates, pipelines, comparisons or actions.</p>
-            <div className="mt-6 flex w-full max-w-lg flex-col gap-2">
+            <div className="mt-6 flex w-full max-w-lg flex-wrap justify-center gap-2">
               {SUGGESTED_PROMPTS.map((prompt) => (
                 <button
                   key={prompt}
                   type="button"
                   onClick={() => submitCopilotMessage(prompt, { ignorePageContext: true })}
-                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-3 text-left text-sm text-foreground shadow-xs transition-colors hover:border-palette-brand-250 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground shadow-xs transition-colors hover:border-palette-brand-250 hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  <Search className="h-4 w-4 shrink-0 text-palette-neutral-400" aria-hidden="true" />
                   {prompt}
                 </button>
               ))}
@@ -149,7 +149,7 @@ export function CopilotWorkspacePage() {
               {turns.map((turn) => (
                 <div key={turn.id} className="space-y-2.5">
                   <div className="flex justify-end">
-                    <p className="max-w-[75%] rounded-2xl rounded-tr-sm bg-palette-brand-600 px-4 py-2.5 text-sm text-white">{turn.query}</p>
+                    <p className="max-w-[75%] rounded-2xl rounded-tr-sm bg-palette-brand-550 px-4 py-2.5 text-sm text-white">{turn.query}</p>
                   </div>
                   <div className="flex items-start gap-2.5">
                     <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-palette-brand-100 text-primary">

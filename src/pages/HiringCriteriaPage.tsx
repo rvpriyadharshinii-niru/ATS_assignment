@@ -180,7 +180,7 @@ export function HiringCriteriaPage() {
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-palette-neutral-900">{criterion.name}</p>
                     {criterion.description && <p className="mt-1 text-sm text-muted-foreground">{criterion.description}</p>}
-                    <p className="mt-1.5 text-xs text-palette-neutral-400">Evidence sources: Resume · Application · Screening</p>
+                    <p className="mt-1.5 text-xs text-palette-neutral-500">Evidence sources: Resume · Application · Screening</p>
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
                     <select
@@ -190,7 +190,7 @@ export function HiringCriteriaPage() {
                         pushToast('Criterion priority updated.')
                       }}
                       aria-label={`${criterion.name} priority`}
-                      className="rounded-full border border-palette-neutral-250 bg-palette-neutral-150 px-2.5 py-1 text-xs font-medium text-palette-neutral-600 focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40"
+                      className="w-[148px] shrink-0 rounded-full border border-palette-neutral-250 bg-palette-neutral-150 px-2.5 py-1 text-xs font-medium text-palette-neutral-600 focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40"
                     >
                       <option value="High">High priority</option>
                       <option value="Medium">Medium priority</option>
@@ -206,19 +206,19 @@ export function HiringCriteriaPage() {
       </div>
 
       <div className="space-y-5">
-        <section className="rounded-xl border border-palette-brand-200 bg-palette-brand-100 p-5 shadow-xs">
-          <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-brand-700">
-            <Sparkles className="h-4 w-4" aria-hidden="true" />
+        <section className="rounded-xl border border-border bg-card p-5 shadow-xs">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
+            <IconBadge icon={Sparkles} color="brand" size="sm" />
             Exploration lens
           </h2>
-          <p className="mt-1 text-sm text-palette-brand-700/80">
+          <p className="mt-1.5 text-sm text-muted-foreground">
             Temporarily prioritize different qualities while exploring candidates. Your hiring criteria won&rsquo;t change.
           </p>
           {filters.length > 0 ? (
             <>
               <ul className="mt-3 space-y-1.5">
                 {filters.map((filter) => (
-                  <li key={filter.id} className="text-sm font-medium text-palette-brand-700">
+                  <li key={filter.id} className="text-sm font-medium text-foreground">
                     {filter.label} prioritized
                   </li>
                 ))}
@@ -226,15 +226,18 @@ export function HiringCriteriaPage() {
               <button
                 type="button"
                 onClick={clearFilters}
-                className="mt-3 text-sm font-medium text-palette-brand-700 underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="mt-3 text-sm font-medium text-palette-neutral-600 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 Clear lens
               </button>
             </>
           ) : (
             <>
-              <p className="mt-3 text-sm text-palette-brand-700/70">No exploration lens applied.</p>
-              <Link to={`/openings/${opening.id}/candidates`} className="mt-3 inline-block text-sm font-medium text-palette-brand-700 underline">
+              <p className="mt-3 text-sm text-muted-foreground">No exploration lens applied.</p>
+              <Link
+                to={`/openings/${opening.id}/candidates`}
+                className="mt-3 inline-block text-sm font-medium text-palette-neutral-600 hover:text-primary"
+              >
                 Explore candidates
               </Link>
             </>

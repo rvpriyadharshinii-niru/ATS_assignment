@@ -1,6 +1,6 @@
 import { CheckCircle2, Flag, Inbox, MessageSquare, Sparkles, UserCheck } from 'lucide-react'
 import type { ComponentType } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { CandidateCard } from '../components/candidates/CandidateCard'
 import { FilterChips } from '../components/candidates/FilterChips'
 import { IconBadge, type IconBadgeColor } from '../components/ui/IconBadge'
@@ -23,15 +23,6 @@ const COLUMN_TINT: Record<CandidateStage, string> = {
   Offer: 'bg-palette-success-100/50',
 }
 
-const COLUMN_HEADER_TEXT: Record<CandidateStage, string> = {
-  Applied: 'text-palette-neutral-700',
-  'AI Screened': 'text-palette-info-700',
-  'HM Review': 'text-palette-brand-700',
-  Interview: 'text-palette-warning-700',
-  Final: 'text-palette-plum-700',
-  Offer: 'text-palette-success-700',
-}
-
 const STAGE_ICON: Record<CandidateStage, ComponentType<{ className?: string; 'aria-hidden'?: boolean }>> = {
   Applied: Inbox,
   'AI Screened': Sparkles,
@@ -52,12 +43,19 @@ const STAGE_BADGE_COLOR: Record<CandidateStage, IconBadgeColor> = {
 
 export function PipelinePage() {
   const { openingId } = useParams<{ openingId: string }>()
+  const navigate = useNavigate()
   const opening = getOpening(openingId)
   const candidates = useEffectiveCandidatesForOpening(opening?.id as OpeningId | undefined)
   const stageCounts = usePipelineStages(opening?.id as OpeningId | undefined)
   const filters = useAppStore((state) => state.filters)
   const addFilter = useAppStore((state) => state.addFilter)
   const submitCopilotMessage = useAppStore((state) => state.submitCopilotMessage)
+
+  function viewMoreInStage(stage: CandidateStage) {
+    if (!opening) return
+    addFilter({ id: `stage-${stage}`, label: stage, source: 'manual', kind: 'stage', stage })
+    navigate(`/openings/${opening.id}/candidates`)
+  }
 
   if (!opening) return null
 
@@ -90,33 +88,30 @@ export function PipelinePage() {
       </div>
 
       {totalWaiting > 0 && (
-        <div className="rounded-xl border border-palette-brand-200 bg-palette-brand-100/40 p-4 shadow-xs">
-          <div className="flex items-start gap-3">
-            <IconBadge icon={Sparkles} color="brand" size="sm" className="mt-0.5" />
-            <div className="min-w-0 flex-1">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Pipeline insight</p>
-              <p className="mt-1 text-sm font-semibold text-palette-neutral-900">Interview is the current bottleneck.</p>
-              <p className="mt-1 text-sm text-foreground">
-                {totalWaiting} candidate{totalWaiting > 1 ? 's have' : ' has'} been waiting for feedback for {minWaitingDays}+ days.
-                {longestWaitingOnYou && ` Your feedback on ${longestWaitingOnYou.name} has been pending for ${longestWaitingOnYou.waitingDays} days.`}
-              </p>
-              <div className="mt-2.5 flex items-center gap-4">
-                <button
-                  type="button"
-                  onClick={() => addFilter({ id: 'ai-stalled', label: 'Waiting in Interview', source: 'ai', kind: 'stalled' })}
-                  className="text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  Review blockers
-                </button>
-                <button
-                  type="button"
-                  onClick={() => submitCopilotMessage("What's blocking this role?")}
-                  className="text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  Ask Copilot
-                </button>
-              </div>
-            </div>
+        <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-xs">
+          <IconBadge icon={Sparkles} color="brand" size="sm" className="shrink-0" />
+          <div className="min-w-0 flex-1">
+            <p className="text-sm text-foreground">
+              <span className="font-semibold text-palette-neutral-900">Interview is the current bottleneck</span> — {totalWaiting} candidate
+              {totalWaiting > 1 ? 's have' : ' has'} been waiting {minWaitingDays}+ days.
+              {longestWaitingOnYou && ` ${longestWaitingOnYou.name} has been pending on you for ${longestWaitingOnYou.waitingDays} days.`}
+            </p>
+          </div>
+          <div className="flex shrink-0 items-center gap-3">
+            <button
+              type="button"
+              onClick={() => submitCopilotMessage("What's blocking this role?")}
+              className="text-sm font-medium text-palette-neutral-600 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Ask Copilot
+            </button>
+            <button
+              type="button"
+              onClick={() => addFilter({ id: 'ai-stalled', label: 'Waiting in Interview', source: 'ai', kind: 'stalled' })}
+              className="whitespace-nowrap rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              Review blockers
+            </button>
           </div>
         </div>
       )}
@@ -135,7 +130,7 @@ export function PipelinePage() {
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     <IconBadge icon={STAGE_ICON[stage]} color={STAGE_BADGE_COLOR[stage]} size="sm" />
-                    <p className={cn('text-xs font-semibold uppercase tracking-wide', COLUMN_HEADER_TEXT[stage])}>{stage}</p>
+                    <p className="whitespace-nowrap text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">{stage}</p>
                   </span>
                   <p className="text-lg font-semibold text-palette-neutral-900">{count}</p>
                 </div>
@@ -155,8 +150,16 @@ export function PipelinePage() {
                     dimmed={hasFilters && !candidateMatchesFilters(candidate, filters)}
                   />
                 ))}
-                {otherCount > 0 && <p className="px-1 pt-1 text-xs text-palette-neutral-400">+{otherCount} more</p>}
-                {named.length === 0 && otherCount === 0 && <p className="px-1 py-2 text-xs text-palette-neutral-400">No candidates</p>}
+                {otherCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => viewMoreInStage(stage)}
+                    className="w-full rounded-md px-1 py-1.5 text-left text-xs font-medium text-palette-neutral-600 hover:bg-card hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    View {otherCount} more →
+                  </button>
+                )}
+                {named.length === 0 && otherCount === 0 && <p className="px-1 py-2 text-xs text-palette-neutral-500">No candidates</p>}
               </div>
             </div>
           )

@@ -12,7 +12,7 @@ const PRIORITY_TONE: Record<Opening['priority'], string> = {
 
 export function PriorityTag({ priority }: { priority: Opening['priority'] }) {
   return (
-    <span className={cn('inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium', PRIORITY_TONE[priority])}>
+    <span className={cn('inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium', PRIORITY_TONE[priority])}>
       <span className="h-1.5 w-1.5 rounded-full bg-current" aria-hidden="true" />
       {priority} priority
     </span>

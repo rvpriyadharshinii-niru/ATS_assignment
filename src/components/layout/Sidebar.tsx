@@ -56,7 +56,7 @@ function NavRow({
 }
 
 function SectionLabel({ children }: { children: string }) {
-  return <p className="px-3 pb-1.5 pt-4 text-[11px] font-semibold uppercase tracking-wide text-palette-neutral-400">{children}</p>
+  return <p className="px-3 pb-1.5 pt-4 text-[11px] font-semibold uppercase tracking-wide text-palette-neutral-600">{children}</p>
 }
 
 export function Sidebar() {

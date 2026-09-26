@@ -148,7 +148,7 @@ export function NotificationsPage() {
         ) : (
           groups.map((group) => (
             <div key={group.label}>
-              <p className="px-1 pb-1.5 text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">{group.label}</p>
+              <p className="px-1 pb-1.5 text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">{group.label}</p>
               <div className="divide-y divide-border rounded-xl border border-border bg-card shadow-xs">
                 {group.items.map((item) => {
                   const isRead = readIds.has(item.id)
@@ -175,7 +175,7 @@ export function NotificationsPage() {
                         <p className="mt-0.5 text-sm font-semibold text-palette-neutral-900">{item.title}</p>
                         {item.detail && <p className="mt-0.5 text-sm text-muted-foreground">{item.detail}</p>}
                         <div className="mt-1.5 flex items-center gap-3">
-                          <p className="text-xs text-palette-neutral-400">{formatTime(item.timestamp)}</p>
+                          <p className="text-xs text-palette-neutral-500">{formatTime(item.timestamp)}</p>
                           {item.action && (
                             <Link
                               to={item.action.to}

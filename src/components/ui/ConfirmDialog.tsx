@@ -30,7 +30,7 @@ export function ConfirmDialog({ open, onOpenChange, title, lines = [], consequen
           )}
 
           <div className="mt-4 rounded-lg bg-muted p-3.5">
-            <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">This will</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">This will</p>
             <ul className="mt-1.5 space-y-1">
               {consequences.map((consequence) => (
                 <li key={consequence} className="text-sm text-foreground">

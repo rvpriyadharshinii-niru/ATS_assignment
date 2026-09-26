@@ -199,7 +199,9 @@ export function CandidateEvidencePage() {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="truncate text-lg font-semibold tracking-tight text-palette-neutral-900">{candidate.name}</h1>
-                <span className={cn('shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium', STAGE_TONE[candidate.stage])}>{candidate.stage}</span>
+                <span className={cn('shrink-0 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium', STAGE_TONE[candidate.stage])}>
+                  {candidate.stage}
+                </span>
               </div>
               <p className="mt-0.5 truncate text-sm text-muted-foreground">
                 {candidate.currentRole && candidate.currentCompany ? `${candidate.currentRole} · ${candidate.currentCompany}` : opening?.title}
@@ -265,7 +267,7 @@ export function CandidateEvidencePage() {
             <span className="text-sm font-medium text-palette-neutral-700">{candidate.prioritiesSupported} / 5 priorities supported</span>
           )}
           {candidate.screeningScore !== undefined && (
-            <span className="text-sm text-palette-neutral-400">AI screening score {candidate.screeningScore}</span>
+            <span className="text-sm text-palette-neutral-500">AI screening score {candidate.screeningScore}</span>
           )}
           {statusNote && <span className="text-sm font-medium text-palette-warning-700">{statusNote}</span>}
         </div>

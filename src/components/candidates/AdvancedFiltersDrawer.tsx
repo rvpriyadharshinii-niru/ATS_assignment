@@ -27,7 +27,7 @@ function CheckboxRow({ label, checked, onChange }: { label: string; checked: boo
 function FilterSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border-b border-border py-4">
-      <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">{title}</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">{title}</p>
       <div className="mt-2">{children}</div>
     </div>
   )

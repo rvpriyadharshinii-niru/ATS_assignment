@@ -29,7 +29,7 @@ function SortableHeaderCell({
     return (
       <th
         className={cn(
-          'sticky top-0 z-10 border-b border-border bg-palette-brand-100 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700',
+          'sticky top-0 z-10 whitespace-nowrap border-b border-border bg-palette-neutral-100 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700',
           className,
         )}
       >
@@ -39,13 +39,13 @@ function SortableHeaderCell({
   }
   const isActive = activeSortKey === sortKey
   return (
-    <th className={cn('sticky top-0 z-10 border-b border-border bg-palette-brand-100 px-3 py-2.5 text-left', className)}>
+    <th className={cn('sticky top-0 z-10 whitespace-nowrap border-b border-border bg-palette-neutral-100 px-3 py-2.5 text-left', className)}>
       <button
         type="button"
         onClick={() => onSort(sortKey)}
         className={cn(
-          'inline-flex items-center gap-0.5 text-xs font-semibold uppercase tracking-wide hover:text-palette-brand-800 focus-visible:outline-none',
-          isActive ? 'text-palette-brand-800' : 'text-palette-brand-700',
+          'inline-flex items-center gap-0.5 text-xs font-semibold uppercase tracking-wide hover:text-palette-neutral-900 focus-visible:outline-none',
+          isActive ? 'text-primary' : 'text-palette-neutral-700',
         )}
       >
         {children}
@@ -84,7 +84,7 @@ export function CandidatesTable({
       <table className="w-full min-w-[960px] border-collapse text-sm">
         <thead>
           <tr>
-            <th className="sticky top-0 z-10 w-10 border-b border-border bg-palette-brand-100 px-3 py-2.5">
+            <th className="sticky top-0 z-10 w-10 border-b border-border bg-palette-neutral-100 px-3 py-2.5">
               <input
                 type="checkbox"
                 checked={allSelected}
@@ -108,7 +108,7 @@ export function CandidatesTable({
             <SortableHeaderCell activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
               Priorities met
             </SortableHeaderCell>
-            <SortableHeaderCell sortKey="score" activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
+            <SortableHeaderCell sortKey="score" activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort} className="text-right">
               AI score
             </SortableHeaderCell>
             <SortableHeaderCell activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
@@ -120,7 +120,7 @@ export function CandidatesTable({
             <SortableHeaderCell sortKey="updated" activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
               Updated
             </SortableHeaderCell>
-            <th className="sticky top-0 z-10 w-10 border-b border-border bg-palette-brand-100 px-3 py-2.5" />
+            <th className="sticky top-0 z-10 w-10 border-b border-border bg-palette-neutral-100 px-3 py-2.5" />
           </tr>
         </thead>
         <tbody>
@@ -131,7 +131,7 @@ export function CandidatesTable({
               <tr
                 key={candidate.id}
                 className={cn(
-                  'border-b border-border last:border-0 hover:bg-palette-brand-100/40',
+                  'border-b border-border last:border-0 hover:bg-muted/60',
                   index % 2 === 1 && 'bg-palette-neutral-100/40',
                   candidate.rejected && 'opacity-50',
                   selected && 'bg-palette-brand-100/60',
@@ -149,7 +149,7 @@ export function CandidatesTable({
                 <td className="px-3 py-2.5 align-top">
                   <Link
                     to={`/candidates/${candidate.id}`}
-                    className="font-semibold text-palette-neutral-900 hover:text-primary focus-visible:outline-none focus-visible:underline"
+                    className="whitespace-nowrap font-semibold text-palette-neutral-900 hover:text-primary focus-visible:outline-none focus-visible:underline"
                   >
                     {candidate.name}
                   </Link>
@@ -166,26 +166,28 @@ export function CandidatesTable({
                   </div>
                   {statusNote && <p className="mt-0.5 text-xs text-palette-neutral-500">{statusNote}</p>}
                 </td>
-                <td className="px-3 py-2.5 align-top text-foreground">{candidate.currentRole ?? '—'}</td>
-                <td className="px-3 py-2.5 align-top text-muted-foreground">{candidate.currentCompany ?? '—'}</td>
+                <td className="whitespace-nowrap px-3 py-2.5 align-top text-foreground">{candidate.currentRole ?? '—'}</td>
+                <td className="whitespace-nowrap px-3 py-2.5 align-top text-muted-foreground">{candidate.currentCompany ?? '—'}</td>
                 <td className="px-3 py-2.5 align-top">{candidate.recommendation ? <RecommendationBadge label={candidate.recommendation} /> : '—'}</td>
                 <td className="px-3 py-2.5 align-top">
                   {candidate.prioritiesSupported !== undefined ? (
-                    <span className="inline-flex rounded-md bg-palette-neutral-150 px-2 py-0.5 text-xs font-semibold text-palette-neutral-700">
+                    <span className="inline-flex whitespace-nowrap rounded-md bg-palette-neutral-150 px-2 py-0.5 text-xs font-semibold text-palette-neutral-700">
                       {candidate.prioritiesSupported}/5
                     </span>
                   ) : (
-                    <span className="inline-flex rounded-md bg-palette-neutral-100 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                    <span className="inline-flex whitespace-nowrap rounded-md bg-palette-neutral-100 px-2 py-0.5 text-xs font-medium text-muted-foreground">
                       {candidate.notableGap ? 'Partial' : 'Needs info'}
                     </span>
                   )}
                 </td>
-                <td className="px-3 py-2.5 align-top text-sm text-muted-foreground">
+                <td className="px-3 py-2.5 text-right align-top text-sm font-medium text-muted-foreground">
                   {candidate.screeningScore ?? '—'}
                 </td>
-                <td className="px-3 py-2.5 align-top text-muted-foreground">{candidate.source ?? '—'}</td>
+                <td className="whitespace-nowrap px-3 py-2.5 align-top text-muted-foreground">{candidate.source ?? '—'}</td>
                 <td className="px-3 py-2.5 align-top">
-                  <span className={cn('inline-flex rounded-md px-2 py-0.5 text-xs font-medium', STAGE_TONE[candidate.stage])}>{candidate.stage}</span>
+                  <span className={cn('inline-flex whitespace-nowrap rounded-md px-2 py-0.5 text-xs font-medium', STAGE_TONE[candidate.stage])}>
+                    {candidate.stage}
+                  </span>
                 </td>
                 <td className="px-3 py-2.5 align-top text-xs text-muted-foreground">{candidate.updatedLabel ?? '—'}</td>
                 <td className="px-3 py-2.5 align-top">

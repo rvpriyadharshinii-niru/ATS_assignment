@@ -210,7 +210,7 @@ export function ImportCsvDialog({ open, onOpenChange, openingId, openingTitle }:
             </div>
           ) : (
             <div className="mt-4">
-              <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Validation</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Validation</p>
               <div className="mt-2 grid grid-cols-3 gap-2 text-center">
                 <div className="rounded-lg bg-palette-success-150 p-3">
                   <p className="text-lg font-semibold text-palette-success-700">{importable.length}</p>

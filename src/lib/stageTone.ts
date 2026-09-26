@@ -9,3 +9,13 @@ export const STAGE_TONE: Record<CandidateStage, string> = {
   Final: 'bg-palette-plum-150 text-palette-plum-700',
   Offer: 'bg-palette-success-150 text-palette-success-700',
 }
+
+/** Restrained per-stage bar-fill color — used by pipeline snapshot/progress bars so no single stage reads as "the purple one." */
+export const STAGE_BAR_FILL: Record<CandidateStage, string> = {
+  Applied: 'bg-palette-neutral-300',
+  'AI Screened': 'bg-palette-info-450',
+  'HM Review': 'bg-palette-brand-400',
+  Interview: 'bg-palette-warning-450',
+  Final: 'bg-palette-plum-350',
+  Offer: 'bg-palette-success-450',
+}

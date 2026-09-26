@@ -1,3 +1,4 @@
+import { Search } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getInterviewFeedback } from '../data/interviewFeedback'
@@ -9,16 +10,34 @@ import type { Candidate, OpeningId } from '../types/domain'
 
 type QueueTab = 'needsFeedback' | 'upcoming' | 'completed'
 
-function interviewersFor(candidate: Candidate): string {
+const OVERDUE_WAITING_DAYS = 3
+
+function interviewerSummary(candidate: Candidate): { label: string; title: string } {
   const reviewers = getInterviewFeedback(candidate.id).map((entry) => entry.reviewer)
-  return reviewers.length > 0 ? `Priya + ${reviewers.join(' + ')}` : '—'
+  const all = ['Priya', ...reviewers]
+  if (reviewers.length === 0) return { label: 'Priya', title: 'Priya' }
+  return { label: `Priya +${reviewers.length}`, title: all.join(', ') }
 }
 
-function feedbackNote(candidate: Candidate): string {
-  if (candidate.waitingOn === 'priya') return 'Your feedback missing'
-  if (candidate.waitingOn === 'other') return 'Waiting on interviewer'
-  if (candidate.stage === 'Final' || candidate.stage === 'Offer') return 'Complete'
-  return '—'
+function statusPrimary(candidate: Candidate): string {
+  if (candidate.waitingOn) return 'Awaiting feedback'
+  return candidate.interviewStatus ?? candidate.stage
+}
+
+function statusSecondary(candidate: Candidate): string | undefined {
+  if (candidate.waitingOn === 'priya') return 'Priya'
+  if (candidate.waitingOn === 'other') {
+    const other = getInterviewFeedback(candidate.id)[0]?.reviewer
+    return other ?? 'Interviewer'
+  }
+  return undefined
+}
+
+function feedbackState(candidate: Candidate): { label: string; tone: string } {
+  if (candidate.waitingOn === 'priya') return { label: 'Missing', tone: 'text-palette-warning-700' }
+  if (candidate.waitingOn === 'other') return { label: 'Pending', tone: 'text-palette-neutral-600' }
+  if (candidate.stage === 'Final' || candidate.stage === 'Offer') return { label: 'Complete', tone: 'text-palette-success-700' }
+  return { label: '—', tone: 'text-muted-foreground' }
 }
 
 function actionFor(candidate: Candidate): string {
@@ -28,37 +47,40 @@ function actionFor(candidate: Candidate): string {
 }
 
 function QueueRow({ candidate }: { candidate: Candidate }) {
+  const interviewers = interviewerSummary(candidate)
+  const feedback = feedbackState(candidate)
+  const secondaryStatus = statusSecondary(candidate)
+  const overdue = (candidate.waitingDays ?? 0) >= OVERDUE_WAITING_DAYS
+
   return (
     <tr className="border-b border-border last:border-0 hover:bg-muted/60">
-      <td className="px-3 py-2.5 align-top">
+      <td className="whitespace-nowrap px-3 py-2.5 align-top">
         <Link to={`/candidates/${candidate.id}`} className="font-semibold text-palette-neutral-900 hover:text-primary focus-visible:outline-none focus-visible:underline">
           {candidate.name}
         </Link>
-        {candidate.source && <p className="text-xs text-muted-foreground">Source: {candidate.source}</p>}
+        {candidate.source && <p className="text-xs text-palette-neutral-500">{candidate.source}</p>}
       </td>
-      <td className="px-3 py-2.5 align-top text-foreground">{deriveInterviewType(candidate)}</td>
-      <td className="px-3 py-2.5 align-top text-muted-foreground">{interviewersFor(candidate)}</td>
-      <td className="px-3 py-2.5 align-top text-muted-foreground">{deriveInterviewDateTime(candidate)}</td>
-      <td className="px-3 py-2.5 align-top text-foreground">{candidate.interviewStatus ?? candidate.stage}</td>
-      <td className="px-3 py-2.5 align-top">
-        <span
-          className={cn(
-            'text-sm font-medium',
-            candidate.waitingOn === 'priya'
-              ? 'text-palette-warning-700'
-              : candidate.waitingOn === 'other'
-                ? 'text-palette-neutral-600'
-                : 'text-palette-success-700',
-          )}
-        >
-          {feedbackNote(candidate)}
-        </span>
+      <td className="whitespace-nowrap px-3 py-2.5 align-top font-medium text-foreground">{deriveInterviewType(candidate)}</td>
+      <td className="whitespace-nowrap px-3 py-2.5 align-top text-muted-foreground" title={interviewers.title}>
+        {interviewers.label}
       </td>
-      <td className="px-3 py-2.5 align-top text-muted-foreground">{candidate.waitingDays !== undefined ? `${candidate.waitingDays}d` : '—'}</td>
-      <td className="px-3 py-2.5 align-top">
+      <td className="whitespace-nowrap px-3 py-2.5 align-top text-muted-foreground">{deriveInterviewDateTime(candidate)}</td>
+      <td className="whitespace-nowrap px-3 py-2.5 align-top">
+        <p className="text-foreground">{statusPrimary(candidate)}</p>
+        {secondaryStatus && <p className="text-xs text-palette-neutral-500">{secondaryStatus}</p>}
+      </td>
+      <td className={cn('whitespace-nowrap px-3 py-2.5 align-top text-sm font-medium', feedback.tone)}>{feedback.label}</td>
+      <td className="whitespace-nowrap px-3 py-2.5 align-top">
+        {candidate.waitingDays !== undefined ? (
+          <span className={overdue ? 'font-semibold text-palette-warning-700' : 'text-muted-foreground'}>{candidate.waitingDays}d</span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )}
+      </td>
+      <td className="whitespace-nowrap px-3 py-2.5 align-top">
         <Link
           to={`/candidates/${candidate.id}`}
-          className="text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:underline"
+          className="whitespace-nowrap text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:underline"
         >
           {actionFor(candidate)}
         </Link>
@@ -77,17 +99,17 @@ function QueueTable({ candidates, emptyMessage }: { candidates: Candidate[]; emp
   }
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-xs">
-      <table className="w-full min-w-[960px] border-collapse text-sm">
+      <table className="w-full min-w-[1040px] border-collapse text-sm">
         <thead>
-          <tr className="border-b border-border bg-palette-brand-100/50">
-            <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Candidate</th>
-            <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Interview type</th>
-            <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Interviewers</th>
-            <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Date &amp; time</th>
-            <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Status</th>
-            <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Feedback</th>
-            <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Waiting</th>
-            <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700">Action</th>
+          <tr className="border-b border-border bg-palette-neutral-100">
+            <th className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700">Candidate</th>
+            <th className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700">Interview</th>
+            <th className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700">Interviewers</th>
+            <th className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700">Date &amp; time</th>
+            <th className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700">Status</th>
+            <th className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700">Feedback</th>
+            <th className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700">Waiting</th>
+            <th className="whitespace-nowrap px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-700">Action</th>
           </tr>
         </thead>
         <tbody>
@@ -105,15 +127,17 @@ export function InterviewsPage() {
   const opening = getOpening(openingId)
   const pool = useEffectiveCandidatesForOpening(opening?.id as OpeningId | undefined)
   const [tab, setTab] = useState<QueueTab>('needsFeedback')
+  const [searchQuery, setSearchQuery] = useState('')
 
   if (!opening) return null
 
-  const interviewCandidates = pool.filter((candidate) => candidate.stage === 'Interview' && !candidate.rejected)
-  const needsFeedback = interviewCandidates.filter((candidate) => candidate.waitingOn)
-  const upcoming = interviewCandidates.filter((candidate) => !candidate.waitingOn)
-  const completed = pool.filter((candidate) => (candidate.stage === 'Final' || candidate.stage === 'Offer') && !candidate.rejected)
+  const query = searchQuery.trim().toLowerCase()
+  const matchesSearch = (candidate: Candidate) => query.length === 0 || candidate.name.toLowerCase().includes(query)
 
-  if (interviewCandidates.length === 0 && completed.length === 0) {
+  const allInterviewCandidates = pool.filter((candidate) => candidate.stage === 'Interview' && !candidate.rejected)
+  const allCompleted = pool.filter((candidate) => (candidate.stage === 'Final' || candidate.stage === 'Offer') && !candidate.rejected)
+
+  if (allInterviewCandidates.length === 0 && allCompleted.length === 0) {
     return (
       <div className="p-6">
         <div className="rounded-xl border border-border bg-card p-6 shadow-xs">
@@ -123,6 +147,11 @@ export function InterviewsPage() {
       </div>
     )
   }
+
+  const interviewCandidates = allInterviewCandidates.filter(matchesSearch)
+  const needsFeedback = interviewCandidates.filter((candidate) => candidate.waitingOn)
+  const upcoming = interviewCandidates.filter((candidate) => !candidate.waitingOn)
+  const completed = allCompleted.filter(matchesSearch)
 
   const TABS: { key: QueueTab; label: string; count: number }[] = [
     { key: 'needsFeedback', label: 'Needs feedback', count: needsFeedback.length },
@@ -144,7 +173,18 @@ export function InterviewsPage() {
         <p className="text-sm text-muted-foreground">The interview work queue for this role.</p>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="relative w-full min-w-[220px] max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-palette-neutral-400" aria-hidden="true" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search interviews…"
+            aria-label="Search interviews"
+            className="w-full rounded-lg border border-border bg-card py-2 pl-9 pr-3 text-sm text-palette-neutral-900 placeholder:text-palette-neutral-400 focus:border-primary focus:outline-none focus:ring-2 focus:ring-ring/40"
+          />
+        </div>
         {TABS.map((entry) => (
           <button
             key={entry.key}

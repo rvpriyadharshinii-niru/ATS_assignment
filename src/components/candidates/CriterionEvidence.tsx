@@ -50,7 +50,7 @@ export function CriterionRow({ criterion, evidence, compact = false, experience 
         <div className="flex items-center justify-between gap-3">
           <span className="text-sm font-semibold text-palette-neutral-900">
             {criterion.name}
-            <span className="ml-1.5 text-xs font-normal text-palette-neutral-400">{criterion.priority}</span>
+            <span className="ml-1.5 text-xs font-normal text-palette-neutral-500">{criterion.priority}</span>
           </span>
           <StrengthBadge strength={strength} />
         </div>
@@ -66,12 +66,12 @@ export function CriterionRow({ criterion, evidence, compact = false, experience 
             <button
               type="button"
               onClick={() => setExpanded((current) => !current)}
-              className="mt-1 text-xs font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="mt-1 text-xs font-medium text-palette-neutral-600 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {expanded ? 'Show less' : 'Show details & source'}
             </button>
             {expanded && (
-              <p className="mt-1 text-xs text-palette-neutral-400">
+              <p className="mt-1 text-xs text-palette-neutral-500">
                 {isUncertainStrength(strength)
                   ? 'Available candidate information does not provide enough evidence for this criterion — this reflects missing information, not a negative finding.'
                   : currentExperience

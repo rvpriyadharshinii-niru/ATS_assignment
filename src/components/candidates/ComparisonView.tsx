@@ -23,7 +23,7 @@ export function ComparisonView({ candidates, criteria, summary }: { candidates: 
         <table className="w-full min-w-[420px] border-collapse text-sm">
           <thead>
             <tr className="border-b border-border bg-muted">
-              <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Criterion</th>
+              <th className="px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">Criterion</th>
               {candidates.map((candidate) => (
                 <th key={candidate.id} className="px-3 py-2.5 text-left">
                   <Link to={`/candidates/${candidate.id}`} className="block text-sm font-semibold text-palette-neutral-900 hover:text-primary">

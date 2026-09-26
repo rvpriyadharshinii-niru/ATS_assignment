@@ -55,7 +55,7 @@ export function CopilotPanel() {
 
   return (
     <div className="flex h-full w-full flex-col bg-card">
-      <header className="flex items-center justify-between gap-2 border-b border-border bg-palette-brand-100/40 px-4 py-3.5">
+      <header className="flex items-center justify-between gap-2 border-b border-border bg-card px-4 py-3.5">
         <div className="flex min-w-0 items-center gap-2">
           <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[image:var(--gradient-brand_wash)] text-background shadow-sm">
             <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
@@ -71,7 +71,7 @@ export function CopilotPanel() {
             onClick={handleExpand}
             aria-label="Expand to full Copilot workspace"
             title="Expand"
-            className="rounded-md p-1.5 text-palette-neutral-400 hover:bg-background hover:text-palette-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="rounded-md p-1.5 text-palette-neutral-500 hover:bg-muted hover:text-palette-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <Maximize2 className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -79,7 +79,7 @@ export function CopilotPanel() {
             type="button"
             onClick={closeCopilot}
             aria-label="Close Copilot"
-            className="rounded-md p-1.5 text-palette-neutral-400 hover:bg-background hover:text-palette-neutral-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="rounded-md p-1.5 text-palette-neutral-500 hover:bg-muted hover:text-palette-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
@@ -110,7 +110,7 @@ export function CopilotPanel() {
             {turns.map((turn) => (
               <div key={turn.id} className="space-y-2.5">
                 <div className="flex justify-end">
-                  <p className="max-w-[85%] rounded-2xl rounded-tr-sm bg-palette-brand-600 px-3.5 py-2 text-sm text-white">{turn.query}</p>
+                  <p className="max-w-[85%] rounded-2xl rounded-tr-sm bg-palette-brand-550 px-3.5 py-2 text-sm text-white">{turn.query}</p>
                 </div>
                 <div className="flex items-start gap-2">
                   <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-palette-brand-100 text-primary">
