@@ -34,11 +34,20 @@ function SortableHeaderCell({
   className?: string
 }) {
   if (!sortKey) {
-    return <th className={cn('px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700', className)}>{children}</th>
+    return (
+      <th
+        className={cn(
+          'sticky top-0 z-10 border-b border-border bg-palette-brand-100 px-3 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-palette-brand-700',
+          className,
+        )}
+      >
+        {children}
+      </th>
+    )
   }
   const isActive = activeSortKey === sortKey
   return (
-    <th className={cn('px-3 py-2.5 text-left', className)}>
+    <th className={cn('sticky top-0 z-10 border-b border-border bg-palette-brand-100 px-3 py-2.5 text-left', className)}>
       <button
         type="button"
         onClick={() => onSort(sortKey)}
@@ -81,9 +90,9 @@ export function CandidatesTable({
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-xs">
       <table className="w-full min-w-[960px] border-collapse text-sm">
-        <thead className="sticky top-0 z-10">
-          <tr className="border-b border-border bg-palette-brand-100">
-            <th className="w-10 px-3 py-2.5">
+        <thead>
+          <tr>
+            <th className="sticky top-0 z-10 w-10 border-b border-border bg-palette-brand-100 px-3 py-2.5">
               <input
                 type="checkbox"
                 checked={allSelected}
@@ -119,7 +128,7 @@ export function CandidatesTable({
             <SortableHeaderCell sortKey="updated" activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
               Updated
             </SortableHeaderCell>
-            <th className="w-10 px-3 py-2.5" />
+            <th className="sticky top-0 z-10 w-10 border-b border-border bg-palette-brand-100 px-3 py-2.5" />
           </tr>
         </thead>
         <tbody>
@@ -170,9 +179,13 @@ export function CandidatesTable({
                 <td className="px-3 py-2.5 align-top">{candidate.recommendation ? <RecommendationBadge label={candidate.recommendation} /> : '—'}</td>
                 <td className="px-3 py-2.5 align-top">
                   {candidate.prioritiesSupported !== undefined ? (
-                    <span className="font-medium text-palette-neutral-700">{candidate.prioritiesSupported}/5</span>
+                    <span className="inline-flex rounded-md bg-palette-neutral-150 px-2 py-0.5 text-xs font-semibold text-palette-neutral-700">
+                      {candidate.prioritiesSupported}/5
+                    </span>
                   ) : (
-                    <span className="text-muted-foreground">{candidate.notableGap ? 'Partial' : 'Needs info'}</span>
+                    <span className="inline-flex rounded-md bg-palette-neutral-100 px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                      {candidate.notableGap ? 'Partial' : 'Needs info'}
+                    </span>
                   )}
                 </td>
                 <td className="px-3 py-2.5 align-top text-sm text-muted-foreground">
@@ -180,7 +193,7 @@ export function CandidatesTable({
                 </td>
                 <td className="px-3 py-2.5 align-top text-muted-foreground">{candidate.source ?? '—'}</td>
                 <td className="px-3 py-2.5 align-top">
-                  <span className={cn('inline-flex rounded-full px-2 py-0.5 text-xs font-medium', STAGE_TONE[candidate.stage])}>{candidate.stage}</span>
+                  <span className={cn('inline-flex rounded-md px-2 py-0.5 text-xs font-medium', STAGE_TONE[candidate.stage])}>{candidate.stage}</span>
                 </td>
                 <td className="px-3 py-2.5 align-top text-xs text-muted-foreground">{candidate.updatedLabel ?? '—'}</td>
                 <td className="px-3 py-2.5 align-top">
