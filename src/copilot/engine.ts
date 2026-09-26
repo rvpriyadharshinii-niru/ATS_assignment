@@ -4,6 +4,7 @@ import { getInterviewFeedback } from '../data/interviewFeedback'
 import { getOpening } from '../data/openings'
 import { getCandidate, recommendedCandidateIds } from '../data/candidates'
 import { buildComparisonSummary } from '../lib/comparison'
+import { deriveExperience, deriveSkills } from '../lib/candidateStatus'
 import { needsValidationCriteriaNames, strongCriteriaNames } from '../lib/criteriaSummary'
 import { CRITERION_KEYWORDS } from '../lib/criterionKeywords'
 import { buildDefaultEmail } from '../lib/email'
@@ -365,11 +366,22 @@ function buildReviewDecisions(candidate: Candidate): { label: string; query: str
   return decisions
 }
 
-/** The single-candidate deep dive behind "Review <name>" — interview picture, feedback and next-step decisions, all inline. */
+/** The single-candidate deep dive behind "Review <name>" and every informational query — profile summary, feedback and next-step decisions, all inline. */
 function handleCandidateReview(candidate: Candidate): CopilotResult {
   const hasScorecard = candidate.evidence.length > 0
+  const headerLine = `${candidate.name} — ${[candidate.currentRole, candidate.currentCompany].filter(Boolean).join(' · ') || candidate.stage}`
+  const metaLine = [candidate.experienceYears !== undefined ? `${candidate.experienceYears} yrs experience` : undefined, candidate.location]
+    .filter(Boolean)
+    .join(' · ')
+  const recommendationLine = [
+    candidate.recommendation,
+    candidate.prioritiesSupported !== undefined ? `${candidate.prioritiesSupported}/5 priorities supported` : undefined,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+
   const message = hasScorecard
-    ? `Here's the interview picture for ${candidate.name}.`
+    ? [headerLine, metaLine, recommendationLine].filter(Boolean).join('\n')
     : `${candidate.name} is currently in ${candidate.stage}${candidate.interviewStatus ? ` — ${candidate.interviewStatus.toLowerCase()}` : ''}. A detailed evidence profile isn't available for this candidate yet.`
 
   return {
@@ -380,6 +392,10 @@ function handleCandidateReview(candidate: Candidate): CopilotResult {
     concerns: needsValidationCriteriaNames(candidate),
     feedback: getInterviewFeedback(candidate.id),
     hasScorecard,
+    skills: hasScorecard ? deriveSkills(candidate) : [],
+    experience: hasScorecard
+      ? deriveExperience(candidate).map((entry) => ({ company: entry.company, role: entry.role, dateRange: entry.dateRange }))
+      : [],
     decisions: buildReviewDecisions(candidate),
     navTo: { label: 'View full candidate profile', path: `/candidates/${candidate.id}` },
   }
@@ -779,16 +795,12 @@ export function runCopilotQuery(rawInput: string, context: CopilotContext): Copi
   // with nothing more specific matched above.
   if (effectiveContext.openingId && /\bcandidates?\b/i.test(input)) return handleTopCandidates(effectiveContext)
 
-  // We can identify who this is about but not what to do — ask instead of returning generic help.
-  const namedFallback = matchCandidatesByName(input, effectiveContext)
-  if (namedFallback.length === 1) {
-    const candidate = namedFallback[0]
-    const firstName = candidate.name.split(' ')[0]
-    return {
-      kind: 'clarify',
-      message: `I understood that you want to take action on ${candidate.name}, but I'm not sure which action you mean. Try "Advance ${firstName}", "Hold ${firstName}", "Compare ${firstName} and another candidate", or "Why ${firstName}?"`,
-    }
-  }
+  // Every action-intent pattern above has already had its chance and failed to match. A candidate we
+  // can still identify here — named, or inherited from the page/conversation context — means this is
+  // an informational question ("give me more information about Rahul", "what are her skills?"), not an
+  // ambiguous action. Answer directly instead of asking what to do.
+  const candidateForInfo = resolveCandidates(input, effectiveContext)[0]
+  if (candidateForInfo) return handleCandidateReview(candidateForInfo)
 
   return handleFallback(effectiveContext)
 }

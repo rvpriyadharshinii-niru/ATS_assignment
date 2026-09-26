@@ -6,6 +6,7 @@ import {
   ChevronRight,
   CircleHelp,
   ClipboardList,
+  Download,
   FileText,
   Home,
   Mail,
@@ -23,14 +24,24 @@ import { EmailComposeDialog } from '../components/candidates/EmailComposeDialog'
 import { RecommendationBadge } from '../components/candidates/RecommendationBadge'
 import { getCriteria } from '../data/criteria'
 import { getOpening } from '../data/openings'
-import { buildStatusNote, deriveAppliedDate, deriveCandidateEmail } from '../lib/candidateStatus'
+import {
+  buildStatusNote,
+  deriveAppliedDate,
+  deriveCandidateEmail,
+  deriveDayGroupLabel,
+  deriveEducation,
+  deriveExperience,
+  deriveLinks,
+  deriveSeedActivity,
+  deriveSkills,
+} from '../lib/candidateStatus'
 import { cn } from '../lib/cn'
 import { needsValidationCriteriaNames, strongCriteriaNames } from '../lib/criteriaSummary'
 import { isUncertainStrength } from '../lib/evidence'
+import { downloadResumePdf } from '../lib/generateResumePdf'
 import { advanceConsequences, advanceCtaLabel, nextStage } from '../lib/stage'
 import { useEffectiveCandidate } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
-import type { ActivityEvent, Candidate } from '../types/domain'
 
 type OpenDialog = 'advance' | 'hold' | 'reject' | 'email' | null
 type DetailTab = 'evidence' | 'resume' | 'activity'
@@ -57,19 +68,6 @@ function activityIcon(message: string): ComponentType<{ className?: string }> {
 
 function formatEventTime(timestamp: number): string {
   return new Date(timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-}
-
-/** Base context entries every candidate has, shown under the real (timestamped) activity log. */
-function buildSeedEntries(candidate: Candidate): { label: string; detail?: string }[] {
-  const entries: { label: string; detail?: string }[] = []
-  if (candidate.source) {
-    entries.push({
-      label: `Application received via ${candidate.source}`,
-      detail: candidate.updatedLabel ? (candidate.updatedLabel === 'Today' ? 'Today' : `${candidate.updatedLabel} ago`) : undefined,
-    })
-  }
-  if (candidate.interviewStatus) entries.push({ label: candidate.interviewStatus })
-  return entries
 }
 
 function OverflowMenu({ onEmail, onReject, rejected }: { onEmail: () => void; onReject: () => void; rejected: boolean }) {
@@ -148,11 +146,27 @@ export function CandidateEvidencePage() {
   const hasUncertainty = candidate.evidence.some((evidence) => isUncertainStrength(evidence.strength))
   const statusNote = buildStatusNote(candidate)
   const upcomingStage = nextStage(candidate.stage)
-  const seedEntries = buildSeedEntries(candidate)
-  const candidateEvents = activityLog.filter((event) => event.candidateId === candidate.id)
   const hasAssessment = candidate.evidence.length > 0 || !!candidate.recommendation || !!candidate.summary
   const strengths = strongCriteriaNames(candidate)
   const needsValidation = needsValidationCriteriaNames(candidate)
+  const skills = deriveSkills(candidate)
+  const experience = deriveExperience(candidate)
+  const education = deriveEducation(candidate)
+  const links = deriveLinks(candidate)
+
+  const activityFeed: { id: string; timestamp: number; label: string; detail?: string }[] = [
+    ...activityLog
+      .filter((event) => event.candidateId === candidate.id)
+      .map((event) => ({ id: event.id, timestamp: event.timestamp, label: event.message, detail: undefined })),
+    ...deriveSeedActivity(candidate),
+  ].sort((a, b) => b.timestamp - a.timestamp)
+  const activityGroups: { dayLabel: string; items: typeof activityFeed }[] = []
+  for (const item of activityFeed) {
+    const dayLabel = deriveDayGroupLabel(item.timestamp)
+    const lastGroup = activityGroups[activityGroups.length - 1]
+    if (lastGroup && lastGroup.dayLabel === dayLabel) lastGroup.items.push(item)
+    else activityGroups.push({ dayLabel, items: [item] })
+  }
 
   return (
     <div className="space-y-4 p-6">
@@ -196,6 +210,14 @@ export function CandidateEvidencePage() {
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground">{candidate.stage}</span>
+            <button
+              type="button"
+              onClick={() => downloadResumePdf(candidate)}
+              className="flex items-center gap-1.5 rounded-lg border border-border px-3.5 py-2 text-sm font-medium text-palette-neutral-700 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Download className="h-3.5 w-3.5" aria-hidden="true" />
+              Download resume
+            </button>
             {!candidate.rejected && (
               <>
                 {upcomingStage && (
@@ -282,6 +304,57 @@ export function CandidateEvidencePage() {
             </div>
           )}
 
+          <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
+            <div>
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Skills</h3>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {skills.map((skill) => (
+                  <span key={skill} className="rounded-full bg-palette-neutral-100 px-2.5 py-1 text-xs font-medium text-palette-neutral-700">
+                    {skill}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 border-t border-border pt-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Experience</h3>
+              <div className="mt-2.5 space-y-4">
+                {experience.map((entry) => (
+                  <div key={`${entry.company}-${entry.dateRange}`}>
+                    <p className="text-sm font-semibold text-foreground">{entry.company}</p>
+                    <p className="text-sm text-foreground">{entry.role}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {entry.dateRange} · {entry.duration}
+                      {entry.location && ` · ${entry.location}`}
+                    </p>
+                    <ul className="mt-1.5 space-y-1">
+                      {entry.bullets.map((bullet) => (
+                        <li key={bullet} className="flex gap-2 text-sm leading-relaxed text-foreground/90">
+                          <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-palette-neutral-300" aria-hidden="true" />
+                          {bullet}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-4 border-t border-border pt-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Education</h3>
+              <p className="mt-1.5 text-sm text-foreground">{education.degree}</p>
+              <p className="text-xs text-muted-foreground">
+                {education.school} · {education.dateRange}
+              </p>
+            </div>
+
+            <div className="mt-4 border-t border-border pt-4">
+              <h3 className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Links</h3>
+              <p className="mt-1.5 text-xs text-muted-foreground">LinkedIn: {links.linkedin}</p>
+              <p className="text-xs text-muted-foreground">Portfolio: {links.portfolio}</p>
+            </div>
+          </div>
+
           <div>
             <nav className="-mb-px flex items-center gap-5 border-b border-border" aria-label="Candidate sections">
               {(
@@ -308,89 +381,109 @@ export function CandidateEvidencePage() {
 
             {activeTab === 'evidence' ? (
               <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-xs">
-                <CriterionEvidenceList criteria={criteria} evidence={candidate.evidence} />
+                <CriterionEvidenceList criteria={criteria} evidence={candidate.evidence} experience={experience} />
                 {hasUncertainty && (
                   <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
                     Criteria marked <span className="font-medium text-palette-warning-700">Unclear</span> or{' '}
                     <span className="font-medium text-palette-warning-700">Insufficient evidence</span> reflect missing information, not a negative
-                    finding.
+                    finding. Missing evidence is never treated as negative evidence.
                   </p>
                 )}
               </div>
             ) : activeTab === 'resume' ? (
               <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-xs">
-                <div className="border-b border-border pb-3">
-                  <p className="text-sm font-semibold text-palette-neutral-900">{candidate.name}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {[deriveCandidateEmail(candidate), candidate.phone, candidate.location].filter(Boolean).join(' · ')}
-                  </p>
-                </div>
-                {candidate.currentRole || candidate.currentCompany || candidate.evidence.length > 0 ? (
-                  <div className="mt-3">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Experience</p>
-                    <p className="mt-1.5 text-sm font-medium text-foreground">
-                      {candidate.currentRole ?? 'Role not specified'}
-                      {candidate.currentCompany && ` · ${candidate.currentCompany}`}
+                <div className="flex items-start justify-between gap-3 border-b border-border pb-3">
+                  <div>
+                    <p className="text-sm font-semibold text-palette-neutral-900">{candidate.name}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {[deriveCandidateEmail(candidate), candidate.phone, candidate.location].filter(Boolean).join(' · ')}
                     </p>
-                    {candidate.experienceYears !== undefined && (
-                      <p className="text-xs text-muted-foreground">{candidate.experienceYears} years of experience</p>
-                    )}
-                    {candidate.evidence.length > 0 && (
-                      <ul className="mt-2.5 space-y-1.5 text-sm leading-relaxed text-foreground/90">
-                        {candidate.evidence
-                          .filter((item) => item.detail)
-                          .slice(0, 4)
-                          .map((item) => (
-                            <li key={item.criterionKey} className="flex gap-2">
-                              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-palette-neutral-300" aria-hidden="true" />
-                              {item.detail}
-                            </li>
-                          ))}
-                      </ul>
+                    {(candidate.currentRole || candidate.currentCompany) && (
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {[candidate.currentRole, candidate.currentCompany].filter(Boolean).join(' · ')}
+                      </p>
                     )}
                   </div>
-                ) : (
-                  <p className="mt-3 text-sm text-muted-foreground">A resume isn&rsquo;t available for this candidate yet.</p>
-                )}
-                <p className="mt-3 border-t border-border pt-3 text-xs text-muted-foreground">
+                  <button
+                    type="button"
+                    onClick={() => downloadResumePdf(candidate)}
+                    className="flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-palette-neutral-700 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <Download className="h-3.5 w-3.5" aria-hidden="true" />
+                    Download resume
+                  </button>
+                </div>
+
+                <div className="mt-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Experience</p>
+                  <div className="mt-2 space-y-3">
+                    {experience.map((entry) => (
+                      <div key={`${entry.company}-${entry.dateRange}`}>
+                        <p className="text-sm font-medium text-foreground">
+                          {entry.role} · {entry.company}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {entry.dateRange} · {entry.duration}
+                        </p>
+                        <ul className="mt-1 space-y-1 text-sm leading-relaxed text-foreground/90">
+                          {entry.bullets.map((bullet) => (
+                            <li key={bullet} className="flex gap-2">
+                              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-palette-neutral-300" aria-hidden="true" />
+                              {bullet}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="mt-4 border-t border-border pt-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Skills</p>
+                  <p className="mt-1.5 text-sm text-foreground">{skills.join(', ')}</p>
+                </div>
+
+                <div className="mt-4 border-t border-border pt-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Education</p>
+                  <p className="mt-1.5 text-sm text-foreground">{education.degree}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {education.school} · {education.dateRange}
+                  </p>
+                </div>
+
+                <p className="mt-4 border-t border-border pt-3 text-xs text-muted-foreground">
                   Representative summary compiled from the application. Source: Resume · Application form.
                 </p>
               </div>
             ) : (
               <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-xs">
-                {candidateEvents.length === 0 && seedEntries.length === 0 ? (
+                {activityGroups.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No activity recorded yet.</p>
                 ) : (
-                  <ul className="space-y-4">
-                    {candidateEvents.map((event: ActivityEvent) => {
-                      const Icon = activityIcon(event.message)
-                      return (
-                        <li key={event.id} className="flex gap-3">
-                          <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-palette-brand-100 text-primary">
-                            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                          </span>
-                          <div>
-                            <p className="text-sm text-foreground">{event.message}</p>
-                            <p className="text-xs text-muted-foreground">{formatEventTime(event.timestamp)}</p>
-                          </div>
-                        </li>
-                      )
-                    })}
-                    {seedEntries.map((entry, index) => {
-                      const Icon = activityIcon(entry.label)
-                      return (
-                        <li key={`seed-${index}`} className="flex gap-3">
-                          <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-palette-neutral-150 text-palette-neutral-500">
-                            <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                          </span>
-                          <div>
-                            <p className="text-sm text-foreground">{entry.label}</p>
-                            {entry.detail && <p className="text-xs text-muted-foreground">{entry.detail}</p>}
-                          </div>
-                        </li>
-                      )
-                    })}
-                  </ul>
+                  <div className="space-y-5">
+                    {activityGroups.map((group) => (
+                      <div key={group.dayLabel}>
+                        <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">{group.dayLabel}</p>
+                        <ul className="mt-2 space-y-3">
+                          {group.items.map((item) => {
+                            const Icon = activityIcon(item.label)
+                            return (
+                              <li key={item.id} className="flex gap-3">
+                                <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-palette-brand-100 text-primary">
+                                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                                </span>
+                                <div>
+                                  <p className="text-xs text-muted-foreground">{formatEventTime(item.timestamp)}</p>
+                                  <p className="text-sm text-foreground">{item.label}</p>
+                                  {item.detail && <p className="text-xs text-muted-foreground">{item.detail}</p>}
+                                </div>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </div>
+                    ))}
+                  </div>
                 )}
               </div>
             )}

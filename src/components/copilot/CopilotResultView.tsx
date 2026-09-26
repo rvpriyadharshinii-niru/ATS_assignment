@@ -283,6 +283,24 @@ function CandidateReviewCard({ result }: { result: Extract<CopilotResult, { kind
 
       {result.hasScorecard && (
         <div className="mt-3 space-y-3">
+          {result.experience.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-400">Experience</p>
+              <div className="mt-1 space-y-0.5">
+                {result.experience.map((entry) => (
+                  <p key={`${entry.company}-${entry.dateRange}`} className="text-sm text-foreground">
+                    {entry.role} · {entry.company} <span className="text-xs text-muted-foreground">({entry.dateRange})</span>
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+          {result.skills.length > 0 && (
+            <p className="text-sm text-foreground">
+              <span className="font-semibold text-palette-neutral-900">Skills: </span>
+              {result.skills.join(', ')}
+            </p>
+          )}
           {(result.strengths.length > 0 || result.concerns.length > 0) && (
             <div className="rounded-lg border border-border bg-muted p-3.5">
               {result.strengths.length > 0 && (

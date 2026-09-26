@@ -97,6 +97,9 @@ export type CopilotResult =
       concerns: string[]
       feedback: InterviewFeedbackEntry[]
       hasScorecard: boolean
+      /** Profile facts, not AI verdicts — shown as a plain skills line under the assessment. */
+      skills: string[]
+      experience: { company: string; role: string; dateRange: string }[]
       decisions: ReviewDecision[]
       navTo?: { label: string; path: string }
     }

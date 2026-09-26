@@ -1,6 +1,7 @@
 import { CircleHelp } from 'lucide-react'
 import { useState } from 'react'
 import { isUncertainStrength } from '../../lib/evidence'
+import type { ExperienceEntry } from '../../lib/candidateStatus'
 import type { CriterionEvidence as CriterionEvidenceItem, EvidenceStrength, HiringCriterion } from '../../types/domain'
 import { cn } from '../../lib/cn'
 
@@ -48,11 +49,14 @@ interface CriterionRowProps {
   criterion: HiringCriterion
   evidence?: CriterionEvidenceItem
   compact?: boolean
+  /** The candidate's work-experience timeline — lets the expanded detail point back at where this evidence came from. */
+  experience?: ExperienceEntry[]
 }
 
-export function CriterionRow({ criterion, evidence, compact = false }: CriterionRowProps) {
+export function CriterionRow({ criterion, evidence, compact = false, experience }: CriterionRowProps) {
   const [expanded, setExpanded] = useState(false)
   const strength = evidence?.strength ?? 'Not available'
+  const currentExperience = experience?.[0]
 
   return (
     <div className="flex gap-3">
@@ -81,7 +85,15 @@ export function CriterionRow({ criterion, evidence, compact = false }: Criterion
             >
               {expanded ? 'Show less' : 'Show details & source'}
             </button>
-            {expanded && <p className="mt-1 text-xs text-palette-neutral-400">Sourced from resume, application and screening information</p>}
+            {expanded && (
+              <p className="mt-1 text-xs text-palette-neutral-400">
+                {isUncertainStrength(strength)
+                  ? 'Available candidate information does not provide enough evidence for this criterion — this reflects missing information, not a negative finding.'
+                  : currentExperience
+                    ? `Sourced from resume, application and screening information. Referenced in Work Experience: ${currentExperience.company} · ${currentExperience.role}.`
+                    : 'Sourced from resume, application and screening information.'}
+              </p>
+            )}
           </>
         )}
       </div>
@@ -93,9 +105,10 @@ interface CriterionEvidenceListProps {
   criteria: HiringCriterion[]
   evidence: CriterionEvidenceItem[]
   compact?: boolean
+  experience?: ExperienceEntry[]
 }
 
-export function CriterionEvidenceList({ criteria, evidence, compact = false }: CriterionEvidenceListProps) {
+export function CriterionEvidenceList({ criteria, evidence, compact = false, experience }: CriterionEvidenceListProps) {
   return (
     <div className={compact ? 'space-y-0' : 'space-y-1'}>
       {criteria.map((criterion) => (
@@ -104,6 +117,7 @@ export function CriterionEvidenceList({ criteria, evidence, compact = false }: C
           criterion={criterion}
           evidence={evidence.find((item) => item.criterionKey === criterion.key)}
           compact={compact}
+          experience={experience}
         />
       ))}
     </div>
