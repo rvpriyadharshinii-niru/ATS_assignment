@@ -359,7 +359,7 @@ function CandidateReviewCard({ result }: { result: Extract<CopilotResult, { kind
                 className={cn(
                   'rounded-lg px-3.5 py-1.5 text-sm font-medium transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                   decision.label === 'Reject'
-                    ? 'bg-destructive text-destructive-foreground'
+                    ? 'border border-palette-danger-300 text-palette-danger-700 hover:bg-palette-danger-150'
                     : decision.label.startsWith('Advance')
                       ? 'bg-primary text-primary-foreground'
                       : 'border border-border text-foreground hover:bg-muted',
