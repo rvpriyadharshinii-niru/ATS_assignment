@@ -6,7 +6,7 @@ import { getCriteria } from '../data/criteria'
 import { getOpening } from '../data/openings'
 import { cn } from '../lib/cn'
 import { RecommendationBadge } from '../components/candidates/RecommendationBadge'
-import { IconBadge } from '../components/ui/IconBadge'
+import { IconBadge, type IconBadgeColor } from '../components/ui/IconBadge'
 import { useEffectiveCandidatesForOpening, usePipelineStages } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
 import type { CandidateStage, OpeningId } from '../types/domain'
@@ -20,13 +20,13 @@ const STAGE_TEXT: Record<CandidateStage, string> = {
   Offer: 'text-palette-success-700',
 }
 
-const STAGE_TINT: Record<CandidateStage, string> = {
-  Applied: 'bg-palette-neutral-100',
-  'AI Screened': 'bg-palette-info-100',
-  'HM Review': 'bg-palette-brand-100',
-  Interview: 'bg-palette-warning-100',
-  Final: 'bg-palette-plum-100/60',
-  Offer: 'bg-palette-success-100',
+const STAGE_BADGE_COLOR: Record<CandidateStage, IconBadgeColor> = {
+  Applied: 'neutral',
+  'AI Screened': 'info',
+  'HM Review': 'brand',
+  Interview: 'warning',
+  Final: 'plum',
+  Offer: 'success',
 }
 
 const STAGE_ICON: Record<CandidateStage, ComponentType<{ className?: string; 'aria-hidden'?: boolean }>> = {
@@ -73,33 +73,23 @@ export function RoleWorkspaceOverviewPage() {
   const poolIds = new Set(pool.map((candidate) => candidate.id))
   const recentActivity = activityLog.filter((event) => poolIds.has(event.candidateId)).slice(0, 5)
 
-  const waitingOnFeedback = pool.filter((candidate) => candidate.stage === 'Interview' && candidate.waitingOn && !candidate.rejected).length
-  const awaitingDecision = pool.filter((candidate) => candidate.stage === 'Final' && !candidate.rejected && !candidate.selected).length
-  const stageSecondary: Partial<Record<CandidateStage, string>> = {
-    Interview: waitingOnFeedback > 0 ? `${waitingOnFeedback} waiting for feedback` : undefined,
-    Final: awaitingDecision > 0 ? `${awaitingDecision} awaiting decision` : undefined,
-  }
-
   return (
     <div className="space-y-5 p-6">
       {stages.length > 0 && (
         <div className="grid grid-cols-6 gap-3">
-          {stages.map((stage) => {
-            const Icon = STAGE_ICON[stage.stage]
-            const secondary = stageSecondary[stage.stage]
-            return (
-              <Link
-                key={stage.stage}
-                to={stage.stage === 'Interview' ? `/openings/${id}/interviews` : `/openings/${id}/pipeline`}
-                className={cn('rounded-xl border border-border p-3.5 text-center shadow-xs transition-colors hover:border-palette-brand-250', STAGE_TINT[stage.stage])}
-              >
-                <Icon className={cn('mx-auto h-4 w-4', STAGE_TEXT[stage.stage])} aria-hidden />
-                <p className="mt-1 text-xl font-semibold text-palette-neutral-900">{stage.count}</p>
-                <p className={cn('mt-0.5 truncate text-xs font-semibold uppercase tracking-wide', STAGE_TEXT[stage.stage])}>{stage.stage}</p>
-                <p className="mt-1 h-3.5 truncate text-[11px] text-muted-foreground">{secondary}</p>
-              </Link>
-            )
-          })}
+          {stages.map((stage) => (
+            <Link
+              key={stage.stage}
+              to={stage.stage === 'Interview' ? `/openings/${id}/interviews` : `/openings/${id}/pipeline`}
+              className="flex items-center gap-2.5 rounded-xl border border-border bg-card p-3.5 shadow-xs transition-colors hover:border-palette-brand-250"
+            >
+              <IconBadge icon={STAGE_ICON[stage.stage]} color={STAGE_BADGE_COLOR[stage.stage]} size="sm" />
+              <div className="min-w-0">
+                <p className={cn('truncate text-xs font-semibold uppercase tracking-wide', STAGE_TEXT[stage.stage])}>{stage.stage}</p>
+                <p className="text-xl font-semibold leading-tight text-palette-neutral-900">{stage.count}</p>
+              </div>
+            </Link>
+          ))}
         </div>
       )}
 
