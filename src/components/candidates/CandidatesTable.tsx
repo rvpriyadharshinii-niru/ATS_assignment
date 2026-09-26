@@ -80,7 +80,7 @@ export function CandidatesTable({
 
   return (
     <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-xs">
-      <table className="w-full min-w-[860px] border-collapse text-sm">
+      <table className="w-full min-w-[960px] border-collapse text-sm">
         <thead className="sticky top-0 z-10">
           <tr className="border-b border-border bg-palette-brand-100">
             <th className="w-10 px-3 py-2.5">
@@ -96,7 +96,10 @@ export function CandidatesTable({
               Candidate
             </SortableHeaderCell>
             <SortableHeaderCell activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
-              Role / Company
+              Role
+            </SortableHeaderCell>
+            <SortableHeaderCell activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
+              Company
             </SortableHeaderCell>
             <SortableHeaderCell activeSortKey={sortKey} sortDirection={sortDirection} onSort={onSort}>
               Recommendation
@@ -162,17 +165,8 @@ export function CandidatesTable({
                   </div>
                   {statusNote && <p className="mt-0.5 text-xs text-palette-neutral-500">{statusNote}</p>}
                 </td>
-                <td className="px-3 py-2.5 align-top text-muted-foreground">
-                  {candidate.currentRole && candidate.currentCompany ? (
-                    <>
-                      <span className="text-foreground">{candidate.currentRole}</span>
-                      <br />
-                      {candidate.currentCompany}
-                    </>
-                  ) : (
-                    '—'
-                  )}
-                </td>
+                <td className="px-3 py-2.5 align-top text-foreground">{candidate.currentRole ?? '—'}</td>
+                <td className="px-3 py-2.5 align-top text-muted-foreground">{candidate.currentCompany ?? '—'}</td>
                 <td className="px-3 py-2.5 align-top">{candidate.recommendation ? <RecommendationBadge label={candidate.recommendation} /> : '—'}</td>
                 <td className="px-3 py-2.5 align-top">
                   {candidate.prioritiesSupported !== undefined ? (
