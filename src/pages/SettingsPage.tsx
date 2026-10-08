@@ -3,10 +3,12 @@ import { useState } from 'react'
 import { PageHeader } from '../components/layout/PageHeader'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { IconBadge } from '../components/ui/IconBadge'
+import { useAgentStore } from '../store/useAgentStore'
 import { useAppStore } from '../store/useAppStore'
 
 export function SettingsPage() {
   const resetDemoData = useAppStore((state) => state.resetDemoData)
+  const resetAgents = useAgentStore((state) => state.resetAgents)
   const pushToast = useAppStore((state) => state.pushToast)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -55,11 +57,13 @@ export function SettingsPage() {
           'Remove candidates added during this session',
           'Restore hiring criteria to their original configuration',
           'Clear filters, activity history and Copilot conversations',
+          'Restore AI Agents settings, test runs and activity',
         ]}
         confirmLabel="Reset"
         tone="destructive"
         onConfirm={() => {
           resetDemoData()
+          resetAgents()
           setConfirmOpen(false)
           pushToast('Demo data reset.')
         }}

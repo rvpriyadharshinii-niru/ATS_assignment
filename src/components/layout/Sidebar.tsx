@@ -1,6 +1,7 @@
-import { Bell, Briefcase, Home, Settings, Sparkles } from 'lucide-react'
+import { Bell, Bot, Briefcase, Home, Settings, Sparkles } from 'lucide-react'
 import { Link, useLocation } from 'react-router-dom'
 import { cn } from '../../lib/cn'
+import { useAttentionCount } from '../../store/useAgentStore'
 
 // Sidebar = location in the PRODUCT. A role workspace's own tabs (Candidates,
 // Pipeline, Interviews, Hiring Criteria) live one level down and never surface
@@ -23,12 +24,15 @@ function NavRow({
   Icon,
   active,
   onClick,
+  badge,
 }: {
   to?: string
   label: string
   Icon: typeof Home
   active: boolean
   onClick?: () => void
+  /** A small count, e.g. agent items waiting on Priya. */
+  badge?: number
 }) {
   const className = cn(
     'relative flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
@@ -39,6 +43,11 @@ function NavRow({
       {active && <span className="absolute -left-3 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-full bg-primary" aria-hidden="true" />}
       <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
       <span className="truncate">{label}</span>
+      {!!badge && (
+        <span className="ml-auto rounded-full bg-palette-warning-150 px-1.5 py-0.5 text-[11px] font-semibold text-palette-warning-700" aria-label={`${badge} waiting on you`}>
+          {badge}
+        </span>
+      )}
     </>
   )
   if (onClick) {
@@ -61,6 +70,7 @@ function SectionLabel({ children }: { children: string }) {
 
 export function Sidebar() {
   const { pathname } = useLocation()
+  const agentAttention = useAttentionCount()
 
   return (
     <aside className="flex h-full w-60 shrink-0 flex-col border-r border-border bg-card">
@@ -82,6 +92,7 @@ export function Sidebar() {
         <SectionLabel>AI</SectionLabel>
         <div className="ml-3 space-y-0.5">
           <NavRow to="/copilot" label="Copilot" Icon={Sparkles} active={pathname === '/copilot'} />
+          <NavRow to="/agents" label="Agents" Icon={Bot} active={pathname === '/agents' || pathname.startsWith('/agents/')} badge={agentAttention} />
         </div>
 
         <SectionLabel>Activity</SectionLabel>

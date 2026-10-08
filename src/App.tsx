@@ -1,5 +1,10 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
+import { AgentActivityPage } from './pages/AgentActivityPage'
+import { AgentConfigurePage } from './pages/AgentConfigurePage'
+import { AgentDetailLayout } from './pages/AgentDetailLayout'
+import { AgentsWorkspacePage } from './pages/AgentsWorkspacePage'
+import { AgentTestPage } from './pages/AgentTestPage'
 import { CandidateEvidencePage } from './pages/CandidateEvidencePage'
 import { CandidateExplorationPage } from './pages/CandidateExplorationPage'
 import { CopilotWorkspacePage } from './pages/CopilotWorkspacePage'
@@ -28,6 +33,13 @@ function App() {
         </Route>
         <Route path="/candidates/:candidateId" element={<CandidateEvidencePage />} />
         <Route path="/copilot" element={<CopilotWorkspacePage />} />
+        <Route path="/agents" element={<AgentsWorkspacePage />} />
+        <Route path="/agents/:agentId" element={<AgentDetailLayout />}>
+          <Route index element={<Navigate to="configure" replace />} />
+          <Route path="configure" element={<AgentConfigurePage />} />
+          <Route path="test" element={<AgentTestPage />} />
+          <Route path="activity" element={<AgentActivityPage />} />
+        </Route>
         <Route path="/notifications" element={<NotificationsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />

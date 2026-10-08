@@ -1,4 +1,4 @@
-import { Search } from 'lucide-react'
+import { ArrowRight, CalendarClock, Search } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { getInterviewFeedback } from '../data/interviewFeedback'
@@ -6,6 +6,7 @@ import { getOpening } from '../data/openings'
 import { deriveInterviewDateTime, deriveInterviewType } from '../lib/candidateStatus'
 import { cn } from '../lib/cn'
 import { useEffectiveCandidatesForOpening } from '../store/candidateSelectors'
+import { useAgentStore } from '../store/useAgentStore'
 import type { Candidate, OpeningId } from '../types/domain'
 
 type QueueTab = 'needsFeedback' | 'upcoming' | 'completed'
@@ -128,6 +129,13 @@ export function InterviewsPage() {
   const pool = useEffectiveCandidatesForOpening(opening?.id as OpeningId | undefined)
   const [tab, setTab] = useState<QueueTab>('needsFeedback')
   const [searchQuery, setSearchQuery] = useState('')
+  const coordination = useAgentStore((state) => state.agents['interview-coordination'])
+  const coordinationWaiting = useAgentStore(
+    (state) =>
+      state.activity.filter(
+        (item) => item.agentId === 'interview-coordination' && item.openingId === opening?.id && (item.status === 'pending' || item.status === 'needs-review' || item.status === 'failed'),
+      ).length,
+  )
 
   if (!opening) return null
 
@@ -207,6 +215,26 @@ export function InterviewsPage() {
           </button>
         ))}
       </div>
+
+      {coordination.config.openingIds.includes(opening.id) && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-palette-brand-200 bg-palette-brand-100/30 px-4 py-2.5">
+          <p className="flex items-center gap-2 text-sm text-foreground">
+            <CalendarClock className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+            <span>
+              <span className="font-medium text-palette-neutral-900">Interview Coordination Agent</span>
+              {coordination.status === 'active'
+                ? coordinationWaiting > 0
+                  ? ` is tracking this role · ${coordinationWaiting} item${coordinationWaiting > 1 ? 's' : ''} waiting on you`
+                  : ' is tracking this role · nothing waiting on you'
+                : ` is ${coordination.status}`}
+            </span>
+          </p>
+          <Link to="/agents/interview-coordination/activity" className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-palette-brand-600">
+            Review
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </Link>
+        </div>
+      )}
 
       <QueueTable candidates={activeCandidates} emptyMessage={emptyMessage} />
     </div>

@@ -25,3 +25,13 @@ npm run build     # typecheck + production build
 npm run lint      # eslint
 npm run preview   # preview production build
 ```
+
+## Post-assignment exploration: AI Agents
+
+Not part of the original submission. **Sidebar → Agents** (`/agents`) explores the step from Copilot to supervised AI Agents: Traditional ATS → AI Copilot → Supervised AI Agents.
+
+- Four agents: Candidate Review, Interview Coordination, Assessment and Interview Preparation, each with Configuration, a Testing Studio and an Activity log.
+- Agent runs are deterministic simulations over the prototype data (`src/agents/simulate.ts`); every output is labelled "Simulated".
+- Agents act only through the existing store mutations, so an approved proposal moves the same candidate, sends the same email and logs the same activity as the manual UI or Copilot.
+- Advancing candidates, messages to candidates and publishing assessments always require approval; agents never reject, and missing evidence is never scored as negative.
+- Candidate profiles get an **Agents** tab; the Interviews tab shows the coordination agent's status. Settings → Reset demo data also resets agents.

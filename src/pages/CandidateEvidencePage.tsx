@@ -1,5 +1,6 @@
 import {
   Activity,
+  Bot,
   ArrowRight,
   Briefcase,
   CheckCircle2,
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState, type ComponentType } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { CandidateAgentFindings } from '../components/agents/CandidateAgentFindings'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { IconBadge } from '../components/ui/IconBadge'
 import { CriteriaMatchVisual } from '../components/candidates/CriteriaMatchVisual'
@@ -45,10 +47,11 @@ import { downloadResumePdf } from '../lib/generateResumePdf'
 import { advanceConsequences, advanceCtaLabel, nextStage } from '../lib/stage'
 import { STAGE_TONE } from '../lib/stageTone'
 import { useEffectiveCandidate } from '../store/candidateSelectors'
+import { useAgentStore } from '../store/useAgentStore'
 import { useAppStore } from '../store/useAppStore'
 
 type OpenDialog = 'advance' | 'hold' | 'reject' | 'email' | null
-type DetailTab = 'assessment' | 'evidence' | 'resume' | 'profile' | 'details' | 'criteria' | 'activity'
+type DetailTab = 'assessment' | 'evidence' | 'resume' | 'profile' | 'details' | 'criteria' | 'activity' | 'agents'
 
 function initialsFor(name: string): string {
   return name
@@ -130,6 +133,9 @@ export function CandidateEvidencePage() {
   const undoLastMutation = useAppStore((state) => state.undoLastMutation)
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
   const [activeTab, setActiveTab] = useState<DetailTab>('assessment')
+  const agentAttention = useAgentStore(
+    (state) => state.activity.filter((item) => item.candidateId === candidateId && (item.status === 'pending' || item.status === 'needs-review')).length,
+  )
 
   useEffect(() => {
     if (candidate) setSelectedCandidate(candidate.id, candidate.openingId)
@@ -284,6 +290,7 @@ export function CandidateEvidencePage() {
               { key: 'details', label: 'Details', icon: Info },
               { key: 'criteria', label: 'Criteria', icon: Briefcase },
               { key: 'activity', label: 'Activity', icon: Activity },
+              { key: 'agents', label: 'Agents', icon: Bot },
             ] as const
           ).map((tab) => (
             <button
@@ -297,6 +304,9 @@ export function CandidateEvidencePage() {
             >
               <tab.icon className="h-4 w-4" aria-hidden="true" />
               {tab.label}
+              {tab.key === 'agents' && agentAttention > 0 && (
+                <span className="rounded-full bg-palette-warning-150 px-1.5 py-0.5 text-xs font-medium text-palette-warning-700">{agentAttention}</span>
+              )}
             </button>
           ))}
         </nav>
@@ -549,6 +559,8 @@ export function CandidateEvidencePage() {
                   </Link>
                 )}
               </div>
+            ) : activeTab === 'agents' ? (
+              <CandidateAgentFindings candidate={candidate} />
             ) : (
               <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-xs">
                 {activityGroups.length === 0 ? (
