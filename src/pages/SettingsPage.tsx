@@ -5,10 +5,12 @@ import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { IconBadge } from '../components/ui/IconBadge'
 import { useAgentStore } from '../store/useAgentStore'
 import { useAppStore } from '../store/useAppStore'
+import { useWorkspaceStore } from '../store/useWorkspaceStore'
 
 export function SettingsPage() {
   const resetDemoData = useAppStore((state) => state.resetDemoData)
   const resetAgents = useAgentStore((state) => state.resetAgents)
+  const resetWorkspace = useWorkspaceStore((state) => state.resetWorkspace)
   const pushToast = useAppStore((state) => state.pushToast)
   const [confirmOpen, setConfirmOpen] = useState(false)
 
@@ -34,7 +36,7 @@ export function SettingsPage() {
             Demo data
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Undo every change made during this session — candidate moves, added candidates, criteria edits and Copilot actions —
+            Undo every change made during this session — candidate moves, added candidates, criteria edits, AI Workspace tasks and approvals —
             and restore the prototype to its original state.
           </p>
           <button
@@ -56,7 +58,7 @@ export function SettingsPage() {
           'Restore every candidate to their original stage',
           'Remove candidates added during this session',
           'Restore hiring criteria to their original configuration',
-          'Clear filters, activity history and Copilot conversations',
+          'Clear filters, activity history and AI Workspace tasks',
           'Restore AI Agents settings, test runs and activity',
         ]}
         confirmLabel="Reset"
@@ -64,6 +66,7 @@ export function SettingsPage() {
         onConfirm={() => {
           resetDemoData()
           resetAgents()
+          resetWorkspace()
           setConfirmOpen(false)
           pushToast('Demo data reset.')
         }}

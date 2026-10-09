@@ -15,11 +15,11 @@ const STEPS = [
   },
   {
     icon: Sparkles,
-    title: 'AI Copilot',
-    body: 'Responds when you ask: investigates, explains and proposes. You confirm each action.',
+    title: 'AI Workspace',
+    body: 'You delegate a task: AI investigates, cites evidence and prepares work. You confirm each action.',
     tag: 'In HireFlow today',
     current: false,
-    link: { to: '/copilot', label: 'Open Copilot' },
+    link: { to: '/workspace', label: 'Open AI Workspace' },
   },
   {
     icon: Bot,
@@ -39,7 +39,7 @@ export function AgentsIntro() {
         <div className="min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-palette-plum-600">Post-assignment exploration</p>
           <h2 id="agents-intro-title" className="mt-1 text-base font-semibold text-palette-neutral-900">
-            Exploring the next step: From Copilot to AI Agents
+            Exploring the next step: From delegated tasks to AI Agents
           </h2>
           {!collapsed && (
             <p className="mt-1.5 max-w-3xl text-sm leading-relaxed text-foreground/90">

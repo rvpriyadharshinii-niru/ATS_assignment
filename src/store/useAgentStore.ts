@@ -147,10 +147,10 @@ function seedActivity(now: number): AgentActivity[] {
       id: 'seed-ic-remind-rohan',
       agentId: 'interview-coordination',
       timestamp: now - 5 * HOUR,
-      title: 'Reminded the Design Lead about Rohan Das’s feedback',
+      title: 'Reminded the Engineering Manager about Rohan Das’s Round 2 feedback',
       openingId: 'senior-product-designer',
       candidateId: 'rohan-das',
-      reason: 'The Design Lead’s scorecard has been pending for 4 days; the team target is 2 business days.',
+      reason: 'The Engineering Manager’s Round 2 scorecard has been pending for 4 days; the team target is 2 business days.',
       status: 'completed',
       resolution: 'Completed automatically — internal reminder under “Handle routine steps”.',
       resolvedAt: now - 5 * HOUR,
@@ -367,12 +367,12 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
       app.pushToast(`${movable.map((candidate) => candidate.name).join(', ')} moved to ${approval.toStage}.`)
     } else if (approval.kind === 'email') {
       app.sendEmail(approval.candidateId, approval.subject, approval.body)
-      resolution = `Approved by Priya · email sent to ${approval.recipient}${edited ? ' (edited before sending)' : ''}.`
-      app.pushToast(`Email sent to ${approval.recipient}.`)
+      resolution = `Approved by Priya · email to ${approval.recipient} recorded${edited ? ' (edited before sending)' : ''}. Delivery is simulated in this prototype.`
+      app.pushToast(`Email to ${approval.recipient} recorded (simulated, not delivered).`)
     } else if (approval.kind === 'internal-message') {
       if (approval.candidateId) app.logActivity(approval.candidateId, `${name}: message sent to ${approval.recipient} — “${approval.subject}”`)
-      resolution = `Approved by Priya · sent to ${approval.recipient}.`
-      app.pushToast(`Sent to ${approval.recipient}.`)
+      resolution = `Approved by Priya · message to ${approval.recipient} recorded (simulated delivery).`
+      app.pushToast(`Message to ${approval.recipient} recorded (simulated).`)
     } else {
       app.logActivity(approval.candidateId, `Assessment sent: “${approval.assessmentTitle}”`)
       const candidate = getCandidate(approval.candidateId)
@@ -383,7 +383,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
         },
       }))
       resolution = `Approved by Priya · assessment sent to ${candidate?.name ?? 'the candidate'}.`
-      app.pushToast(`Assessment sent to ${candidate?.name ?? 'the candidate'}.`)
+      app.pushToast(`Assessment for ${candidate?.name ?? 'the candidate'} recorded as sent (simulated).`)
     }
 
     set((state) => ({

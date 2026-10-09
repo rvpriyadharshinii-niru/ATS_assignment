@@ -1,36 +1,38 @@
+import { Menu } from 'lucide-react'
+import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
-import { useAppStore } from '../../store/useAppStore'
-import { CopilotLauncher } from '../copilot/CopilotLauncher'
-import { CopilotPanel } from '../copilot/CopilotPanel'
+import { AskAiButton } from './AskAiButton'
 import { Sidebar } from './Sidebar'
 import { ToastStack } from './ToastStack'
 
 export function AppShell() {
-  const copilotExpanded = useAppStore((state) => state.copilotExpanded)
   const { pathname } = useLocation()
-  const isCopilotWorkspace = pathname === '/copilot'
-
-  // Docked, not floating: opening Copilot resizes the workspace next to it rather than covering or
-  // dimming it, so Priya can see the product respond while she talks to Copilot (a Rovo-style dock).
-  const showDock = copilotExpanded && !isCopilotWorkspace
+  const [navOpen, setNavOpen] = useState(false)
+  const isWorkspace = pathname.startsWith('/workspace')
 
   return (
-    <div className="flex h-svh bg-palette-brand-100">
-      <Sidebar />
-      <div className="flex min-w-0 flex-1 gap-3 p-3">
-        <main className="h-full min-w-0 flex-1 overflow-hidden rounded-2xl bg-background shadow-sm">
-          <div className="h-full overflow-y-auto">
+    <div className="flex h-svh bg-palette-neutral-150">
+      <Sidebar className="hidden md:flex" />
+      {navOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <button type="button" className="absolute inset-0 bg-palette-neutral-900/30" aria-label="Close navigation" onClick={() => setNavOpen(false)} />
+          <Sidebar className="relative z-10 shadow-xl" onNavigate={() => setNavOpen(false)} />
+        </div>
+      )}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <header className="flex h-12 items-center gap-2 border-b border-border bg-card px-3 md:hidden">
+          <button type="button" onClick={() => setNavOpen(true)} className="rounded-md p-1.5 text-palette-neutral-700 hover:bg-muted" aria-label="Open navigation">
+            <Menu className="h-5 w-5" aria-hidden="true" />
+          </button>
+          <span className="text-sm font-semibold text-palette-neutral-900">HireFlow</span>
+        </header>
+        <main className="min-h-0 min-w-0 flex-1 overflow-hidden bg-background">
+          <div className={isWorkspace ? 'h-full' : 'h-full overflow-y-auto'}>
             <Outlet />
           </div>
         </main>
-        {showDock && (
-          <aside className="h-full w-[420px] shrink-0 overflow-hidden rounded-2xl border border-border bg-background shadow-md">
-            <CopilotPanel />
-          </aside>
-        )}
       </div>
-      {/* The standalone workspace IS the Copilot UI here — no floating launcher/panel duplicate. */}
-      {!isCopilotWorkspace && !copilotExpanded && <CopilotLauncher />}
+      <AskAiButton />
       <ToastStack />
     </div>
   )

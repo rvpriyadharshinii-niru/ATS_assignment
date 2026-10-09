@@ -60,7 +60,7 @@ function formatTime(timestamp: number): string {
   return new Date(timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
 }
 
-export function NotificationsPage() {
+export function NotificationsPage({ embedded = false }: { embedded?: boolean }) {
   const activityLog = useAppStore((state) => state.activityLog)
   const [filter, setFilter] = useState<FilterKey>('all')
   const [readIds, setReadIds] = useState<Set<string>>(new Set())
@@ -107,7 +107,7 @@ export function NotificationsPage() {
 
   return (
     <div>
-      <PageHeader
+      {!embedded && <PageHeader
         title="Notifications"
         description={unreadCount > 0 ? `${unreadCount} unread` : 'You’re all caught up.'}
         actions={
@@ -121,9 +121,9 @@ export function NotificationsPage() {
             </button>
           ) : undefined
         }
-      />
+      />}
 
-      <div className="space-y-4 p-6">
+      <div className={embedded ? 'space-y-4' : 'space-y-4 p-6'}>
         <div className="flex items-center gap-2">
           {FILTERS.map((entry) => (
             <button

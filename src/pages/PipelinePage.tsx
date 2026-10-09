@@ -10,6 +10,7 @@ import { cn } from '../lib/cn'
 import { candidateMatchesFilters } from '../lib/evidence'
 import { useEffectiveCandidatesForOpening, usePipelineStages } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
+import { useLaunchTask } from '../workspace/presets'
 import type { CandidateStage, OpeningId } from '../types/domain'
 
 const STAGES: CandidateStage[] = ['Applied', 'AI Screened', 'HM Review', 'Interview', 'Final', 'Offer']
@@ -49,7 +50,7 @@ export function PipelinePage() {
   const stageCounts = usePipelineStages(opening?.id as OpeningId | undefined)
   const filters = useAppStore((state) => state.filters)
   const addFilter = useAppStore((state) => state.addFilter)
-  const submitCopilotMessage = useAppStore((state) => state.submitCopilotMessage)
+  const launch = useLaunchTask()
 
   function viewMoreInStage(stage: CandidateStage) {
     if (!opening) return
@@ -100,10 +101,10 @@ export function PipelinePage() {
           <div className="flex shrink-0 items-center gap-3">
             <button
               type="button"
-              onClick={() => submitCopilotMessage("What's blocking this role?")}
+              onClick={() => launch('Why is the Product Designer role delayed?')}
               className="text-sm font-medium text-palette-neutral-600 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              Ask Copilot
+              Investigate with AI
             </button>
             <button
               type="button"

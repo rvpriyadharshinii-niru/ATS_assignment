@@ -1,13 +1,11 @@
 import { create } from 'zustand'
-import { addManualCandidate, applyCandidateOverride, candidates, getCandidate, resetCandidatesToSeed, slugifyCandidateId } from '../data/candidates'
+import { addManualCandidate, applyCandidateOverride, getCandidate, resetCandidatesToSeed, slugifyCandidateId } from '../data/candidates'
 import {
   addCriterionToOpening,
   removeCriterionFromOpening,
   resetCriteriaToSeed,
   setCriterionPriority as setCriterionPriorityData,
 } from '../data/criteria'
-import { seedConversationOrder, seedConversationsById } from '../data/seedConversations'
-import { resolveOpeningOverride, runCopilotQuery } from '../copilot/engine'
 import type {
   ActivityEvent,
   Candidate,
@@ -20,7 +18,6 @@ import type {
   HiringCriterion,
   OpeningId,
 } from '../types/domain'
-import type { CopilotConversation, CopilotContext, CopilotResult, CopilotScopeLevel, CopilotTurn, PendingAction } from '../types/copilot'
 
 interface EmailRecord {
   id: string
@@ -56,23 +53,10 @@ interface UndoSnapshot {
   previousOverrides: Record<string, CandidateOverride | undefined>
 }
 
-/** Where docked Copilot was expanded from — lets the full workspace offer "← Back to X" and re-dock into the exact same context. */
-export interface CopilotExpandedFrom {
-  path: string
-  label: string
-}
-
 interface AppState {
   selectedOpeningId: OpeningId | null
   selectedCandidateId: string | null
   filters: CandidateFilter[]
-  copilotExpanded: boolean
-  copilotExpandedFrom: CopilotExpandedFrom | null
-
-  /** Every Copilot thread, contextual panel and full workspace alike — two views of the same conversation set. */
-  conversations: Record<string, CopilotConversation>
-  conversationOrder: string[]
-  activeConversationId: string | null
 
   /** The single source of truth for every candidate's current stage/hold/reject/etc, layered on top of the static base data. */
   candidateOverrides: Record<string, CandidateOverride>
@@ -92,24 +76,14 @@ interface AppState {
   removeFilter: (filterId: string) => void
   clearFilters: () => void
 
-  openCopilot: () => void
-  closeCopilot: () => void
-  toggleCopilot: () => void
-  /** Called when Copilot is expanded from a docked/contextual context — records where "← Back" should return to. */
-  setCopilotExpandedFrom: (info: CopilotExpandedFrom | null) => void
-  /** Returns to the originating page and re-docks Copilot with the same conversation. */
-  returnToCopilotOrigin: (navigate: (path: string) => void) => void
-  /** `ignorePageContext: true` is used by the standalone workspace, which is cross-role by default rather than scoped to whatever page Priya last browsed. */
-  submitCopilotMessage: (query: string, options?: { ignorePageContext?: boolean }) => void
-  startNewConversation: () => void
-  selectConversation: (conversationId: string) => void
-
   advanceCandidates: (candidateIds: string[], toStage: CandidateStage) => void
   holdCandidates: (candidateIds: string[]) => void
   rejectCandidates: (candidateIds: string[]) => void
   finalizeCandidate: (candidateId: string) => void
   sendEmail: (candidateId: string, subject: string, body: string) => void
   logActivity: (candidateId: string, message: string) => void
+  /** Records a change to a candidate's in-stage interview state (feedback submitted, reminder sent). */
+  updateInterviewState: (candidateId: string, patch: Pick<CandidateOverride, 'interviewStatus' | 'waitingOn' | 'waitingDays'>, message: string) => void
   addCandidate: (input: NewCandidateInput) => Candidate
   setCriterionPriority: (openingId: OpeningId, criterionKey: CriterionKey, priority: CriterionPriority) => void
   addCriterion: (openingId: OpeningId, criterion: HiringCriterion) => void
@@ -121,12 +95,6 @@ interface AppState {
   /** Restores every mutable demo state — candidates, criteria, overrides, filters, activity, conversations — to the original seed. */
   resetDemoData: () => void
 
-  resolveCopilotTurn: (turnId: string, result: CopilotResult) => void
-  confirmPendingAction: (turnId: string, action: PendingAction) => void
-  /** Executes one non-batch action and reports what happened — shared by a single confirm and each leg of a batch confirm. */
-  applyAtomicAction: (action: Exclude<PendingAction, { kind: 'batch' }>) => { message: string; candidateIds: string[] }
-  cancelPendingAction: (turnId: string) => void
-  sendEmailFromCopilot: (turnId: string, candidateId: string, subject: string, body: string) => void
 }
 
 /** Interview-status note shown right after landing on a stage — undefined for stages with no default note. */
@@ -135,37 +103,10 @@ const STAGE_ENTRY_STATUS: Partial<Record<CandidateStage, string>> = {
   Offer: 'Preparing offer',
 }
 
-function conversationTitleFrom(query: string): string {
-  return query.length > 48 ? `${query.slice(0, 48)}…` : query
-}
-
-function candidateIdsFromAction(action: PendingAction): string[] {
-  if (action.kind === 'finalize') return [action.candidateId]
-  if (action.kind === 'batch') return action.actions.flatMap(candidateIdsFromAction)
-  if (action.kind === 'setCriterionPriority') return []
-  return action.candidateIds
-}
-
-/** Candidates a turn's result put in front of Priya — remembered so "move both to Interview" can resolve after a comparison. */
-function extractCandidateIds(result: CopilotResult): string[] {
-  if (result.kind === 'candidateList' || result.kind === 'comparison') return result.candidateIds
-  if (result.kind === 'evidence' || result.kind === 'candidateReview') return [result.candidateId]
-  if (result.kind === 'reviewQueue') return result.items.map((item) => item.candidateId)
-  if (result.kind === 'actionComplete' && result.candidateIds) return result.candidateIds
-  if (result.kind === 'confirm') return candidateIdsFromAction(result.action)
-  if (result.kind === 'pipelineDiagnosis') return [...result.waitingOnYou, ...result.waitingOnOthers].map((entry) => entry.candidateId)
-  return []
-}
-
 export const useAppStore = create<AppState>((set, get) => ({
   selectedOpeningId: null,
   selectedCandidateId: null,
   filters: [],
-  copilotExpanded: false,
-  copilotExpandedFrom: null,
-  conversations: seedConversationsById,
-  conversationOrder: seedConversationOrder,
-  activeConversationId: null,
   candidateOverrides: {},
   sentEmails: [],
   activityLog: [],
@@ -198,95 +139,6 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   removeFilter: (filterId) => set((state) => ({ filters: state.filters.filter((filter) => filter.id !== filterId) })),
   clearFilters: () => set({ filters: [] }),
-
-  openCopilot: () => set({ copilotExpanded: true }),
-  closeCopilot: () => set({ copilotExpanded: false }),
-  toggleCopilot: () => set((state) => ({ copilotExpanded: !state.copilotExpanded })),
-  setCopilotExpandedFrom: (info) => set({ copilotExpandedFrom: info }),
-  returnToCopilotOrigin: (navigate) => {
-    const origin = get().copilotExpandedFrom
-    if (!origin) return
-    navigate(origin.path)
-    set({ copilotExpanded: true, copilotExpandedFrom: null })
-  },
-
-  // Expanding into a different, or a fresh, conversation breaks the link back to whatever page
-  // launched the one being expanded — the "← Back" affordance only makes sense for that exact thread.
-  startNewConversation: () => set({ activeConversationId: null, copilotExpandedFrom: null }),
-  selectConversation: (conversationId) => set({ activeConversationId: conversationId, copilotExpandedFrom: null }),
-
-  submitCopilotMessage: (query, options) => {
-    const state = get()
-    const ignorePageContext = options?.ignorePageContext ?? false
-
-    let conversationId = state.activeConversationId
-    let conversations = state.conversations
-    let conversationOrder = state.conversationOrder
-    if (!conversationId || !conversations[conversationId]) {
-      conversationId = `conv-${Date.now()}`
-      conversations = {
-        ...conversations,
-        [conversationId]: {
-          id: conversationId,
-          title: conversationTitleFrom(query),
-          createdAt: Date.now(),
-          turns: [],
-          stickyOpeningId: null,
-          lastCandidateIds: [],
-        },
-      }
-      conversationOrder = [conversationId, ...conversationOrder]
-    }
-    const activeConversation = conversations[conversationId]
-
-    // The contextual panel always inherits the current page's role/candidate. The
-    // standalone workspace is cross-role by default, falling back only to whatever
-    // role this specific conversation thread last explicitly switched to.
-    const baseOpeningId = ignorePageContext ? activeConversation.stickyOpeningId : (state.selectedOpeningId ?? activeConversation.stickyOpeningId)
-    const baseCandidateId = ignorePageContext ? null : state.selectedCandidateId
-    const openingOverride = resolveOpeningOverride(query)
-    const effectiveOpeningId = openingOverride ?? baseOpeningId
-    const level: CopilotScopeLevel = baseCandidateId ? 'candidate' : effectiveOpeningId ? 'role' : 'global'
-
-    const effectiveCandidates: Candidate[] = candidates.map((candidate) => applyCandidateOverride(candidate, state.candidateOverrides[candidate.id]))
-    const context: CopilotContext = {
-      level,
-      openingId: effectiveOpeningId,
-      candidateId: baseCandidateId,
-      filters: state.filters,
-      candidates: effectiveCandidates,
-      recentCandidateIds: activeConversation.lastCandidateIds,
-    }
-    // Structured results (candidate lists, pipeline insight) render inside Copilot only.
-    // The background workspace is never mutated or navigated until Priya explicitly
-    // clicks the result's "Open candidates" / "Open pipeline" action.
-    const result = runCopilotQuery(query, context)
-    const turn: CopilotTurn = { id: `${Date.now()}-${activeConversation.turns.length}`, query, result }
-    const mentionedCandidateIds = extractCandidateIds(result)
-
-    set({
-      conversations: {
-        ...conversations,
-        [conversationId]: {
-          ...activeConversation,
-          turns: [...activeConversation.turns, turn],
-          stickyOpeningId: openingOverride ?? activeConversation.stickyOpeningId,
-          lastCandidateIds: mentionedCandidateIds.length > 0 ? mentionedCandidateIds : activeConversation.lastCandidateIds,
-        },
-      },
-      conversationOrder,
-      activeConversationId: conversationId,
-      ...(ignorePageContext ? {} : { copilotExpanded: true }),
-    })
-
-    // Reversible view operations never need confirmation (per the operating-layer model): when
-    // Copilot is used from a page-scoped context (the docked panel, not the standalone cross-role
-    // workspace), an applied filter takes effect immediately instead of waiting for a click-through —
-    // Priya is already looking at the table/board it would apply to.
-    if (!ignorePageContext && result.kind === 'candidateList' && result.appliedFilter) {
-      get().addFilter(result.appliedFilter)
-    }
-  },
 
   advanceCandidates: (candidateIds, toStage) => {
     // Captured before mutation for two reasons: the undo snapshot needs the prior override, and the
@@ -367,7 +219,12 @@ export const useAppStore = create<AppState>((set, get) => ({
         { id: `${Date.now()}-${state.sentEmails.length}`, candidateId, to: candidate?.name ?? candidateId, subject, body, sentAt: Date.now() },
       ],
     }))
-    get().logActivity(candidateId, `Email sent: "${subject}"`)
+    get().logActivity(candidateId, `Email recorded: "${subject}" (simulated, no email delivered)`)
+  },
+
+  updateInterviewState: (candidateId, patch, message) => {
+    set((state) => ({ candidateOverrides: { ...state.candidateOverrides, [candidateId]: { ...(state.candidateOverrides[candidateId] ?? {}), ...patch } } }))
+    get().logActivity(candidateId, message)
   },
 
   logActivity: (candidateId, message) =>
@@ -445,11 +302,6 @@ export const useAppStore = create<AppState>((set, get) => ({
       selectedOpeningId: null,
       selectedCandidateId: null,
       filters: [],
-      copilotExpanded: false,
-      copilotExpandedFrom: null,
-      conversations: seedConversationsById,
-      conversationOrder: seedConversationOrder,
-      activeConversationId: null,
       candidateOverrides: {},
       sentEmails: [],
       activityLog: [],
@@ -459,65 +311,4 @@ export const useAppStore = create<AppState>((set, get) => ({
     })
   },
 
-  resolveCopilotTurn: (turnId, result) =>
-    set((state) => {
-      const conversationId = state.activeConversationId
-      if (!conversationId) return {}
-      const conversation = state.conversations[conversationId]
-      if (!conversation) return {}
-      return {
-        conversations: {
-          ...state.conversations,
-          [conversationId]: { ...conversation, turns: conversation.turns.map((turn) => (turn.id === turnId ? { ...turn, result } : turn)) },
-        },
-      }
-    }),
-
-  confirmPendingAction: (turnId, action) => {
-    if (action.kind === 'batch') {
-      const applied = action.actions.map((sub) => get().applyAtomicAction(sub))
-      const message = `Done.\n\n${applied.map((entry) => entry.message).join('\n')}`
-      get().resolveCopilotTurn(turnId, { kind: 'actionComplete', message, candidateIds: applied.flatMap((entry) => entry.candidateIds) })
-      return
-    }
-    const { message, candidateIds } = get().applyAtomicAction(action)
-    get().resolveCopilotTurn(turnId, { kind: 'actionComplete', message: `Done. ${message}`, candidateIds })
-  },
-
-  applyAtomicAction: (action) => {
-    if (action.kind === 'advance') {
-      get().advanceCandidates(action.candidateIds, action.toStage)
-      const names = action.candidateIds.map((id) => getCandidate(id)?.name.split(' ')[0] ?? id)
-      const namesJoined = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0]
-      const verb = names.length > 1 ? 'are' : 'is'
-      return { message: `${namesJoined} ${verb} now in ${action.toStage}.`, candidateIds: action.candidateIds }
-    }
-    if (action.kind === 'hold') {
-      get().holdCandidates(action.candidateIds)
-      const names = action.candidateIds.map((id) => getCandidate(id)?.name ?? id)
-      return { message: `${names.join(' and ')} placed on hold.`, candidateIds: action.candidateIds }
-    }
-    if (action.kind === 'reject') {
-      get().rejectCandidates(action.candidateIds)
-      const names = action.candidateIds.map((id) => getCandidate(id)?.name ?? id)
-      return { message: `${names.join(' and ')} rejected and removed from the active pipeline.`, candidateIds: action.candidateIds }
-    }
-    if (action.kind === 'finalize') {
-      get().finalizeCandidate(action.candidateId)
-      return {
-        message: `${getCandidate(action.candidateId)?.name} marked as the selected candidate. Next: prepare offer process.`,
-        candidateIds: [action.candidateId],
-      }
-    }
-    get().setCriterionPriority(action.openingId, action.criterionKey, action.priority)
-    return { message: `${action.criterionName} is now ${action.priority} priority.`, candidateIds: [] }
-  },
-
-  cancelPendingAction: (turnId) => get().resolveCopilotTurn(turnId, { kind: 'text', message: 'Cancelled — no changes were made.' }),
-
-  sendEmailFromCopilot: (turnId, candidateId, subject, body) => {
-    get().sendEmail(candidateId, subject, body)
-    const candidate = getCandidate(candidateId)
-    get().resolveCopilotTurn(turnId, { kind: 'actionComplete', message: `Email sent to ${candidate?.name ?? 'candidate'}.`, candidateIds: [candidateId] })
-  },
 }))
