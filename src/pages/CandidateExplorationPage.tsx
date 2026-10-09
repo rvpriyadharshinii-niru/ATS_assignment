@@ -20,6 +20,7 @@ import { cn } from '../lib/cn'
 import { STAGE_ORDER } from '../lib/stage'
 import { useEffectiveCandidatesForOpening } from '../store/candidateSelectors'
 import { useAppStore } from '../store/useAppStore'
+import { useLaunchTask } from '../workspace/presets'
 import type { Candidate, OpeningId } from '../types/domain'
 
 const MAX_COMPARE = 3
@@ -50,7 +51,7 @@ export function CandidateExplorationPage() {
   const clearFilters = useAppStore((state) => state.clearFilters)
   const holdCandidates = useAppStore((state) => state.holdCandidates)
   const rejectCandidates = useAppStore((state) => state.rejectCandidates)
-  const openCopilot = useAppStore((state) => state.openCopilot)
+  const launch = useLaunchTask()
   const pushToast = useAppStore((state) => state.pushToast)
   const pool = useEffectiveCandidatesForOpening(opening?.hasDetailedData ? (opening.id as OpeningId) : undefined)
   const [searchParams] = useSearchParams()
@@ -222,11 +223,11 @@ export function CandidateExplorationPage() {
             )}
             <button
               type="button"
-              onClick={openCopilot}
+              onClick={() => launch("Review today's new applicants")}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-              Ask Copilot to broaden this search
+              Review applicants with AI instead
             </button>
           </div>
         </div>
@@ -259,9 +260,22 @@ export function CandidateExplorationPage() {
             type="button"
             onClick={() => setCompareOpen(true)}
             disabled={selectedIds.length < 2}
-            className="text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40"
+            className="text-sm font-medium text-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40"
           >
             Compare
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const names = selectedIds.map((id) => visibleCandidates.find((candidate) => candidate.id === id)?.name ?? id)
+              launch(`Compare ${names.slice(0, 3).join(' and ')}`, { candidateIds: selectedIds.slice(0, 3) })
+            }}
+            disabled={selectedIds.length < 2 || selectedIds.length > 3}
+            title={selectedIds.length > 3 ? 'Select up to 3 to compare with AI' : undefined}
+            className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+            Compare with AI
           </button>
           <button
             type="button"

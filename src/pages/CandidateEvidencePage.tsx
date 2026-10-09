@@ -1,5 +1,6 @@
 import {
   Activity,
+  Bot,
   ArrowRight,
   Briefcase,
   CheckCircle2,
@@ -19,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useEffect, useState, type ComponentType } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { CandidateAgentFindings } from '../components/agents/CandidateAgentFindings'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
 import { IconBadge } from '../components/ui/IconBadge'
 import { CriteriaMatchVisual } from '../components/candidates/CriteriaMatchVisual'
@@ -45,10 +47,14 @@ import { downloadResumePdf } from '../lib/generateResumePdf'
 import { advanceConsequences, advanceCtaLabel, nextStage } from '../lib/stage'
 import { STAGE_TONE } from '../lib/stageTone'
 import { useEffectiveCandidate } from '../store/candidateSelectors'
+import { useAgentStore } from '../store/useAgentStore'
 import { useAppStore } from '../store/useAppStore'
+import { useWorkspaceStore } from '../store/useWorkspaceStore'
+import { getResume } from '../data/sources'
+import { useLaunchTask } from '../workspace/presets'
 
 type OpenDialog = 'advance' | 'hold' | 'reject' | 'email' | null
-type DetailTab = 'assessment' | 'evidence' | 'resume' | 'profile' | 'details' | 'criteria' | 'activity'
+type DetailTab = 'assessment' | 'evidence' | 'resume' | 'profile' | 'details' | 'criteria' | 'activity' | 'agents'
 
 function initialsFor(name: string): string {
   return name
@@ -130,6 +136,11 @@ export function CandidateEvidencePage() {
   const undoLastMutation = useAppStore((state) => state.undoLastMutation)
   const [openDialog, setOpenDialog] = useState<OpenDialog>(null)
   const [activeTab, setActiveTab] = useState<DetailTab>('assessment')
+  const launch = useLaunchTask()
+  const savedGuide = useWorkspaceStore((state) => (candidateId ? state.savedGuides[candidateId] : undefined))
+  const agentAttention = useAgentStore(
+    (state) => state.activity.filter((item) => item.candidateId === candidateId && (item.status === 'pending' || item.status === 'needs-review')).length,
+  )
 
   useEffect(() => {
     if (candidate) setSelectedCandidate(candidate.id, candidate.openingId)
@@ -191,7 +202,7 @@ export function CandidateEvidencePage() {
       </nav>
 
       <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-3.5">
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-palette-brand-100 text-base font-semibold text-palette-brand-700">
               {initialsFor(candidate.name)}
@@ -217,7 +228,15 @@ export function CandidateEvidencePage() {
               </p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => launch(`Why ${candidate.name}?`, { candidateIds: [candidate.id] })}
+              className="flex items-center gap-1.5 rounded-lg border border-palette-brand-300 bg-palette-brand-100/60 px-3.5 py-2 text-sm font-medium text-palette-brand-700 hover:bg-palette-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+              Investigate with AI
+            </button>
             <button
               type="button"
               onClick={() => downloadResumePdf(candidate)}
@@ -273,8 +292,36 @@ export function CandidateEvidencePage() {
         </div>
       </div>
 
+      {savedGuide ? (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border border-palette-success-300 bg-palette-success-150/40 px-4 py-3">
+          <ClipboardList className="h-4 w-4 text-palette-success-700" aria-hidden="true" />
+          <p className="min-w-0 flex-1 text-sm text-palette-neutral-800">
+            <span className="font-semibold">Interview guide saved</span> · {savedGuide.roundType}, {savedGuide.minutes} min,{' '}
+            {savedGuide.sections.reduce((total, section) => total + section.questions.length, 0)} questions{savedGuide.edited ? ' · edited by you' : ''}
+          </p>
+          <button
+            type="button"
+            onClick={() => launch(`Prepare interview questions for ${candidate.name}`, { candidateIds: [candidate.id] })}
+            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-palette-neutral-700 hover:bg-muted"
+          >
+            Open guide
+          </button>
+        </div>
+      ) : (
+        !candidate.rejected && (
+          <button
+            type="button"
+            onClick={() => launch(`Prepare interview questions for ${candidate.name}`, { candidateIds: [candidate.id] })}
+            className="flex w-full items-center gap-2 rounded-xl border border-dashed border-border px-4 py-2.5 text-left text-sm text-palette-neutral-600 hover:bg-muted"
+          >
+            <Sparkles className="h-4 w-4 text-palette-brand-500" aria-hidden="true" />
+            Prepare an interview guide for {candidate.name.split(' ')[0]} with AI, built from the gaps in the evidence
+          </button>
+        )
+      )}
+
       <div>
-        <nav className="-mb-px flex items-center gap-5 border-b border-border" aria-label="Candidate sections">
+        <nav className="-mb-px flex items-center gap-5 overflow-x-auto border-b border-border" aria-label="Candidate sections">
           {(
             [
               { key: 'assessment', label: 'AI Assessment', icon: Sparkles },
@@ -284,6 +331,7 @@ export function CandidateEvidencePage() {
               { key: 'details', label: 'Details', icon: Info },
               { key: 'criteria', label: 'Criteria', icon: Briefcase },
               { key: 'activity', label: 'Activity', icon: Activity },
+              { key: 'agents', label: 'Agents', icon: Bot },
             ] as const
           ).map((tab) => (
             <button
@@ -297,6 +345,9 @@ export function CandidateEvidencePage() {
             >
               <tab.icon className="h-4 w-4" aria-hidden="true" />
               {tab.label}
+              {tab.key === 'agents' && agentAttention > 0 && (
+                <span className="rounded-full bg-palette-warning-150 px-1.5 py-0.5 text-xs font-medium text-palette-warning-700">{agentAttention}</span>
+              )}
             </button>
           ))}
         </nav>
@@ -419,7 +470,9 @@ export function CandidateEvidencePage() {
                 </div>
 
                 <p className="mt-4 border-t border-border pt-3 text-xs text-muted-foreground">
-                  Representative summary compiled from the application. Source: Resume · Application form.
+                  {getResume(candidate.id)
+                    ? 'Source: resume on file. AI citations in the workspace point to these exact passages.'
+                    : 'Representative summary compiled from the application form. No full resume is on file, so AI will not cite or rank this candidate.'}
                 </p>
               </div>
             ) : activeTab === 'profile' ? (
@@ -549,6 +602,8 @@ export function CandidateEvidencePage() {
                   </Link>
                 )}
               </div>
+            ) : activeTab === 'agents' ? (
+              <CandidateAgentFindings candidate={candidate} />
             ) : (
               <div className="mt-4 rounded-xl border border-border bg-card p-5 shadow-xs">
                 {activityGroups.length === 0 ? (

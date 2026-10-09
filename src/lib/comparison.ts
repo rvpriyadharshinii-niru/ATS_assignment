@@ -26,7 +26,7 @@ export function buildComparisonSummary(candidatesToCompare: Candidate[], criteri
     if (!allTied && topRank >= STRENGTH_RANK.Good) {
       const subject = leaders.length > 1 ? leaders.join(' and ') : leaders[0]
       const verb = leaders.length > 1 ? 'have' : 'has'
-      notes.push(`${subject} ${verb} the strongest evidence in ${criterion.name.toLowerCase()}`)
+      notes.push(`${subject} ${verb} the strongest evidence in ${criterion.name.split(' ').map((word) => (/[A-Z].*[A-Z0-9]/.test(word) ? word : word.toLowerCase())).join(' ')}`)
     }
   }
 

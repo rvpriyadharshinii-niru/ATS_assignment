@@ -6,6 +6,7 @@ import { getCriteria } from '../data/criteria'
 import { getOpening } from '../data/openings'
 import { cn } from '../lib/cn'
 import { useAppStore } from '../store/useAppStore'
+import { useLaunchTask } from '../workspace/presets'
 
 const TABS = [
   { to: '', label: 'Overview', end: true, icon: LayoutGrid },
@@ -20,6 +21,7 @@ export function RoleWorkspaceLayout() {
   const opening = getOpening(openingId)
   const setSelectedOpening = useAppStore((state) => state.setSelectedOpening)
   const navigate = useNavigate()
+  const launch = useLaunchTask()
 
   useEffect(() => {
     if (opening) setSelectedOpening(opening.id)
@@ -39,7 +41,7 @@ export function RoleWorkspaceLayout() {
 
   return (
     <div>
-      <div className="border-b border-border bg-card px-8 pt-5">
+      <div className="border-b border-border bg-card px-5 pt-5 sm:px-8">
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <button
             type="button"
@@ -54,7 +56,7 @@ export function RoleWorkspaceLayout() {
           </Link>
           <ChevronRight className="h-3.5 w-3.5 text-palette-neutral-300" aria-hidden="true" />
           <Link to="/openings" className="hover:text-palette-neutral-900">
-            My Openings
+            Jobs
           </Link>
           <ChevronRight className="h-3.5 w-3.5 text-palette-neutral-300" aria-hidden="true" />
           <span className="text-palette-neutral-700">{opening.title}</span>
@@ -88,10 +90,32 @@ export function RoleWorkspaceLayout() {
               )}
             </div>
           </div>
-          <PriorityTag priority={opening.priority} />
+          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+            <PriorityTag priority={opening.priority} />
+            {opening.hasDetailedData && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => launch("Review today's new applicants")}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-palette-neutral-700 hover:bg-muted"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-palette-brand-600" aria-hidden="true" />
+                  Review applicants with AI
+                </button>
+                <button
+                  type="button"
+                  onClick={() => launch('What needs attention in my hiring pipeline?')}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-palette-neutral-700 hover:bg-muted"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-palette-brand-600" aria-hidden="true" />
+                  Investigate pipeline
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
-        <nav className="mt-4 -mb-px flex items-center gap-5" aria-label="Role sections">
+        <nav className="mt-4 -mb-px flex items-center gap-5 overflow-x-auto" aria-label="Role sections">
           {TABS.map((tab) => {
             const count = tab.to === 'candidates' ? opening.totalCandidates : tab.to === 'criteria' ? criteriaCount : undefined
             return (
