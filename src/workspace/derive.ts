@@ -90,7 +90,16 @@ export function peerPosition(candidate: Candidate, peers: Candidate[], key: Crit
   if (better === 0 && tied === 0) return `Strongest of ${peers.length}`
   if (better === 0) return `Joint strongest of ${peers.length}`
   if (better === peers.length - 1) return `Weakest of ${peers.length}`
-  return `${better + 1}${better === 0 ? 'st' : better === 1 ? 'nd' : 'rd'} of ${peers.length}`
+  const place = better + 1
+  return `${place}${place === 2 ? 'nd' : place === 3 ? 'rd' : 'th'} of ${peers.length}`
+}
+
+/** Lower-cases a name for use mid-sentence while keeping acronyms such as AI, SaaS and B2B intact. */
+export function midSentence(text: string): string {
+  return text
+    .split(' ')
+    .map((word) => (/[A-Z].*[A-Z0-9]/.test(word) ? word : word.toLowerCase()))
+    .join(' ')
 }
 
 /** One plain sentence recommending — or declining to recommend — a candidate. */
@@ -98,16 +107,18 @@ export function recommendationSentence(candidate: Candidate): string {
   const name = firstName(candidate)
   const criteriaCount = getCriteria(candidate.openingId).length
   if (candidate.evidence.length === 0) return `I can't assess ${name} yet: HireFlow has no resume or evaluation on file.`
-  const strong = strongCriteria(candidate).map((key) => criterionName(candidate, key).toLowerCase())
+  const strong = strongCriteria(candidate).map((key) => midSentence(criterionName(candidate, key)))
   const gaps = gapCriteria(candidate).filter((gap) => gap.kind !== 'partial')
   const supported = supportedCount(candidate)
   const label = candidate.recommendation ?? 'Under review'
   const lead =
     label === 'Needs more information'
       ? `${name} needs more information before I can recommend either way. Only ${plural(supported, 'criterion', 'criteria')} of ${criteriaCount} can be assessed from the application.`
-      : `${name} is a ${label.toLowerCase()}: evidence supports ${supported} of ${criteriaCount} criteria${strong.length ? `, strongest in ${listJoin(strong)}` : ''}.`
+      : !candidate.recommendation
+        ? `${name} has no overall recommendation yet: evidence supports ${supported} of ${criteriaCount} criteria${strong.length ? `, strongest in ${listJoin(strong)}` : ''}.`
+        : `${name} is a ${label.toLowerCase()}: evidence supports ${supported} of ${criteriaCount} criteria${strong.length ? `, strongest in ${listJoin(strong)}` : ''}.`
   if (label === 'Needs more information' || gaps.length === 0) return lead
-  return `${lead} Not yet demonstrated: ${listJoin(gaps.map((gap) => criterionName(candidate, gap.key).toLowerCase()))}.`
+  return `${lead} Not yet demonstrated: ${listJoin(gaps.map((gap) => midSentence(criterionName(candidate, gap.key))))}.`
 }
 
 /* ---------------- Applicant review (Moment 1) ---------------- */
@@ -369,7 +380,7 @@ export function buildSessionItems(candidates: Candidate[], agentActivity: AgentA
       kind: 'shortlist',
       title: `Shortlist ${candidate.name} for interview`,
       candidateId: id,
-      why: `${candidate.name} has been in HM Review for ${daysSinceUpdate(candidate) || 'under 1'} day(s). ${recommendationSentence(candidate)}`,
+      why: `${candidate.name} ${daysSinceUpdate(candidate) ? `has been in HM Review for ${plural(daysSinceUpdate(candidate), 'day')}` : 'reached HM Review today'}. ${recommendationSentence(candidate)}`,
       prepared: 'Evidence review against the 5 role criteria, with sources.',
       toStage: 'Interview',
       status: 'todo',

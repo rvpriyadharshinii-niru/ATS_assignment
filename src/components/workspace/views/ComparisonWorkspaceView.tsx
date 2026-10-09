@@ -9,7 +9,7 @@ import { useAllEffectiveCandidates } from '../../../store/candidateSelectors'
 import { useWorkspaceStore } from '../../../store/useWorkspaceStore'
 import type { Candidate } from '../../../types/domain'
 import type { WorkspaceTask } from '../../../types/workspace'
-import { evidenceFor, firstName, gapCriteria, supportedCount } from '../../../workspace/derive'
+import { evidenceFor, firstName, gapCriteria, midSentence, supportedCount } from '../../../workspace/derive'
 import { RecommendationBadge } from '../../candidates/RecommendationBadge'
 import { DecisionBar } from '../DecisionBar'
 import { Avatar, CitationChip, Label, StrengthPill } from '../ui'
@@ -118,7 +118,7 @@ export function ComparisonWorkspaceView({ task, candidateIds }: { task: Workspac
                 return (
                   <td key={candidate.id} className="px-4 py-3 align-top text-xs text-palette-neutral-700">
                     <p>{supportedCount(candidate)} of {criteria.length} criteria supported</p>
-                    <p className="mt-0.5">{gaps.length ? `To validate: ${gaps.map((gap) => criteria.find((c) => c.key === gap.key)?.name.toLowerCase()).join(', ')}` : 'No gaps found'}</p>
+                    <p className="mt-0.5">{gaps.length ? `To validate: ${gaps.map((gap) => criteria.find((c) => c.key === gap.key)?.name ?? '').map(midSentence).join(', ')}` : 'No gaps found'}</p>
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       <button type="button" className={btn.chip} onClick={() => send(task.id, `Why ${firstName(candidate)}?`)}>
                         Why {firstName(candidate)}?
@@ -137,7 +137,7 @@ export function ComparisonWorkspaceView({ task, candidateIds }: { task: Workspac
         </table>
       </div>
 
-      <div className="grid gap-3 md:grid-cols-2">
+      <div className="grid gap-3 @2xl:grid-cols-2">
         {people.map((candidate) => (
           <div key={candidate.id} className="rounded-xl border border-border bg-card p-3">
             <p className="mb-2 text-sm font-semibold text-palette-neutral-900">{candidate.name}</p>

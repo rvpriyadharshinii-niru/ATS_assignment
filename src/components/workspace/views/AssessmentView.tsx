@@ -40,7 +40,7 @@ export function AssessmentView({ openingId }: { openingId: OpeningId }) {
         </button>
       </div>
 
-      <section className="grid gap-2 sm:grid-cols-2">
+      <section className="grid gap-2 @lg:grid-cols-2">
         {checks.map((check) => (
           <div key={check.label} className="flex items-start gap-2 rounded-lg border border-border bg-card px-3 py-2">
             {check.ok ? <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-palette-success-600" aria-hidden="true" /> : <CircleAlert className="mt-0.5 h-4 w-4 shrink-0 text-palette-warning-600" aria-hidden="true" />}

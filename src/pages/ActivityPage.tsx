@@ -92,7 +92,7 @@ export function ActivityPage() {
       </nav>
 
       {tab === 'waiting' && (
-        <div className="space-y-6">
+        <div className="space-y-6 pt-1">
           {waiting === 0 && <EmptyState icon={CheckCheck} title="Nothing is waiting on you" body="New proposals from AI tasks and agents will appear here for approval." />}
           {workspaceApprovals.length > 0 && (
             <section>

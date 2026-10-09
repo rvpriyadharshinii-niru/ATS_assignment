@@ -6,7 +6,7 @@ import { cn } from '../../../lib/cn'
 import { useAllEffectiveCandidates } from '../../../store/candidateSelectors'
 import { useWorkspaceStore } from '../../../store/useWorkspaceStore'
 import type { FollowUpDraft, WorkspaceTask } from '../../../types/workspace'
-import { criterionName, firstName, gapCriteria, waitingOnFeedback } from '../../../workspace/derive'
+import { criterionName, firstName, gapCriteria, midSentence, waitingOnFeedback } from '../../../workspace/derive'
 import { EmptyState, Label } from '../ui'
 import { btn, inputBase } from '../styles'
 
@@ -105,7 +105,7 @@ export function OwnFeedbackForm({ candidateId, onSubmit, submitted }: { candidat
         <div className="rounded-lg border border-dashed border-palette-brand-250 p-3">
           <Label>Prepared by AI · points you may want to cover</Label>
           <p className="mt-1 text-xs text-palette-neutral-700">
-            Evidence is still thin on {gaps.map((gap) => criterionName(candidate, gap.key).toLowerCase()).join(' and ')}. This is a prompt for your own notes, not feedback.
+            Evidence is still thin on {gaps.map((gap) => midSentence(criterionName(candidate, gap.key))).join(' and ')}. This is a prompt for your own notes, not feedback.
           </p>
         </div>
       )}

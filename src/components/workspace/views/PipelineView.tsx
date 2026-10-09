@@ -76,7 +76,7 @@ export function PipelineView({ task, openingId, focus, stage }: { task: Workspac
             <ExternalLink className="h-3 w-3" aria-hidden="true" />
           </Link>
         </div>
-        <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-6">
+        <div className="mt-3 grid grid-cols-3 gap-2 @xl:grid-cols-6">
           {counts.map((entry) => {
             const flagged = issues.some((issue) => issue.stage === entry.stage)
             return (

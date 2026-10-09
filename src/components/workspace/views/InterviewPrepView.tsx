@@ -4,7 +4,7 @@ import { deriveInterviewDayLabel, deriveInterviewType } from '../../../lib/candi
 import { useAllEffectiveCandidates } from '../../../store/candidateSelectors'
 import { useWorkspaceStore } from '../../../store/useWorkspaceStore'
 import type { WorkspaceTask } from '../../../types/workspace'
-import { firstName, gapCriteria, criterionName } from '../../../workspace/derive'
+import { criterionName, firstName, gapCriteria, midSentence } from '../../../workspace/derive'
 import { btn } from '../styles'
 
 export function InterviewPrepView({ task, candidateIds }: { task: WorkspaceTask; candidateIds: string[] }) {
@@ -33,7 +33,7 @@ export function InterviewPrepView({ task, candidateIds }: { task: WorkspaceTask;
                 </p>
                 {hasDocs ? (
                   <p className="mt-1.5 text-sm text-palette-neutral-700">
-                    {gaps.length ? `Focus: validate ${gaps.map((gap) => criterionName(candidate, gap.key).toLowerCase()).join(' and ')}.` : 'Evidence covers every criterion; go deeper on ownership.'}
+                    {gaps.length ? `Focus: validate ${gaps.map((gap) => midSentence(criterionName(candidate, gap.key))).join(' and ')}.` : 'Evidence covers every criterion; go deeper on ownership.'}
                   </p>
                 ) : (
                   <p className="mt-1.5 flex items-center gap-1.5 text-sm text-palette-warning-700">

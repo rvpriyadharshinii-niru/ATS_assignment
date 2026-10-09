@@ -93,7 +93,7 @@ function AiMessage({ task, message, now, isLast }: { task: WorkspaceTask; messag
 
   const ToneIcon = message.tone === 'clarify' ? HelpCircle : message.tone === 'limitation' ? CircleAlert : message.tone === 'done' ? CheckCircle2 : Sparkles
   return (
-    <div className="space-y-1">
+    <div className="space-y-1" data-role="ai">
       <div className="flex items-center gap-1.5 text-[11px] font-semibold text-palette-neutral-550">
         <ToneIcon
           className={cn(
@@ -236,7 +236,7 @@ export function ConversationPanel({ task, onCollapse }: { task: WorkspaceTask; o
           {task.saved ? <BookmarkCheck className="h-4 w-4 text-palette-brand-600" aria-hidden="true" /> : <Bookmark className="h-4 w-4" aria-hidden="true" />}
         </button>
         {onCollapse && (
-          <button type="button" onClick={onCollapse} className={btn.ghost} aria-label="Collapse conversation" title="Collapse conversation">
+          <button type="button" onClick={onCollapse} className={cn(btn.ghost, 'max-lg:hidden')} aria-label="Collapse conversation" title="Collapse conversation">
             <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
           </button>
         )}

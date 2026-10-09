@@ -314,8 +314,8 @@ export function ClearTasksView({ task }: { task: WorkspaceTask }) {
       {session.finished ? (
         <Summary task={task} />
       ) : (
-        <div className="grid gap-4 lg:grid-cols-[230px_1fr]">
-          <ol className="space-y-1 lg:sticky lg:top-0 lg:self-start">
+        <div className="grid gap-4 @3xl:grid-cols-[230px_1fr]">
+          <ol className="space-y-1 @3xl:sticky @3xl:top-0 @3xl:self-start">
             {items.map((item, index) => (
               <li key={item.id}>
                 <button
@@ -349,7 +349,7 @@ export function ClearTasksView({ task }: { task: WorkspaceTask }) {
                 )}
               </div>
               <h3 className="mt-2 text-base font-semibold text-palette-neutral-900">{current.title}</h3>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="mt-3 grid gap-3 @lg:grid-cols-2">
                 <div>
                   <Label>Why it matters</Label>
                   <p className="mt-1 text-sm text-palette-neutral-700">{current.why}</p>

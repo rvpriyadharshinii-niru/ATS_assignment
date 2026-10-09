@@ -1,5 +1,5 @@
 import { Bookmark, MessageSquare, PanelLeftOpen, Plus, Sparkles, X } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { ConversationPanel } from '../components/workspace/ConversationPanel'
 import { WorkSurface } from '../components/workspace/WorkSurface'
@@ -106,38 +106,46 @@ function SplitWorkspace({ task }: { task: WorkspaceTask }) {
         ))}
       </div>
       <div id="workspace-split" className="flex min-h-0 flex-1">
-        {collapsed ? (
+        {collapsed && (
           <div className="hidden w-12 shrink-0 flex-col items-center gap-2 border-r border-border bg-card py-3 lg:flex">
             <button type="button" className={btn.ghost} onClick={() => setPanel({ collapsed: false })} aria-label="Show conversation" title="Show conversation">
               <PanelLeftOpen className="h-4 w-4" aria-hidden="true" />
             </button>
             <MessageSquare className="h-4 w-4 text-palette-neutral-400" aria-hidden="true" />
           </div>
-        ) : (
-          <>
-            <div style={{ width: panelWidth }} className="hidden min-h-0 shrink-0 border-r border-border lg:block">
-              <ConversationPanel task={task} onCollapse={() => setPanel({ collapsed: true })} />
-            </div>
-            <div
-              role="separator"
-              aria-orientation="vertical"
-              aria-label="Resize conversation panel"
-              tabIndex={0}
-              onPointerDown={() => {
-                dragging.current = true
-                document.body.style.cursor = 'col-resize'
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'ArrowLeft') setPanel({ width: Math.max(300, panelWidth - 24) })
-                if (event.key === 'ArrowRight') setPanel({ width: Math.min(560, panelWidth + 24) })
-              }}
-              className="-ml-px hidden w-1.5 shrink-0 cursor-col-resize hover:bg-palette-brand-200 focus-visible:bg-palette-brand-300 focus-visible:outline-none lg:block"
-            />
-          </>
         )}
-        <div className={cn('min-h-0 min-w-0 flex-1 lg:hidden', mobileTab === 'chat' ? 'block' : 'hidden')}>
-          <ConversationPanel task={task} />
+        {/* One conversation panel: a full-width tab on narrow screens, a resizable column on desktop. */}
+        <div
+          // Keeps the conversation near a third of the screen on smaller laptops, whatever width was dragged.
+          style={{ '--panel-w': `min(${panelWidth}px, max(300px, 34vw))` } as CSSProperties}
+          className={cn(
+            'min-h-0 min-w-0 flex-1 lg:w-[var(--panel-w)] lg:flex-none lg:shrink-0 lg:border-r lg:border-border',
+            mobileTab === 'chat' ? 'block' : 'hidden',
+            collapsed ? 'lg:hidden' : 'lg:block',
+          )}
+        >
+          <ConversationPanel task={task} onCollapse={() => setPanel({ collapsed: true })} />
         </div>
+        {!collapsed && (
+          <div
+            role="separator"
+            aria-orientation="vertical"
+            aria-label="Resize conversation panel"
+            aria-valuenow={panelWidth}
+            aria-valuemin={300}
+            aria-valuemax={560}
+            tabIndex={0}
+            onPointerDown={() => {
+              dragging.current = true
+              document.body.style.cursor = 'col-resize'
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'ArrowLeft') setPanel({ width: Math.max(300, panelWidth - 24) })
+              if (event.key === 'ArrowRight') setPanel({ width: Math.min(560, panelWidth + 24) })
+            }}
+            className="-ml-px hidden w-1.5 shrink-0 cursor-col-resize hover:bg-palette-brand-200 focus-visible:bg-palette-brand-300 focus-visible:outline-none lg:block"
+          />
+        )}
         <div className={cn('min-h-0 min-w-0 flex-1 lg:block', mobileTab === 'work' ? 'block' : 'hidden')}>
           <WorkSurface task={task} />
         </div>

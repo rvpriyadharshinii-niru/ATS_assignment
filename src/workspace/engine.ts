@@ -33,6 +33,7 @@ import {
   listJoin,
   pipelineIssues,
   plural,
+  midSentence,
   recommendationSentence,
   supportedCount,
   waitingOnFeedback,
@@ -147,8 +148,9 @@ export function matchNames(text: string, pool: Candidate[]): NameMatch {
     .map((candidate) => ({ candidate, index: text.toLowerCase().indexOf(firstName(candidate).toLowerCase()) }))
     .sort((a, b) => (a.index === -1 ? 999 : a.index) - (b.index === -1 ? 999 : b.index))
     .map((entry) => entry.candidate)
-  const unknown = /\b(?:about|why|compare|investigate)\s+([A-Z][a-z]+)\b/.exec(text)
-  return { matches: ordered, unknownName: !ordered.length && unknown && !/^(the|this|that|her|him|them|my)$/i.test(unknown[1]) ? unknown[1] : undefined }
+  const unknown = /\b(?:[Aa]bout|[Ww]hy|[Cc]ompare|[Ii]nvestigate|[Ss]hortlist|[Rr]eject)\s+([A-Z][a-z]+)\b/.exec(text)
+  const notAName = /^(the|this|that|her|him|them|my|is|are|do|does|did|should|would|was|has|product|ux|senior|hiring|interview|candidates?|applicants?|everyone|all)$/i
+  return { matches: ordered, unknownName: !ordered.length && unknown && !notAName.test(unknown[1]) ? unknown[1] : undefined }
 }
 
 function resolveOpening(text: string): OpeningId | undefined {
@@ -158,7 +160,8 @@ function resolveOpening(text: string): OpeningId | undefined {
   return undefined
 }
 
-function resolveTargets(text: string, context: EngineContext): { candidates: Candidate[]; clarify?: EngineResult } {
+/** `explicit` is false when the targets come only from the task's focus, not from names in the request. */
+function resolveTargets(text: string, context: EngineContext): { candidates: Candidate[]; explicit?: boolean; clarify?: EngineResult } {
   const pool = context.candidates
   const named = matchNames(text, pool)
   if (named.ambiguous) {
@@ -196,10 +199,10 @@ function resolveTargets(text: string, context: EngineContext): { candidates: Can
   const recent = context.task.recentCandidateIds.map((id) => pool.find((candidate) => candidate.id === id)).filter((c): c is Candidate => !!c)
   if (named.matches.length) {
     // "Compare her with Rahul": the pronoun brings the focused candidate along with the named one.
-    if (PRONOUN.test(text) && focus && !named.matches.includes(focus)) return { candidates: [focus, ...named.matches] }
-    return { candidates: named.matches }
+    if (PRONOUN.test(text) && focus && !named.matches.includes(focus)) return { candidates: [focus, ...named.matches], explicit: true }
+    return { candidates: named.matches, explicit: true }
   }
-  if (COLLECTIVE.test(text) && recent.length > 1) return { candidates: recent }
+  if (COLLECTIVE.test(text) && recent.length > 1) return { candidates: recent, explicit: true }
   if (focus) return { candidates: [focus] }
   return { candidates: [] }
 }
@@ -299,7 +302,7 @@ function showSource(candidate: Candidate, text: string, context: EngineContext):
     if (!ids.length) {
       return {
         reply: {
-          text: `I couldn't find any passage about ${name.toLowerCase()} in ${firstName(candidate)}'s documents. ${source.note ?? ''} That's missing evidence, not a negative finding.`.trim(),
+          text: `I couldn't find any passage about ${midSentence(name)} in ${firstName(candidate)}'s documents. ${source.note ?? ''} That's missing evidence, not a negative finding.`.trim(),
           tone: 'limitation',
           steps: STEPS.source,
           suggestions: [{ label: 'Prepare questions to validate it', query: `Prepare questions to validate the gaps for ${firstName(candidate)}` }],
@@ -439,7 +442,7 @@ function guide(candidate: Candidate, text: string, context: EngineContext): Engi
   const existing = context.task.guides[candidate.id]
   const draft = existing && !gapsOnly ? existing : buildGuideDraft(candidate, { gapsOnly })
   const validate = draft.sections.filter((section) => section.kind === 'validate')
-  const focusNames = validate.map((section) => section.title.split(' · ')[0].toLowerCase())
+  const focusNames = validate.map((section) => midSentence(section.title.split(' · ')[0]))
   return {
     reply: {
       text: `I drafted a ${draft.minutes}-minute ${draft.roundType.toLowerCase()} guide for ${firstName(candidate)}${focusNames.length ? `, focused on ${listJoin(focusNames)}` : ''}. Each section shows why it's there and the evidence behind it. Edit anything, then save it for the interview.`,
@@ -750,7 +753,13 @@ function challenge(candidate: Candidate, text: string): EngineResult {
   const name = criterionName(candidate, key)
   return {
     reply: {
-      text: `Fair challenge. I rated ${name.toLowerCase()} as ${strengthOf(candidate, key)} because ${source.passageIds.length ? `the documents only say “${getPassage(source.passageIds[0])?.passage.text}”` : 'no document mentions it'}${source.note ? ` ${source.note.charAt(0).toLowerCase()}${source.note.slice(1)}` : '.'} If you know more, record your assessment on the right. I'll show it next to mine, labelled as yours.`,
+      text: `Fair challenge. I rated ${midSentence(name)} as ${strengthOf(candidate, key)}. ${
+        source.conflict
+          ? `The sources disagree: ${source.conflict.note.charAt(0).toLowerCase()}${source.conflict.note.slice(1).replace(/\.$/, '')}. I kept both visible rather than picking one.`
+          : source.passageIds.length
+            ? `The closest passage is “${getPassage(source.passageIds[0])?.passage.text.replace(/\.$/, '')}.”${source.note ? ` ${source.note}` : ''}`
+            : `No document mentions it.${source.note ? ` ${source.note}` : ''}`
+      } If you know more, record your assessment on the right. I'll show it next to mine, labelled as yours.`,
       claims: source.passageIds.length ? [{ text: `See the passage behind “${name}”`, candidateId: candidate.id, criterionKey: key }] : undefined,
     },
     view: { type: 'candidate', candidateId: candidate.id, focus: 'challenge' },
@@ -804,10 +813,10 @@ function criterionSearch(key: CriterionKey, context: EngineContext): EngineResul
     .filter((candidate) => STRENGTH_RANK[evidenceFor(candidate, key)?.strength ?? 'Not available'] >= STRENGTH_RANK.Good)
     .sort((a, b) => STRENGTH_RANK[evidenceFor(b, key)!.strength] - STRENGTH_RANK[evidenceFor(a, key)!.strength])
   const name = getCriteria(SPD).find((criterion) => criterion.key === key)?.name ?? key
-  if (!matches.length) return { reply: { text: `No active candidates have Good or Strong evidence for ${name.toLowerCase()}.`, tone: 'limitation' } }
+  if (!matches.length) return { reply: { text: `No active candidates have Good or Strong evidence for ${midSentence(name)}.`, tone: 'limitation' } }
   return {
     reply: {
-      text: `${plural(matches.length, 'candidate')} ${matches.length === 1 ? 'has' : 'have'} Good or Strong evidence for ${name.toLowerCase()}: ${listJoin(matches.map((candidate) => `${candidate.name} (${strengthOf(candidate, key)})`))}.`,
+      text: `${plural(matches.length, 'candidate')} ${matches.length === 1 ? 'has' : 'have'} Good or Strong evidence for ${midSentence(name)}: ${listJoin(matches.map((candidate) => `${candidate.name} (${strengthOf(candidate, key)})`))}.`,
       claims: matches.slice(0, 3).map((candidate) => ({ text: `${candidate.name}: ${evidenceFor(candidate, key)!.detail}`, candidateId: candidate.id, criterionKey: key })),
       suggestions: matches.length >= 2 ? [{ label: `Compare the top ${Math.min(3, matches.length)}`, query: `Compare ${listJoin(matches.slice(0, 3).map(firstName))}` }] : [],
     },
@@ -845,7 +854,7 @@ export function respond(text: string, context: EngineContext): EngineResult {
   if (/what changed|since (my )?last|catch me up|what'?s new/.test(lower)) return briefing('changes')
   if (/how (do|did) you (score|rank|decide|assess|evaluate)|what does .*(score|match) mean|basis of|how .*(assessed|scored)/.test(lower)) return method()
 
-  const { candidates: targets, clarify } = resolveTargets(t, context)
+  const { candidates: targets, explicit, clarify } = resolveTargets(t, context)
   if (clarify) return clarify
 
   if (/\b(reject|decline|turn down)\b/.test(lower)) return rejectGuard(targets)
@@ -878,11 +887,12 @@ export function respond(text: string, context: EngineContext): EngineResult {
     }
   }
   const criterion = matchCriterionKeyword(lower)
-  if (criterion && /who|which|find|show|strong in|best at/.test(lower) && !targets.length) return criterionSearch(criterion, context)
+  if (criterion && /who|which|find|show|strong in|best at/.test(lower) && !explicit) return criterionSearch(criterion, context)
+  if (/\bapplicants?\b|\bapplications\b|new candidates/.test(lower)) return applicantReview(t, context)
   if (targets.length === 1 && /review|why|recommend|tell me|investigate|look at|about|explain|profile|\?|^[a-z]+$/i.test(lower)) return whyCandidate(targets[0], context)
   if (/review|applicants?|applications|who should i (review|look at)|new candidates|first\b/.test(lower)) return applicantReview(t, context)
-  if (targets.length === 1) return whyCandidate(targets[0], context)
-  if (targets.length > 1) return compare(targets, context)
+  if (explicit && targets.length === 1) return whyCandidate(targets[0], context)
+  if (explicit && targets.length > 1) return compare(targets, context)
   if (/\bwhy\b|explain|recommend/.test(lower)) return needCandidate('explain')
   return fallback()
 }

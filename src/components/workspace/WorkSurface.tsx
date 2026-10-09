@@ -129,7 +129,7 @@ export function WorkSurface({ task }: { task: WorkspaceTask }) {
           <SimulatedNote className="hidden sm:inline-flex" />
         </div>
       )}
-      <div className="min-h-0 flex-1 overflow-y-auto bg-background px-5 py-5">{preparing ? <Preparing task={task} now={now} /> : <ViewBody task={task} />}</div>
+      <div className="@container min-h-0 flex-1 overflow-y-auto bg-background px-5 py-5">{preparing ? <Preparing task={task} now={now} /> : <ViewBody task={task} />}</div>
     </div>
   )
 }

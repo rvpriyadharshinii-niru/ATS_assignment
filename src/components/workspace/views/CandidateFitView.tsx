@@ -11,7 +11,7 @@ import { useAllEffectiveCandidates } from '../../../store/candidateSelectors'
 import { useWorkspaceStore } from '../../../store/useWorkspaceStore'
 import type { Candidate, CriterionKey, EvidenceStrength } from '../../../types/domain'
 import type { WorkspaceTask } from '../../../types/workspace'
-import { applicantReviewSet, evidenceFor, firstName, gapCriteria, peerPosition, recommendationSentence } from '../../../workspace/derive'
+import { applicantReviewSet, evidenceFor, firstName, gapCriteria, midSentence, peerPosition, recommendationSentence } from '../../../workspace/derive'
 import { RecommendationBadge } from '../../candidates/RecommendationBadge'
 import { DecisionBar } from '../DecisionBar'
 import { Avatar, CitationChip, EmptyState, Label, StrengthPill } from '../ui'
@@ -44,7 +44,7 @@ function ChallengePanel({ task, candidate, onClose }: { task: WorkspaceTask; can
           <p className="mt-0.5 text-xs text-palette-neutral-600">Your view is shown next to the AI's, labelled as yours. The AI rating stays visible so the difference is on record.</p>
         </div>
       </div>
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+      <div className="mt-3 grid gap-3 @lg:grid-cols-2">
         <label className="block text-xs font-medium text-palette-neutral-700">
           Criterion
           <select value={key} onChange={(event) => setKey(event.target.value as CriterionKey)} className={cn(inputBase, 'mt-1')}>
@@ -117,7 +117,7 @@ export function CandidateFitView({ task, candidateId, focus, embedded = false }:
     focus === 'gaps' ? [...criteria].sort((a, b) => (gaps.some((gap) => gap.key === b.key) ? 1 : 0) - (gaps.some((gap) => gap.key === a.key) ? 1 : 0)) : criteria
 
   return (
-    <div className="space-y-5">
+    <div className="@container space-y-5">
       {!embedded && (
         <div className="flex flex-wrap items-start gap-3">
           <Avatar name={candidate.name} size="lg" />
@@ -228,7 +228,7 @@ export function CandidateFitView({ task, candidateId, focus, embedded = false }:
                   <div
                     key={criterion.key}
                     className={cn(
-                      'group grid gap-x-4 gap-y-1.5 px-4 py-3 md:grid-cols-[minmax(150px,200px)_1fr]',
+                      'group grid gap-x-4 gap-y-1.5 px-4 py-3 @xl:grid-cols-[minmax(150px,200px)_1fr]',
                       index > 0 && 'border-t border-border',
                       task.focusCriterionKey === criterion.key && 'bg-palette-brand-100/50',
                       focus === 'gaps' && isGap && 'bg-palette-warning-100/60',
@@ -317,7 +317,8 @@ export function CandidateFitView({ task, candidateId, focus, embedded = false }:
                 : gaps.filter((gap) => gap.kind !== 'partial').length
                   ? `Shortlist if the strengths matter most for this role, and validate ${gaps
                       .filter((gap) => gap.kind !== 'partial')
-                      .map((gap) => criteria.find((criterion) => criterion.key === gap.key)?.name.toLowerCase())
+                      .map((gap) => criteria.find((criterion) => criterion.key === gap.key)?.name ?? '')
+                      .map(midSentence)
                       .join(' and ')} in the interview.`
                   : 'Evidence supports every criterion. Use the interview to check depth and personal contribution.'}
             </p>

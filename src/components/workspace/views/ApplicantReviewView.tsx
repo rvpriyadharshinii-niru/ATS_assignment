@@ -1,4 +1,5 @@
 import { Check, Clock, GitCompareArrows, Inbox, UserX } from 'lucide-react'
+import { recommendedCandidateIds } from '../../../data/candidates'
 import { useState } from 'react'
 import { cn } from '../../../lib/cn'
 import { useAllEffectiveCandidates } from '../../../store/candidateSelectors'
@@ -32,12 +33,18 @@ export function ApplicantReviewView({ task, openingId, candidateId }: { task: Wo
     .filter((candidate): candidate is Candidate => !!candidate && candidate.openingId === openingId)
     .filter((candidate) => ![...set.reviewFirst, ...set.worthALook, ...set.needsInfo].some((entry) => entry.id === candidate.id))
   const groups = [
-    { label: 'Review first', hint: 'Strongest evidence against the criteria', items: [...set.reviewFirst, ...decidedElsewhere.filter((candidate) => ['ananya-rao', 'rahul-mehta', 'meera-shah'].includes(candidate.id))] },
-    { label: 'Worth a look', hint: 'Mixed evidence; useful alternatives', items: [...set.worthALook, ...decidedElsewhere.filter((candidate) => !['ananya-rao', 'rahul-mehta', 'meera-shah'].includes(candidate.id))] },
+    {
+      label: 'Review first',
+      hint: 'Strongest evidence against the criteria',
+      // Keep the AI's original order even after someone has been moved on.
+      items: recommendedCandidateIds.map((id) => [...set.reviewFirst, ...decidedElsewhere].find((candidate) => candidate.id === id)).filter((candidate): candidate is Candidate => !!candidate),
+    },
+    { label: 'Worth a look', hint: 'Mixed evidence; useful alternatives', items: [...set.worthALook, ...decidedElsewhere.filter((candidate) => !recommendedCandidateIds.includes(candidate.id))] },
     { label: 'Needs more information', hint: 'Too little to assess either way', items: set.needsInfo },
   ].filter((group) => group.items.length)
   const listed = groups.flatMap((group) => group.items)
   const current = listed.find((candidate) => candidate.id === candidateId) ?? listed[0]
+  const untracked = Math.max(0, set.totalNew - listed.length)
   const decided = listed.filter((candidate) => task.decisions[candidate.id] || candidate.rejected).length
 
   if (!listed.length) {
@@ -47,8 +54,8 @@ export function ApplicantReviewView({ task, openingId, candidateId }: { task: Wo
   const toggle = (id: string) => setSelected((list) => (list.includes(id) ? list.filter((entry) => entry !== id) : list.length >= 3 ? list : [...list, id]))
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[250px_1fr]">
-      <aside className="space-y-4 lg:sticky lg:top-0 lg:self-start">
+    <div className="grid gap-5 @xl:grid-cols-[220px_1fr] @4xl:grid-cols-[250px_1fr]">
+      <aside className="space-y-4 @xl:sticky @xl:top-0 @xl:self-start">
         <div className="rounded-xl border border-border bg-card p-3">
           <p className="text-sm font-semibold text-palette-neutral-900">
             {decided} of {listed.length} decided
@@ -57,7 +64,7 @@ export function ApplicantReviewView({ task, openingId, candidateId }: { task: Wo
             <div className="h-full rounded-full bg-palette-success-500 transition-all" style={{ width: `${(decided / listed.length) * 100}%` }} />
           </div>
           <p className="mt-2 text-xs text-palette-neutral-550">
-            {set.totalNew} new since your last review{set.untrackedNew ? ` · ${set.untrackedNew} have summary data only and aren't ranked` : ''}.
+            {set.totalNew} new since your last review{untracked ? ` · ${untracked} have summary data only and aren't ranked` : ''}.
           </p>
         </div>
         {groups.map((group) => (

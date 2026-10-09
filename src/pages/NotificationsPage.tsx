@@ -1,4 +1,4 @@
-import { Bell, Calendar, SlidersHorizontal, Users } from 'lucide-react'
+import { Bell, Calendar, SlidersHorizontal, Sparkles, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { PageHeader } from '../components/layout/PageHeader'
@@ -7,6 +7,7 @@ import { getCandidate } from '../data/candidates'
 import { staticNotifications, type NotificationCategory } from '../data/notifications'
 import { cn } from '../lib/cn'
 import { useAppStore } from '../store/useAppStore'
+import { useLaunchTask } from '../workspace/presets'
 
 type FilterKey = 'all' | 'unread' | NotificationCategory
 
@@ -18,6 +19,7 @@ interface FeedItem {
   detail?: string
   timestamp: number
   action?: { label: string; to: string }
+  ai?: { label: string; query: string; key?: string }
 }
 
 const FILTERS: { key: FilterKey; label: string }[] = [
@@ -64,6 +66,7 @@ export function NotificationsPage({ embedded = false }: { embedded?: boolean }) 
   const activityLog = useAppStore((state) => state.activityLog)
   const [filter, setFilter] = useState<FilterKey>('all')
   const [readIds, setReadIds] = useState<Set<string>>(new Set())
+  const launch = useLaunchTask()
 
   const feed: FeedItem[] = useMemo(() => {
     const fromStatic: FeedItem[] = staticNotifications.map((item) => ({
@@ -74,6 +77,7 @@ export function NotificationsPage({ embedded = false }: { embedded?: boolean }) 
       detail: item.detail,
       timestamp: item.timestamp,
       action: item.action,
+      ai: item.ai,
     }))
     const fromActivity: FeedItem[] = activityLog.map((event) => {
       const candidate = getCandidate(event.candidateId)
@@ -176,10 +180,23 @@ export function NotificationsPage({ embedded = false }: { embedded?: boolean }) 
                         {item.detail && <p className="mt-0.5 text-sm text-muted-foreground">{item.detail}</p>}
                         <div className="mt-1.5 flex items-center gap-3">
                           <p className="text-xs text-palette-neutral-500">{formatTime(item.timestamp)}</p>
+                          {item.ai && (
+                            <button
+                              type="button"
+                              onClick={(event) => {
+                                event.stopPropagation()
+                                launch(item.ai!.query, item.ai!.key ? { key: item.ai!.key } : undefined)
+                              }}
+                              className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:underline"
+                            >
+                              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                              {item.ai.label}
+                            </button>
+                          )}
                           {item.action && (
                             <Link
                               to={item.action.to}
-                              className="text-sm font-medium text-primary hover:text-palette-brand-600 focus-visible:outline-none focus-visible:underline"
+                              className="text-sm font-medium text-palette-neutral-600 hover:text-palette-neutral-900 focus-visible:outline-none focus-visible:underline"
                             >
                               {item.action.label}
                             </Link>
