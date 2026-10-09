@@ -19,6 +19,8 @@ React, Vite, TypeScript (strict), Tailwind CSS, React Router, Zustand, Lucide Re
 
 ## Commands
 
+Requires Node.js 20.19+ or 22.12+ (Vite 8). No environment variables or accounts are needed; all data is bundled.
+
 ```bash
 npm install
 npm run dev       # start dev server
