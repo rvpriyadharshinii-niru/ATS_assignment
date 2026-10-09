@@ -1,3 +1,4 @@
+import { getResume } from '../data/sources'
 import type { Candidate, CriterionKey } from '../types/domain'
 
 export function buildStatusNote(candidate: Candidate): string | undefined {
@@ -106,6 +107,8 @@ const SKILL_LABEL_BY_CRITERION: Partial<Record<CriterionKey, string>> = {
 const GENERIC_SPD_SKILL_POOL = ['Interaction Design', 'Product Strategy', 'Prototyping', 'User Research']
 
 export function deriveSkills(candidate: Candidate): string[] {
+  const resume = getResume(candidate.id)
+  if (resume) return resume.skills
   const evidenceSkills = candidate.evidence
     .filter((item) => item.strength === 'Strong' || item.strength === 'Good')
     .map((item) => SKILL_LABEL_BY_CRITERION[item.criterionKey])
@@ -126,6 +129,23 @@ const PREVIOUS_ROLE_TITLES = ['Product Designer', 'UX Designer', 'Senior UX Desi
 
 /** Not a real field — a stable 2-entry chronological timeline derived from current role/company/experience. */
 export function deriveExperience(candidate: Candidate): ExperienceEntry[] {
+  // A real source resume always wins — the profile, the PDF and the AI evidence must quote the same document.
+  const resume = getResume(candidate.id)
+  if (resume) {
+    return resume.roles.map((role) => {
+      const [start, end] = role.dateRange.split('–').map((part) => part.trim())
+      const endYear = end === 'Present' ? new Date().getFullYear() : Number(end)
+      const span = Math.max(1, endYear - Number(start))
+      return {
+        company: role.company,
+        role: role.role,
+        dateRange: role.dateRange.replace('–', '-'),
+        duration: `${span} yr${span === 1 ? '' : 's'}`,
+        location: role.location,
+        bullets: role.points.map((point) => point.text),
+      }
+    })
+  }
   const totalYears = candidate.experienceYears ?? 6
   const currentSpan = Math.max(2, Math.min(totalYears - 1, Math.round(totalYears * 0.5)))
   const previousSpan = Math.max(1, totalYears - currentSpan)
@@ -169,6 +189,8 @@ const SCHOOLS = ['National Institute of Design', 'Srishti Institute of Art, Desi
 
 /** Not a real field — a small, secondary, deterministic education line so the profile never looks incomplete. */
 export function deriveEducation(candidate: Candidate): EducationInfo {
+  const resumeEducation = getResume(candidate.id)?.education
+  if (resumeEducation) return { ...resumeEducation, dateRange: resumeEducation.dateRange.replace('–', '-') }
   const index = hashString(`${candidate.id}-education`)
   const totalYears = candidate.experienceYears ?? 6
   const gradYear = new Date().getFullYear() - totalYears

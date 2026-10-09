@@ -8,13 +8,15 @@ export interface StaticNotification {
   detail: string
   timestamp: number
   action?: { label: string; to: string }
+  /** Opens the same situation as a prepared AI Workspace task. */
+  ai?: { label: string; query: string; key?: string }
 }
 
 const HOUR = 60 * 60 * 1000
 const DAY = 24 * HOUR
 const now = Date.now()
 
-/** Mirrors the same facts Home's "Needs your attention" and Copilot's "What needs my attention" show — one set of truths, several presentations. */
+/** Mirrors the same facts Home's "Needs your attention" and the AI Workspace's "What needs my attention" show — one set of truths, several presentations. */
 export const staticNotifications: StaticNotification[] = [
   {
     id: 'notif-nisha-feedback',
@@ -24,6 +26,7 @@ export const staticNotifications: StaticNotification[] = [
     detail: '5 days waiting.',
     timestamp: now - 2 * HOUR,
     action: { label: 'Review', to: '/candidates/nisha-verma' },
+    ai: { label: 'Prepare my feedback with AI', query: 'Prepare follow-ups for everyone waiting on feedback', key: 'follow-ups' },
   },
   {
     id: 'notif-spd-screening',
@@ -32,7 +35,8 @@ export const staticNotifications: StaticNotification[] = [
     title: '12 new Senior Product Designer candidates completed screening',
     detail: '3 surfaced for review.',
     timestamp: now - 5 * HOUR,
-    action: { label: 'Review 3', to: '/openings/senior-product-designer/candidates' },
+    action: { label: 'Open candidates', to: '/openings/senior-product-designer/candidates' },
+    ai: { label: 'Review with AI', query: "Review today's new applicants", key: 'applicant-review:spd' },
   },
   {
     id: 'notif-pm-decision',

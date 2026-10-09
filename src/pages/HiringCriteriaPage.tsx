@@ -161,7 +161,7 @@ export function HiringCriteriaPage() {
                 <IconBadge icon={SlidersHorizontal} color="brand" size="sm" />
                 Configured hiring criteria
               </h2>
-              <p className="mt-1 text-sm text-muted-foreground">These are the persistent criteria Copilot uses when evaluating candidates for this role.</p>
+              <p className="mt-1 text-sm text-muted-foreground">These are the persistent criteria HireFlow AI uses when evaluating candidates for this role.</p>
             </div>
             <button
               type="button"
