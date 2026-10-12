@@ -5,7 +5,7 @@ import { CandidateCard } from '../components/candidates/CandidateCard'
 import { FilterChips } from '../components/candidates/FilterChips'
 import { IconBadge, type IconBadgeColor } from '../components/ui/IconBadge'
 import { getOpening } from '../data/openings'
-import { STAGE_BASELINE_OTHER } from '../data/pipeline'
+import { stageBaseline } from '../data/pipeline'
 import { cn } from '../lib/cn'
 import { candidateMatchesFilters } from '../lib/evidence'
 import { useEffectiveCandidatesForOpening, usePipelineStages } from '../store/candidateSelectors'
@@ -20,7 +20,7 @@ const COLUMN_TINT: Record<CandidateStage, string> = {
   'AI Screened': 'bg-palette-info-100/50',
   'HM Review': 'bg-palette-brand-100/50',
   Interview: 'bg-palette-warning-100/50',
-  Final: 'bg-palette-plum-100/40',
+  Final: 'bg-palette-pink-100/40',
   Offer: 'bg-palette-success-100/50',
 }
 
@@ -38,7 +38,7 @@ const STAGE_BADGE_COLOR: Record<CandidateStage, IconBadgeColor> = {
   'AI Screened': 'info',
   'HM Review': 'brand',
   Interview: 'warning',
-  Final: 'plum',
+  Final: 'pink',
   Offer: 'success',
 }
 
@@ -101,7 +101,7 @@ export function PipelinePage() {
           <div className="flex shrink-0 items-center gap-3">
             <button
               type="button"
-              onClick={() => launch('Why is the Product Designer role delayed?')}
+              onClick={() => launch(opening.id === 'senior-product-designer' ? 'Why is the Product Designer role delayed?' : `Why is the ${opening.title} role delayed?`)}
               className="text-sm font-medium text-palette-neutral-600 hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               Investigate with AI
@@ -122,7 +122,7 @@ export function PipelinePage() {
         {STAGES.map((stage) => {
           const count = stageCounts.find((entry) => entry.stage === stage)?.count ?? 0
           const named = active.filter((candidate) => candidate.stage === stage)
-          const otherCount = STAGE_BASELINE_OTHER[stage]
+          const otherCount = stageBaseline(opening.id)[stage]
           const waitingOnPriya = named.filter((candidate) => candidate.waitingOn === 'priya').length
 
           return (

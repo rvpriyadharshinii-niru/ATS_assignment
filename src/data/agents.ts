@@ -1,7 +1,7 @@
 import type { AgentActionDef, AgentDataSourceDef, AgentId, AgentRecord, AutonomyLevel, RefinementKey } from '../types/agents'
 
 /**
- * The four supervised agents in this post-assignment exploration. Definitions are static (what
+ * The four supervised agents in HireFlow. Definitions are static (what
  * the agent *can* do); AgentRecord.config is what Priya has chosen it *may* do, and lives in the
  * agent store so Configuration, Testing and "Run now" all read the same settings.
  */

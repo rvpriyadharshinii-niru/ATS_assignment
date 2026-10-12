@@ -1,3 +1,4 @@
+import { getCriteria } from '../data/criteria'
 import type { Candidate } from '../types/domain'
 
 const COLUMNS: { header: string; get: (candidate: Candidate) => string }[] = [
@@ -7,7 +8,7 @@ const COLUMNS: { header: string; get: (candidate: Candidate) => string }[] = [
   { header: 'Experience (yrs)', get: (c) => (c.experienceYears !== undefined ? String(c.experienceYears) : '') },
   { header: 'Location', get: (c) => c.location ?? '' },
   { header: 'Recommendation', get: (c) => c.recommendation ?? '' },
-  { header: 'Priorities supported', get: (c) => (c.prioritiesSupported !== undefined ? `${c.prioritiesSupported}/5` : '') },
+  { header: 'Priorities supported', get: (c) => (c.prioritiesSupported !== undefined ? `${c.prioritiesSupported}/${getCriteria(c.openingId).length}` : '') },
   { header: 'AI screening score', get: (c) => (c.screeningScore !== undefined ? String(c.screeningScore) : '') },
   { header: 'Stage', get: (c) => c.stage },
   { header: 'Source', get: (c) => c.source ?? '' },

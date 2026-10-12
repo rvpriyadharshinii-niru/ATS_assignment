@@ -58,7 +58,7 @@ export function CandidateAgentFindings({ candidate }: { candidate: Candidate }) 
             </p>
           )}
           <Link to={`/agents/candidate-review/test?candidate=${candidate.id}`} className={cn(linkClass, 'mt-3')}>
-            Open in Testing Studio
+            Open in Candidate Review agent
             <ArrowRight className="h-3 w-3" aria-hidden="true" />
           </Link>
         </section>
@@ -123,7 +123,7 @@ export function CandidateAgentFindings({ candidate }: { candidate: Candidate }) 
       <section>
         <div className="flex items-center justify-between gap-3">
           <p className={sectionLabelClass}>Agent activity for {candidate.name.split(' ')[0]}</p>
-          <Link to="/agents?tab=activity" className={linkClass}>
+          <Link to="/activity" className={linkClass}>
             All agent activity
             <ArrowRight className="h-3 w-3" aria-hidden="true" />
           </Link>

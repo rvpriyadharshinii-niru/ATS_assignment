@@ -1,10 +1,10 @@
 import type { Candidate, CandidateOverride, OpeningId } from '../types/domain'
 
 /**
- * Named candidate records for Senior Product Designer, transcribed from
- * PROTOTYPE_DATA.md sections 11–18. These are the only candidates with
- * detailed evidence in this prototype — the role's 46-candidate total is
- * an aggregate figure and is never used to fabricate additional records.
+ * Named candidate records for every opening. Senior Product Designer's are transcribed from
+ * PROTOTYPE_DATA.md sections 11–18; Product Manager and UX Researcher follow the same shape.
+ * Each role's total in openings.ts is an aggregate figure: the rest of it is modelled as
+ * pipeline baselines (pipeline.ts) and never used to fabricate additional records.
  */
 export const candidates: Candidate[] = [
   {
@@ -401,16 +401,322 @@ export const candidates: Candidate[] = [
     source: 'Career site',
   },
 
-  /** Product Manager's one named record, from PROTOTYPE_DATA.md section 27. */
+  /**
+   * Product Manager. Aarav Sethi is the finalist from PROTOTYPE_DATA.md section 27, now with a full
+   * evidence profile; the others are this opening's named applicants and its one upcoming interview.
+   * Every evidence detail restates a passage in sources.ts.
+   */
   {
     id: 'aarav-sethi',
     name: 'Aarav Sethi',
     openingId: 'product-manager',
     stage: 'Final',
-    evidence: [],
+    experienceYears: 8,
+    location: 'Mumbai',
+    currentRole: 'Senior Product Manager',
+    currentCompany: 'Tidepool',
+    recommendation: 'Strong match',
+    prioritiesSupported: 5,
+    screeningScore: 88,
+    evidence: [
+      {
+        criterionKey: 'productStrategy',
+        strength: 'Strong',
+        detail: 'Owned the Tidepool procurement roadmap and reprioritised it around three enterprise customer outcomes, retiring 40% of the backlog.',
+      },
+      {
+        criterionKey: 'customerDiscovery',
+        strength: 'Good',
+        detail: 'Runs a continuous discovery programme of roughly 25 customer interviews a quarter with finance and procurement leads.',
+      },
+      {
+        criterionKey: 'dataInformedDecisions',
+        strength: 'Strong',
+        detail: 'Set up the product activation metrics framework and ran 14 onboarding and pricing experiments.',
+      },
+      {
+        criterionKey: 'b2bSaasDomain',
+        strength: 'Strong',
+        detail: '8 years in B2B SaaS, most recently procurement and spend-management products for enterprise finance teams.',
+      },
+      {
+        criterionKey: 'crossFunctionalCollaboration',
+        strength: 'Good',
+        detail: 'Led a squad of eight engineers and two designers through the approval-workflow rebuild; the Engineering Manager called him a strong partner to engineering.',
+      },
+    ],
+    summary:
+      'Aarav is a strong match. He has supporting evidence across all 5 configured priorities, strongest in product strategy, data-informed decisions and B2B SaaS. The open question from the final round is the depth of his qualitative discovery.',
     interviewStatus: 'Awaiting Hiring Manager decision',
     updatedLabel: '1d',
     source: 'Referral',
+  },
+  {
+    id: 'riya-desai',
+    name: 'Riya Desai',
+    openingId: 'product-manager',
+    stage: 'HM Review',
+    updatedLabel: 'Today',
+    source: 'LinkedIn',
+    experienceYears: 7,
+    location: 'Bengaluru',
+    currentRole: 'Senior Product Manager',
+    currentCompany: 'Clearbook',
+    recommendation: 'Strong match',
+    prioritiesSupported: 4,
+    screeningScore: 86,
+    evidence: [
+      {
+        criterionKey: 'productStrategy',
+        strength: 'Strong',
+        detail: 'Owns strategy for Clearbook’s close-management product: sets the annual roadmap and the prioritisation framework three squads use.',
+      },
+      {
+        criterionKey: 'customerDiscovery',
+        strength: 'Strong',
+        detail: 'Interviews 8–10 controllers a month; turned discovery findings into the reconciliation assistant, now used by 70% of accounts.',
+      },
+      {
+        criterionKey: 'dataInformedDecisions',
+        strength: 'Good',
+        detail: 'Defined the north-star metric and dashboards for the close product and uses cohort analysis to decide what to build next.',
+      },
+      {
+        criterionKey: 'b2bSaasDomain',
+        strength: 'Strong',
+        detail: '7 years building B2B SaaS for finance and operations teams.',
+      },
+      {
+        criterionKey: 'crossFunctionalCollaboration',
+        strength: 'Moderate',
+        detail: 'Partners with engineering, design and sales leads in a weekly product council; what she drove there is not described.',
+      },
+    ],
+    summary:
+      'Riya is a strong match. She has supporting evidence across 4 of the 5 configured priorities, with particularly strong evidence in product strategy, customer discovery and B2B SaaS. Cross-functional leadership is the least demonstrated.',
+  },
+  {
+    id: 'karan-joshi',
+    name: 'Karan Joshi',
+    openingId: 'product-manager',
+    stage: 'HM Review',
+    updatedLabel: '1d',
+    source: 'Referral',
+    experienceYears: 6,
+    location: 'Pune',
+    currentRole: 'Product Manager',
+    currentCompany: 'Stackwise',
+    recommendation: 'Good match',
+    prioritiesSupported: 3,
+    screeningScore: 81,
+    evidence: [
+      {
+        criterionKey: 'productStrategy',
+        strength: 'Moderate',
+        detail: 'Re-sequenced the quarterly roadmap after an outage review, moving reliability work ahead of new features.',
+      },
+      {
+        criterionKey: 'customerDiscovery',
+        strength: 'Limited',
+        detail: 'Ran usability sessions with internal operations users; no external customer discovery is described.',
+      },
+      {
+        criterionKey: 'dataInformedDecisions',
+        strength: 'Strong',
+        detail: 'Introduced experiment reviews and an event-tracking plan, so decisions on the pipeline UI are backed by usage data.',
+      },
+      {
+        criterionKey: 'b2bSaasDomain',
+        strength: 'Strong',
+        detail: 'Product manager for a deployment platform sold to engineering teams at mid-size and enterprise companies.',
+      },
+      {
+        criterionKey: 'crossFunctionalCollaboration',
+        strength: 'Strong',
+        detail: 'Coordinated a release across four engineering teams, support and sales enablement.',
+      },
+    ],
+    summary:
+      'Karan has strong evidence in data-informed decisions, B2B SaaS and cross-functional delivery. Compared with Riya, he has less evidence of setting product direction and of external customer discovery.',
+  },
+  {
+    id: 'divya-pillai',
+    name: 'Divya Pillai',
+    openingId: 'product-manager',
+    stage: 'AI Screened',
+    updatedLabel: '3d',
+    source: 'Career site',
+    experienceYears: 4,
+    location: 'Chennai',
+    currentRole: 'Product Manager',
+    currentCompany: 'Mintleaf',
+    recommendation: 'Promising',
+    screeningScore: 74,
+    evidence: [
+      { criterionKey: 'productStrategy', strength: 'Good', detail: 'Proposed and won approval for a shift from feature launches to retention, and owns the H2 roadmap.' },
+      { criterionKey: 'customerDiscovery', strength: 'Strong', detail: 'Runs weekly user interviews and diary studies on how young professionals plan their savings.' },
+      { criterionKey: 'dataInformedDecisions', strength: 'Strong', detail: 'Ran 30+ A/B tests on onboarding and goal-setting for a consumer savings app.' },
+      { criterionKey: 'b2bSaasDomain', strength: 'Limited', detail: 'Both roles are consumer products (savings and food delivery); no B2B SaaS work is described.' },
+      { criterionKey: 'crossFunctionalCollaboration', strength: 'Moderate', detail: 'Works day to day with a squad of five engineers and one designer.' },
+    ],
+    notableGap: 'No B2B SaaS experience described yet.',
+  },
+  {
+    id: 'farhan-qureshi',
+    name: 'Farhan Qureshi',
+    openingId: 'product-manager',
+    stage: 'Applied',
+    updatedLabel: '2d',
+    source: 'LinkedIn',
+    experienceYears: 5,
+    location: 'Hyderabad',
+    currentRole: 'Product Manager',
+    currentCompany: 'Haulmark',
+    recommendation: 'Needs more information',
+    evidence: [
+      { criterionKey: 'b2bSaasDomain', strength: 'Good', detail: 'Application says he is a product manager on a B2B logistics platform.' },
+      { criterionKey: 'dataInformedDecisions', strength: 'Possible', detail: 'Application mentions working with data teams on reporting features.' },
+      { criterionKey: 'productStrategy', strength: 'Not available', detail: 'Insufficient information to assess this criterion yet.' },
+      { criterionKey: 'customerDiscovery', strength: 'Not available', detail: 'Insufficient information to assess this criterion yet.' },
+      { criterionKey: 'crossFunctionalCollaboration', strength: 'Not available', detail: 'Insufficient information to assess this criterion yet.' },
+    ],
+    notableGap: 'Not enough information to confidently rank this candidate yet.',
+  },
+  {
+    id: 'siddharth-kulkarni',
+    name: 'Siddharth Kulkarni',
+    openingId: 'product-manager',
+    stage: 'Interview',
+    experienceYears: 9,
+    location: 'Bengaluru',
+    currentRole: 'Group Product Manager',
+    currentCompany: 'Pinecrest Cloud',
+    recommendation: 'Good match',
+    screeningScore: 80,
+    evidence: [
+      { criterionKey: 'productStrategy', strength: 'Strong', detail: 'Set a two-year platform strategy that consolidated three products into one suite.' },
+      { criterionKey: 'customerDiscovery', strength: 'Moderate', detail: 'Ran customer advisory boards with enterprise HR leaders; hands-on discovery interviews are not described.' },
+      { criterionKey: 'dataInformedDecisions', strength: 'Good', detail: 'Introduced quarterly business reviews built on adoption and retention metrics.' },
+      { criterionKey: 'b2bSaasDomain', strength: 'Strong', detail: 'Group product manager for an HR and payroll suite sold to enterprise HR teams.' },
+      { criterionKey: 'crossFunctionalCollaboration', strength: 'Strong', detail: 'Leads four product managers and partners with engineering, design and customer success directors.' },
+    ],
+    interviewStatus: 'Interview scheduled',
+    updatedLabel: '1d',
+    source: 'Agency',
+  },
+
+  /**
+   * UX Researcher. Screening is still in progress, so everyone named here is AI Screened or in
+   * HM Review and nothing is waiting on Priya.
+   */
+  {
+    id: 'zoya-mirza',
+    name: 'Zoya Mirza',
+    openingId: 'ux-researcher',
+    stage: 'HM Review',
+    updatedLabel: '2d',
+    source: 'LinkedIn',
+    experienceYears: 6,
+    location: 'Bengaluru',
+    currentRole: 'Senior UX Researcher',
+    currentCompany: 'Fernhill',
+    recommendation: 'Strong match',
+    prioritiesSupported: 4,
+    screeningScore: 85,
+    evidence: [
+      {
+        criterionKey: 'researchMethods',
+        strength: 'Strong',
+        detail: 'Runs mixed-methods research for an HR suite: contextual inquiry, usability testing, surveys and unmoderated card sorts.',
+      },
+      {
+        criterionKey: 'researchSynthesis',
+        strength: 'Strong',
+        detail: 'Synthesised 40 interviews into a jobs-to-be-done framework that now structures the product roadmap.',
+      },
+      {
+        criterionKey: 'researchImpact',
+        strength: 'Strong',
+        detail: 'Research on manager approvals led the team to drop a planned feature and redesign the approvals queue instead.',
+      },
+      {
+        criterionKey: 'enterpriseResearchContext',
+        strength: 'Good',
+        detail: 'Recruits and interviews HR administrators at enterprise customers with 5,000+ employees.',
+      },
+      {
+        criterionKey: 'communicationSkills',
+        strength: 'Unclear',
+        detail: 'The resume does not describe how she shares findings with stakeholders.',
+      },
+    ],
+    summary:
+      'Zoya is a strong match. She has supporting evidence across 4 of the 5 configured priorities, with particularly strong evidence in research methods, synthesis and research impact. How she communicates findings is not described.',
+  },
+  {
+    id: 'manav-chawla',
+    name: 'Manav Chawla',
+    openingId: 'ux-researcher',
+    stage: 'AI Screened',
+    updatedLabel: '1d',
+    source: 'Career site',
+    experienceYears: 5,
+    location: 'Gurugram',
+    currentRole: 'UX Researcher',
+    currentCompany: 'Quillstack',
+    recommendation: 'Good match',
+    screeningScore: 78,
+    evidence: [
+      { criterionKey: 'researchMethods', strength: 'Moderate', detail: 'Leads usability testing and interview studies; no other methods are described.' },
+      { criterionKey: 'researchSynthesis', strength: 'Good', detail: 'Maintains the team’s research repository and tags insights across studies.' },
+      { criterionKey: 'researchImpact', strength: 'Good', detail: 'Research with legal operations teams shaped the approval-routing feature.' },
+      { criterionKey: 'enterpriseResearchContext', strength: 'Strong', detail: 'Researches with legal operations teams at enterprise customers of a B2B document workflow product.' },
+      { criterionKey: 'communicationSkills', strength: 'Strong', detail: 'Presents a monthly research readout to product, design and sales leadership.' },
+    ],
+    notableGap: 'Narrower range of research methods than the strongest applicant.',
+  },
+  {
+    id: 'lakshmi-krishnan',
+    name: 'Lakshmi Krishnan',
+    openingId: 'ux-researcher',
+    stage: 'AI Screened',
+    updatedLabel: '2d',
+    source: 'Referral',
+    experienceYears: 3,
+    location: 'Hyderabad',
+    currentRole: 'Design Researcher',
+    currentCompany: 'Pocketful',
+    recommendation: 'Promising',
+    screeningScore: 72,
+    evidence: [
+      { criterionKey: 'researchMethods', strength: 'Good', detail: 'Plans and runs diary studies, interviews and concept tests for a budgeting app.' },
+      { criterionKey: 'researchSynthesis', strength: 'Strong', detail: 'Built an affinity-mapping synthesis workshop that the design team now runs after every study.' },
+      { criterionKey: 'researchImpact', strength: 'Limited', detail: 'Findings were shared with the product team ahead of quarterly planning; no decision is described as changing.' },
+      { criterionKey: 'enterpriseResearchContext', strength: 'Not available', detail: 'All described research is on a consumer app.' },
+      { criterionKey: 'communicationSkills', strength: 'Good', detail: 'Writes study reports and short video highlight reels for each release.' },
+    ],
+    notableGap: 'No enterprise or B2B research context yet.',
+  },
+  {
+    id: 'aditi-banerjee',
+    name: 'Aditi Banerjee',
+    openingId: 'ux-researcher',
+    stage: 'AI Screened',
+    updatedLabel: '1d',
+    source: 'Career site',
+    experienceYears: 4,
+    location: 'Kolkata',
+    currentRole: 'UX Researcher',
+    currentCompany: 'Northbeam Analytics',
+    recommendation: 'Needs more information',
+    evidence: [
+      { criterionKey: 'enterpriseResearchContext', strength: 'Good', detail: 'Application says she is a UX researcher on a B2B analytics product.' },
+      { criterionKey: 'researchMethods', strength: 'Possible', detail: 'Application mentions user interviews and usability tests.' },
+      { criterionKey: 'researchSynthesis', strength: 'Not available', detail: 'Insufficient information to assess this criterion yet.' },
+      { criterionKey: 'researchImpact', strength: 'Not available', detail: 'Insufficient information to assess this criterion yet.' },
+      { criterionKey: 'communicationSkills', strength: 'Not available', detail: 'Insufficient information to assess this criterion yet.' },
+    ],
+    notableGap: 'Not enough information to confidently rank this candidate yet.',
   },
 ]
 
@@ -454,8 +760,33 @@ export function slugifyCandidateId(name: string): string {
   return id
 }
 
-/** The three candidates surfaced by "Who should I review?" / the Home insight. */
-export const recommendedCandidateIds = ['ananya-rao', 'rahul-mehta', 'meera-shah']
+const RECOMMENDATION_RANK: Record<string, number> = { 'Strong match': 2, 'Good match': 1 }
+
+/**
+ * Review-first picks for the openings without a curated list: reviewable-stage candidates with a
+ * Strong or Good match, strongest recommendation first, then by screening score.
+ */
+function strengthOrderedRecommendations(openingId: OpeningId): string[] {
+  return candidates
+    .filter((candidate) => candidate.openingId === openingId && ['Applied', 'AI Screened', 'HM Review'].includes(candidate.stage))
+    .filter((candidate) => RECOMMENDATION_RANK[candidate.recommendation ?? ''] !== undefined)
+    .sort((a, b) => RECOMMENDATION_RANK[b.recommendation!] - RECOMMENDATION_RANK[a.recommendation!] || (b.screeningScore ?? 0) - (a.screeningScore ?? 0))
+    .map((candidate) => candidate.id)
+}
+
+/**
+ * Who to review first, per opening, in order. Senior Product Designer's three are curated
+ * (PROTOTYPE_DATA.md, "Who should I review?" / the Home insight); the other openings are ordered
+ * by evidence strength. Every reader filters this list against one opening's pool, so the
+ * flat, ordered array works for all of them.
+ */
+export const recommendedCandidateIds = [
+  'ananya-rao',
+  'rahul-mehta',
+  'meera-shah',
+  ...strengthOrderedRecommendations('product-manager'),
+  ...strengthOrderedRecommendations('ux-researcher'),
+]
 
 /**
  * Merges a stage/hold/reject/etc. override on top of a base candidate record.

@@ -7,14 +7,14 @@ import type { EvidenceStrength } from '../../types/domain'
 import type { TaskStatus } from '../../types/workspace'
 
 export function Label({ children, className }: { children: ReactNode; className?: string }) {
-  return <p className={cn('text-[11px] font-semibold uppercase tracking-wide text-palette-neutral-550', className)}>{children}</p>
+  return <p className={cn('text-[11px] font-semibold uppercase tracking-[0.06em] text-palette-neutral-650', className)}>{children}</p>
 }
 
 const STATUS: Record<TaskStatus, { label: string; className: string; dot: string }> = {
-  preparing: { label: 'Preparing', className: 'bg-palette-brand-100 text-palette-brand-700', dot: 'bg-palette-brand-500 animate-pulse' },
+  preparing: { label: 'Preparing', className: 'bg-palette-neutral-150 text-palette-neutral-700', dot: 'bg-palette-neutral-500 animate-pulse' },
   'in-progress': { label: 'In progress', className: 'bg-palette-info-150 text-palette-info-700', dot: 'bg-palette-info-500' },
   'needs-clarification': { label: 'Needs your input', className: 'bg-palette-warning-150 text-palette-warning-700', dot: 'bg-palette-warning-500' },
-  ready: { label: 'Ready for review', className: 'bg-palette-brand-100 text-palette-brand-700', dot: 'bg-palette-brand-500' },
+  ready: { label: 'Ready for review', className: 'bg-palette-neutral-150 text-palette-neutral-800', dot: 'bg-palette-pink-500' },
   'awaiting-approval': { label: 'Awaiting approval', className: 'bg-palette-warning-150 text-palette-warning-700', dot: 'bg-palette-warning-500' },
   completed: { label: 'Completed', className: 'bg-palette-success-150 text-palette-success-700', dot: 'bg-palette-success-500' },
   partial: { label: 'Partially completed', className: 'bg-palette-warning-150 text-palette-warning-700', dot: 'bg-palette-warning-500' },
@@ -32,13 +32,13 @@ export function TaskStatusPill({ status, className }: { status: TaskStatus; clas
 }
 
 const STRENGTH_TONE: Record<EvidenceStrength, string> = {
-  Strong: 'bg-palette-success-150 text-palette-success-700',
-  Good: 'bg-palette-info-150 text-palette-info-700',
+  Strong: 'bg-palette-success-150 text-palette-success-800',
+  Good: 'bg-palette-info-150 text-palette-info-800',
   Moderate: 'bg-palette-neutral-200 text-palette-neutral-700',
   Limited: 'bg-palette-neutral-200 text-palette-neutral-700',
-  Possible: 'bg-palette-warning-150 text-palette-warning-700',
-  Unclear: 'bg-palette-warning-150 text-palette-warning-700',
-  'Not available': 'bg-palette-warning-150 text-palette-warning-700',
+  Possible: 'bg-palette-warning-150 text-palette-warning-800',
+  Unclear: 'bg-palette-warning-150 text-palette-warning-800',
+  'Not available': 'bg-palette-warning-150 text-palette-warning-800',
 }
 
 export function StrengthPill({ strength, className }: { strength: EvidenceStrength; className?: string }) {
@@ -70,7 +70,7 @@ export function Avatar({ name, size = 'md', className }: { name: string; size?: 
 export function SimulatedNote({ className, children = 'Simulated AI preparation' }: { className?: string; children?: ReactNode }) {
   return (
     <span
-      title="Prepared by HireFlow's deterministic simulation over the prototype data. No live AI model was called."
+      title="Prepared by HireFlow's rule-based simulation of AI over this workspace's sample data. No live AI model was called."
       className={cn('inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-dashed border-palette-neutral-400 px-1.5 py-0.5 text-[11px] font-medium text-palette-neutral-600', className)}
     >
       <FlaskConical className="h-3 w-3" aria-hidden="true" />

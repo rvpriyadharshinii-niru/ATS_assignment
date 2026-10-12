@@ -88,7 +88,7 @@ export function SourceView({ task, candidateId, passageIds, criterionKey }: { ta
               onClick={() => setDocId(doc.id)}
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium',
-                doc.id === activeDoc.id ? 'bg-palette-neutral-900 text-white' : 'bg-palette-neutral-200 text-palette-neutral-700 hover:bg-palette-neutral-250',
+                doc.id === activeDoc.id ? 'bg-palette-brand-600 text-white' : 'bg-palette-neutral-200 text-palette-neutral-700 hover:bg-palette-neutral-250',
               )}
             >
               {doc.kind === 'resume' ? <FileText className="h-3.5 w-3.5" aria-hidden="true" /> : <Quote className="h-3.5 w-3.5" aria-hidden="true" />}
@@ -137,7 +137,7 @@ export function SourceView({ task, candidateId, passageIds, criterionKey }: { ta
                         className={cn(
                           'w-full rounded-md px-2 py-1 text-left text-[13.5px] leading-relaxed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                           isConflict
-                            ? 'bg-palette-plum-100 text-palette-neutral-900 ring-1 ring-inset ring-palette-plum-300'
+                            ? 'bg-palette-pink-100 text-palette-neutral-900 ring-1 ring-inset ring-palette-pink-300'
                             : isHighlighted
                               ? 'bg-palette-warning-200 text-palette-neutral-900'
                               : 'text-palette-neutral-700 hover:bg-palette-neutral-150',

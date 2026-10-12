@@ -118,6 +118,8 @@ export interface FollowUpDraft {
   reason: string
   status: 'draft' | 'approved' | 'skipped'
   revision: number
+  /** The candidate's interview status before approval, so Undo can put it back exactly. */
+  undo?: { hadStatus: boolean; previousStatus?: string }
 }
 
 export type SessionItemKind = 'shortlist' | 'agent-proposal' | 'own-feedback' | 'reminder' | 'guide' | 'decision'

@@ -93,7 +93,7 @@ function AiMessage({ task, message, now, isLast }: { task: WorkspaceTask; messag
 
   const ToneIcon = message.tone === 'clarify' ? HelpCircle : message.tone === 'limitation' ? CircleAlert : message.tone === 'done' ? CheckCircle2 : Sparkles
   return (
-    <div className="space-y-1" data-role="ai">
+    <div className="space-y-1.5" data-role="ai">
       <div className="flex items-center gap-1.5 text-[11px] font-semibold text-palette-neutral-550">
         <ToneIcon
           className={cn(
@@ -107,7 +107,7 @@ function AiMessage({ task, message, now, isLast }: { task: WorkspaceTask; messag
       <ProgressList message={message} now={now} />
       {!running && (
         <>
-          <p className="whitespace-pre-line text-[13.5px] leading-relaxed text-palette-neutral-800">{message.text}</p>
+          <p className="whitespace-pre-line text-sm leading-relaxed text-palette-neutral-850">{message.text}</p>
           {message.claims && message.claims.length > 0 && <ClaimList claims={message.claims} onOpen={openClaim} />}
           {message.changes && message.changes.length > 0 && (
             <div className="mt-2 rounded-lg border border-palette-success-300 bg-palette-success-100 px-2.5 py-2">
@@ -242,12 +242,12 @@ export function ConversationPanel({ task, onCollapse }: { task: WorkspaceTask; o
         )}
       </div>
 
-      <div ref={listRef} className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 py-4">
+      <div ref={listRef} className="min-h-0 flex-1 space-y-6 overflow-y-auto px-5 py-5">
         {task.messages.map((message, index) =>
           message.role === 'user' ? (
             <div key={message.id} className="flex flex-col items-end gap-1">
               {message.context && <p className="max-w-[90%] truncate text-[11px] text-palette-neutral-550">{message.context}</p>}
-              <p className="max-w-[90%] rounded-2xl rounded-br-md bg-palette-neutral-200 px-3 py-2 text-[13.5px] text-palette-neutral-900">{message.text}</p>
+              <p className="max-w-[90%] rounded-2xl rounded-br-md bg-palette-brand-500 px-3.5 py-2 text-sm text-white shadow-xs">{message.text}</p>
             </div>
           ) : (
             <AiMessage key={message.id} task={task} message={message} now={now} isLast={index === task.messages.length - 1} />

@@ -6,6 +6,7 @@ This is a frontend prototype, not a production ATS. See `/docs` for the source-o
 
 - [`docs/UXRD.md`](docs/UXRD.md) — product/UX requirements
 - [`docs/HIREFLOW_V2.md`](docs/HIREFLOW_V2.md) — V2 redesign: what changed, simulated vs real, journeys and a five-minute demo path
+- [`docs/UX_AUDIT_V2.md`](docs/UX_AUDIT_V2.md) — UX and functional audit: what works, gaps fixed, what remains and what is simulated
 - [`docs/AI_BEHAVIOR.md`](docs/AI_BEHAVIOR.md) — original (V1) Copilot behavior specification
 - [`docs/PROTOTYPE_DATA.md`](docs/PROTOTYPE_DATA.md) — fixed prototype dataset
 - [`docs/ENGINEERING_REQUIREMENTS.md`](docs/ENGINEERING_REQUIREMENTS.md) — engineering guardrails
@@ -35,13 +36,13 @@ npm run preview   # preview production build
 - **AI Workspace** (`/workspace`) holds delegated tasks: a resizable conversation panel beside an adaptive work surface (applicant review, evidence, source documents, comparison, interview guide, pipeline, follow-ups, "Clear my hiring tasks").
 - Every rating cites resume or scorecard passages; missing and conflicting evidence are stated, never guessed.
 - **Candidates** (`/candidates`) and **Approvals & activity** (`/activity`) are new; **Ask AI** (⌘K) starts a task from any page with its context.
-- The AI is a deterministic rule-based simulation. Emails, reminders and calendar checks are recorded, not delivered. See [`docs/HIREFLOW_V2.md`](docs/HIREFLOW_V2.md).
+- The AI is a deterministic rule-based simulation. Emails, reminders and calendar checks are recorded, not delivered. See [`docs/HIREFLOW_V2.md`](docs/HIREFLOW_V2.md) and the audit in [`docs/UX_AUDIT_V2.md`](docs/UX_AUDIT_V2.md).
 
-## Post-assignment exploration: AI Agents
+## AI Agents
 
-Not part of the original submission. **Sidebar → Agents** (`/agents`) explores the step from delegated tasks to supervised AI Agents: Traditional ATS → AI Workspace → Supervised AI Agents.
+**AI Agents** (`/agents`) shows four supervised agents as cards. Opening one lets you run it on real HireFlow data, review its results and approvals, and change its settings.
 
-- Four agents: Candidate Review, Interview Coordination, Assessment and Interview Preparation, each with Configuration, a Testing Studio and an Activity log.
+- Four agents: Candidate Review, Interview Coordination, Assessment and Interview Preparation, each with Run the agent, Results & approvals, and Settings.
 - Agent runs are deterministic simulations over the prototype data (`src/agents/simulate.ts`); every output is labelled "Simulated".
 - Agents act only through the existing store mutations, so an approved proposal moves the same candidate, sends the same email and logs the same activity as the manual UI or the AI Workspace.
 - Advancing candidates, messages to candidates and publishing assessments always require approval; agents never reject, and missing evidence is never scored as negative.

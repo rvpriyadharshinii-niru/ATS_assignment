@@ -2,7 +2,7 @@ import { generateInterviewGuide, ROUND_TYPES } from '../agents/simulate'
 import { getCandidate, recommendedCandidateIds } from '../data/candidates'
 import { getCriteria, getCriterionName } from '../data/criteria'
 import { getOpening } from '../data/openings'
-import { STAGE_BASELINE_OTHER } from '../data/pipeline'
+import { stageBaseline } from '../data/pipeline'
 import { getEvidenceSource, PENDING_SCORECARDS } from '../data/sources'
 import { STRENGTH_RANK, displayStrength } from '../lib/evidence'
 import { STAGE_ORDER } from '../lib/stage'
@@ -116,7 +116,7 @@ export function recommendationSentence(candidate: Candidate): string {
       ? `${name} needs more information before I can recommend either way. Only ${plural(supported, 'criterion', 'criteria')} of ${criteriaCount} can be assessed from the application.`
       : !candidate.recommendation
         ? `${name} has no overall recommendation yet: evidence supports ${supported} of ${criteriaCount} criteria${strong.length ? `, strongest in ${listJoin(strong)}` : ''}.`
-        : `${name} is a ${label.toLowerCase()}: evidence supports ${supported} of ${criteriaCount} criteria${strong.length ? `, strongest in ${listJoin(strong)}` : ''}.`
+        : `${name} is ${label === 'Promising' ? 'a promising candidate' : `a ${label.toLowerCase()}`}: evidence supports ${supported} of ${criteriaCount} criteria${strong.length ? `, strongest in ${listJoin(strong)}` : ''}.`
   if (label === 'Needs more information' || gaps.length === 0) return lead
   return `${lead} Not yet demonstrated: ${listJoin(gaps.map((gap) => midSentence(criterionName(candidate, gap.key))))}.`
 }
@@ -162,7 +162,7 @@ export interface PipelineIssue {
 export function stageCounts(candidates: Candidate[], openingId: OpeningId): { stage: CandidateStage; count: number; named: Candidate[] }[] {
   return STAGE_ORDER.map((stage) => {
     const named = active(candidates).filter((candidate) => candidate.openingId === openingId && candidate.stage === stage)
-    const baseline = openingId === SPD ? STAGE_BASELINE_OTHER[stage] : 0
+    const baseline = stageBaseline(openingId)[stage]
     return { stage, count: baseline + named.length, named }
   })
 }
@@ -192,17 +192,33 @@ export function pipelineIssues(candidates: Candidate[], openingId: OpeningId = S
       action: { label: 'Prepare follow-ups', query: 'Prepare follow-ups for everyone waiting on feedback' },
     })
   }
+  // A finalist whose evaluation is done and who is waiting on the hiring manager's call (Product Manager's Aarav).
+  const awaitingDecision = scoped.filter((candidate) => candidate.stage === 'Final' && !candidate.selected && /decision/i.test(candidate.interviewStatus ?? ''))
+  if (awaitingDecision.length) {
+    issues.push({
+      id: 'decision',
+      severity: 'medium',
+      title: `${plural(awaitingDecision.length, 'finalist')} waiting on your decision`,
+      why: `The final round is done and ${listJoin(awaitingDecision.map(firstName))} ${awaitingDecision.length === 1 ? 'is' : 'are'} waiting on your call. Nothing moves until you decide.`,
+      stage: 'Final',
+      candidateIds: awaitingDecision.map((candidate) => candidate.id),
+      prepared: 'An evidence review against the role criteria, with the panel scorecard and the open question to settle.',
+      action: { label: `Review ${firstName(awaitingDecision[0])}'s evidence`, query: `Why ${firstName(awaitingDecision[0])}?` },
+    })
+  }
   const unreviewed = scoped.filter((candidate) => candidate.stage === 'AI Screened' && candidate.evidence.length > 0 && daysSinceUpdate(candidate) >= 3)
   if (unreviewed.length) {
+    const minDays = Math.min(...unreviewed.map(daysSinceUpdate))
+    const maxDays = Math.max(...unreviewed.map(daysSinceUpdate))
     issues.push({
       id: 'unreviewed',
       severity: 'medium',
       title: `${plural(unreviewed.length, 'screened applicant')} not reviewed`,
-      why: `Screening finished ${Math.min(...unreviewed.map(daysSinceUpdate))}–${Math.max(...unreviewed.map(daysSinceUpdate))} days ago and nobody has looked yet.`,
+      why: `Screening finished ${minDays === maxDays ? minDays : `${minDays}–${maxDays}`} days ago and nobody has looked yet.`,
       stage: 'AI Screened',
       candidateIds: unreviewed.map((candidate) => candidate.id),
-      prepared: 'Evidence-backed reviews against the 5 role criteria.',
-      action: { label: 'Review applicants', query: "Review today's new applicants" },
+      prepared: `Evidence-backed reviews against the ${getCriteria(openingId).length} role criteria.`,
+      action: { label: 'Review applicants', query: openingId === SPD ? "Review today's new applicants" : `Review ${getOpening(openingId)?.title} applicants` },
     })
   }
   const needsInfo = scoped.filter((candidate) => candidate.recommendation === 'Needs more information' && candidate.stage === 'Applied')
@@ -217,7 +233,7 @@ export function pipelineIssues(candidates: Candidate[], openingId: OpeningId = S
       action: { label: 'See what’s missing', query: `What are the gaps for ${needsInfo[0].name}?` },
     })
   }
-  const finals = scoped.filter((candidate) => candidate.stage === 'Final' && !candidate.selected)
+  const finals = scoped.filter((candidate) => candidate.stage === 'Final' && !candidate.selected && !awaitingDecision.includes(candidate))
   if (finals.length) {
     const unconfirmed = finals.filter((candidate) => candidate.interviewStatus === 'Final interview scheduled')
     issues.push({
@@ -282,6 +298,56 @@ const RUBRIC_BY_CRITERION: Partial<Record<CriterionKey, { strong: string; mixed:
     mixed: 'Led initiatives informally; scope or outcomes stay vague.',
     weak: 'No examples beyond their own work.',
   },
+  productStrategy: {
+    strong: 'Names the trade-offs they made, what they cut, and the outcome each priority served.',
+    mixed: 'Owned a roadmap, but the reasoning behind priorities stays generic.',
+    weak: 'Delivered a roadmap someone else set.',
+  },
+  customerDiscovery: {
+    strong: 'Runs discovery themselves on a regular cadence and names a decision it changed.',
+    mixed: 'Talks to customers, but the link to what was built is loose.',
+    weak: 'Relies on requests passed on by sales or support.',
+  },
+  dataInformedDecisions: {
+    strong: 'Defined the metrics, designed experiments soundly and changed course because of results.',
+    mixed: 'Uses dashboards others built; decisions only partly follow the data.',
+    weak: 'No concrete metric or experiment they owned.',
+  },
+  b2bSaasDomain: {
+    strong: 'Separates buyer, admin and user needs, with specific B2B accounts or segments.',
+    mixed: 'B2B context is real but described at a high level.',
+    weak: 'Examples stay consumer.',
+  },
+  crossFunctionalCollaboration: {
+    strong: 'Led delivery across several functions toward a shared outcome, with their role clear.',
+    mixed: 'Works well with their own squad; wider coordination is unclear.',
+    weak: 'Describes hand-offs rather than collaboration.',
+  },
+  researchMethods: {
+    strong: 'Chooses methods to fit the question, across qualitative and quantitative.',
+    mixed: 'Solid in one or two methods; range is narrow.',
+    weak: 'Uses the same method regardless of the question.',
+  },
+  researchSynthesis: {
+    strong: 'A clear path from raw data to frameworks the team reused.',
+    mixed: 'Produces themes, but the process or rigour is thin.',
+    weak: 'Reports observations without synthesis.',
+  },
+  researchImpact: {
+    strong: 'Names a product decision that changed because of their findings.',
+    mixed: 'Findings were shared and valued; impact on decisions is indirect.',
+    weak: 'No example of research changing a decision.',
+  },
+  enterpriseResearchContext: {
+    strong: 'Has recruited and researched with business users and buyers at real accounts.',
+    mixed: 'Some B2B research, limited to one role or segment.',
+    weak: 'Consumer research only.',
+  },
+  communicationSkills: {
+    strong: 'Readouts and artefacts that clearly moved stakeholders, tailored to each audience.',
+    mixed: 'Clear reports, with little evidence of adapting to the audience.',
+    weak: 'Findings stay inside the research team.',
+  },
 }
 
 let guideIdCounter = 0
@@ -343,7 +409,7 @@ export function buildFollowUpDrafts(candidates: Candidate[]): FollowUpDraft[] {
         audience: 'Interviewer' as const,
         recipient: reviewer,
         channel: 'HireFlow internal message',
-        subject: `Scorecard needed: ${candidate.name} · Senior Product Designer`,
+        subject: `Scorecard needed: ${candidate.name} · ${getOpening(candidate.openingId)?.title ?? 'Senior Product Designer'}`,
         body: `Hi,\n\nCould you submit your scorecard for ${candidate.name}'s ${pending?.round ?? 'interview'} by end of day tomorrow? The interview was ${days} days ago and the next step is waiting on it.\n\nPlease write it independently of the other panelists' notes.\n\nThanks,\nPriya`,
         reason: `${candidate.name} has waited ${days} days on the ${reviewer}'s scorecard (target: ${FEEDBACK_TARGET_DAYS} business days).`,
         status: 'draft' as const,
@@ -462,8 +528,8 @@ export function buildSessionItems(candidates: Candidate[], agentActivity: AgentA
       kind: 'decision',
       title: `Decide on ${aarav.name} (Product Manager finalist)`,
       candidateId: aarav.id,
-      why: 'Aarav finished the current evaluation stage and is waiting on your decision.',
-      prepared: 'Nothing: HireFlow has no resume, scorecard or criteria for this role, so I can’t prepare a recommendation.',
+      why: `Aarav finished the current evaluation stage and is waiting on your decision. ${recommendationSentence(aarav)}`,
+      prepared: `An evidence review against the ${getCriteria(aarav.openingId).length} Product Manager criteria, with the Engineering Manager’s panel scorecard. The decision is yours.`,
       status: 'todo',
     })
   }
@@ -510,7 +576,7 @@ export function attentionItems(candidates: Candidate[], agentPending: number): A
       tone: 'urgent',
     })
   }
-  const upcoming = active(candidates).filter((candidate) => candidate.openingId === SPD && candidate.stage === 'Interview' && !candidate.waitingOn)
+  const upcoming = active(candidates).filter((candidate) => candidate.stage === 'Interview' && !candidate.waitingOn)
   if (upcoming.length) {
     items.push({
       id: 'interviews',
@@ -538,10 +604,10 @@ export function attentionItems(candidates: Candidate[], agentPending: number): A
     items.push({
       id: 'pm-decision',
       what: 'Product Manager finalist waiting on your decision',
-      why: 'Aarav Sethi finished the current stage. HireFlow has no evaluation record, so this one is yours to judge directly.',
-      prepared: 'Nothing yet: no evidence to prepare from.',
-      cta: 'Open in tasks',
-      query: 'Help me clear my pending hiring tasks',
+      why: 'Aarav Sethi finished the final round and is waiting on your decision. His evidence and panel scorecard are on file.',
+      prepared: 'An evidence review with sources, and the one open question from the panel.',
+      cta: 'Review Aarav',
+      query: 'Why Aarav?',
       tone: 'normal',
     })
   }

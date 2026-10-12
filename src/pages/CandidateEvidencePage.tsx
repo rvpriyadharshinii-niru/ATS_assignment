@@ -22,7 +22,6 @@ import { useEffect, useState, type ComponentType } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { CandidateAgentFindings } from '../components/agents/CandidateAgentFindings'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
-import { IconBadge } from '../components/ui/IconBadge'
 import { CriteriaMatchVisual } from '../components/candidates/CriteriaMatchVisual'
 import { CriterionEvidenceList } from '../components/candidates/CriterionEvidence'
 import { EmailComposeDialog } from '../components/candidates/EmailComposeDialog'
@@ -68,7 +67,7 @@ function initialsFor(name: string): string {
 
 function activityIcon(message: string): ComponentType<{ className?: string }> {
   if (message.startsWith('Moved')) return ArrowRight
-  if (message.startsWith('Email sent')) return Mail
+  if (message.startsWith('Email recorded')) return Mail
   if (message.startsWith('Flagged on hold')) return PauseCircle
   if (message.startsWith('Rejected')) return XCircle
   if (message.startsWith('Marked as the selected')) return CheckCircle2
@@ -80,15 +79,20 @@ function formatEventTime(timestamp: number): string {
   return new Date(timestamp).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
 }
 
-function OverflowMenu({ onEmail, onReject, rejected }: { onEmail: () => void; onReject: () => void; rejected: boolean }) {
+function OverflowMenu({ onEmail, onReject, onDownload, onHold, rejected }: { onEmail: () => void; onReject: () => void; onDownload: () => void; onHold?: () => void; rejected: boolean }) {
   const [open, setOpen] = useState(false)
-  if (rejected) return null
+  const items = [
+    { label: 'Download resume', run: onDownload },
+    ...(rejected ? [] : [...(onHold ? [{ label: 'Put on hold', run: onHold }] : []), { label: 'Send email', run: onEmail }, { label: 'Reject', run: onReject, danger: true }]),
+  ]
   return (
     <div className="relative">
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
         aria-label="More actions"
+        aria-haspopup="menu"
+        aria-expanded={open}
         className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-palette-neutral-500 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
@@ -96,27 +100,21 @@ function OverflowMenu({ onEmail, onReject, rejected }: { onEmail: () => void; on
       {open && (
         <>
           <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full z-40 mt-1 w-40 overflow-hidden rounded-lg border border-border bg-card py-1 shadow-lg">
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false)
-                onEmail()
-              }}
-              className="block w-full px-3 py-1.5 text-left text-sm text-foreground hover:bg-muted"
-            >
-              Send email
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setOpen(false)
-                onReject()
-              }}
-              className="block w-full px-3 py-1.5 text-left text-sm text-destructive hover:bg-muted"
-            >
-              Reject
-            </button>
+          <div role="menu" className="absolute right-0 top-full z-40 mt-1 w-44 overflow-hidden rounded-lg border border-border bg-card py-1 shadow-lg">
+            {items.map((item) => (
+              <button
+                key={item.label}
+                type="button"
+                role="menuitem"
+                onClick={() => {
+                  setOpen(false)
+                  item.run()
+                }}
+                className={cn('block w-full px-3 py-1.5 text-left text-sm hover:bg-muted', 'danger' in item ? 'text-destructive' : 'text-foreground')}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
         </>
       )}
@@ -150,7 +148,7 @@ export function CandidateEvidencePage() {
     return (
       <div className="p-8">
         <div className="rounded-xl border border-border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">This candidate record is not available in the prototype.</p>
+          <p className="text-sm text-muted-foreground">This candidate record is not available.</p>
         </div>
       </div>
     )
@@ -204,7 +202,7 @@ export function CandidateEvidencePage() {
       <div className="rounded-xl border border-border bg-card p-5 shadow-xs">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-3.5">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-palette-brand-100 text-base font-semibold text-palette-brand-700">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-palette-neutral-200 text-base font-semibold text-palette-neutral-700">
               {initialsFor(candidate.name)}
             </span>
             <div className="min-w-0">
@@ -228,46 +226,31 @@ export function CandidateEvidencePage() {
               </p>
             </div>
           </div>
-          <div className="flex shrink-0 flex-wrap items-center justify-end gap-2">
+          <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:justify-end">
             <button
               type="button"
               onClick={() => launch(`Why ${candidate.name}?`, { candidateIds: [candidate.id] })}
-              className="flex items-center gap-1.5 rounded-lg border border-palette-brand-300 bg-palette-brand-100/60 px-3.5 py-2 text-sm font-medium text-palette-brand-700 hover:bg-palette-brand-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className="flex items-center gap-1.5 rounded-lg border border-border px-3.5 py-2 text-sm font-medium text-palette-neutral-800 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
-              <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+              <Sparkles className="h-3.5 w-3.5 text-palette-brand-600" aria-hidden="true" />
               Investigate with AI
             </button>
-            <button
-              type="button"
-              onClick={() => downloadResumePdf(candidate)}
-              className="flex items-center gap-1.5 rounded-lg border border-border px-3.5 py-2 text-sm font-medium text-palette-neutral-700 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            >
-              <Download className="h-3.5 w-3.5" aria-hidden="true" />
-              Download resume
-            </button>
-            {!candidate.rejected && (
-              <>
-                {!candidate.hold && (
-                  <button
-                    type="button"
-                    onClick={() => setOpenDialog('hold')}
-                    className="rounded-lg border border-palette-danger-300 px-3.5 py-2 text-sm font-medium text-palette-danger-700 hover:bg-palette-danger-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    Hold
-                  </button>
-                )}
-                {upcomingStage && (
-                  <button
-                    type="button"
-                    onClick={() => setOpenDialog('advance')}
-                    className="rounded-lg bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                  >
-                    {advanceCtaLabel(upcomingStage)}
-                  </button>
-                )}
-                <OverflowMenu onEmail={() => setOpenDialog('email')} onReject={() => setOpenDialog('reject')} rejected={!!candidate.rejected} />
-              </>
+            {!candidate.rejected && upcomingStage && (
+              <button
+                type="button"
+                onClick={() => setOpenDialog('advance')}
+                className="rounded-lg bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                {advanceCtaLabel(upcomingStage)}
+              </button>
             )}
+            <OverflowMenu
+              onDownload={() => downloadResumePdf(candidate)}
+              onHold={candidate.hold ? undefined : () => setOpenDialog('hold')}
+              onEmail={() => setOpenDialog('email')}
+              onReject={() => setOpenDialog('reject')}
+              rejected={!!candidate.rejected}
+            />
           </div>
         </div>
 
@@ -283,10 +266,12 @@ export function CandidateEvidencePage() {
             <span className="rounded-full bg-palette-success-150 px-2.5 py-1 text-xs font-medium text-palette-success-700">Selected</span>
           )}
           {candidate.prioritiesSupported !== undefined && (
-            <span className="text-sm font-medium text-palette-neutral-700">{candidate.prioritiesSupported} / 5 priorities supported</span>
+            <span className="text-sm font-medium text-palette-neutral-700">{candidate.prioritiesSupported} / {getCriteria(candidate.openingId).length} priorities supported</span>
           )}
           {candidate.screeningScore !== undefined && (
-            <span className="text-sm text-palette-neutral-500">AI screening score {candidate.screeningScore}</span>
+            <span className="text-xs text-palette-neutral-500" title="From the earlier automated screening step. For reference only: it doesn't show what is missing.">
+              Earlier screening score {candidate.screeningScore} · reference only
+            </span>
           )}
           {statusNote && <span className="text-sm font-medium text-palette-warning-700">{statusNote}</span>}
         </div>
@@ -307,18 +292,7 @@ export function CandidateEvidencePage() {
             Open guide
           </button>
         </div>
-      ) : (
-        !candidate.rejected && (
-          <button
-            type="button"
-            onClick={() => launch(`Prepare interview questions for ${candidate.name}`, { candidateIds: [candidate.id] })}
-            className="flex w-full items-center gap-2 rounded-xl border border-dashed border-border px-4 py-2.5 text-left text-sm text-palette-neutral-600 hover:bg-muted"
-          >
-            <Sparkles className="h-4 w-4 text-palette-brand-500" aria-hidden="true" />
-            Prepare an interview guide for {candidate.name.split(' ')[0]} with AI, built from the gaps in the evidence
-          </button>
-        )
-      )}
+      ) : null}
 
       <div>
         <nav className="-mb-px flex items-center gap-5 overflow-x-auto border-b border-border" aria-label="Candidate sections">
@@ -340,7 +314,7 @@ export function CandidateEvidencePage() {
               onClick={() => setActiveTab(tab.key)}
               className={cn(
                 'flex items-center gap-1.5 border-b-2 pb-3 text-sm font-medium transition-colors focus-visible:outline-none',
-                activeTab === tab.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
+                activeTab === tab.key ? 'border-palette-brand-600 text-palette-brand-700' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
               )}
             >
               <tab.icon className="h-4 w-4" aria-hidden="true" />
@@ -354,43 +328,56 @@ export function CandidateEvidencePage() {
 
         {activeTab === 'assessment' ? (
           hasAssessment ? (
-            <div className="mt-4 rounded-xl border border-palette-brand-200 bg-palette-brand-100/30 p-5 shadow-xs">
-              <div className="flex items-center gap-2">
-                <IconBadge icon={Sparkles} color="brand" size="sm" />
-                <h2 className="text-xs font-semibold uppercase tracking-wide text-primary">AI assessment</h2>
-              </div>
-              {(candidate.recommendation || candidate.prioritiesSupported !== undefined) && (
-                <p className="mt-2 text-sm font-semibold text-palette-neutral-900">
-                  {candidate.recommendation}
-                  {candidate.recommendation && candidate.prioritiesSupported !== undefined && ' · '}
-                  {candidate.prioritiesSupported !== undefined && `${candidate.prioritiesSupported} of 5 priorities supported`}
-                </p>
-              )}
-
+            <div className="mt-4 space-y-5 rounded-xl border border-border bg-card p-5">
               {criteria.length > 0 && (
-                <div className="mt-4 border-t border-border pt-3.5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-palette-neutral-600">How the profile matches each criterion</p>
+                <div>
+                  <p className="text-xs font-semibold text-palette-neutral-600">How the profile matches each criterion</p>
                   <CriteriaMatchVisual criteria={criteria} evidence={candidate.evidence} />
                 </div>
               )}
 
-              {strengths.length > 0 && (
-                <div className="mt-4 border-t border-border pt-3.5">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-palette-success-700">Strongest evidence</p>
-                  <p className="mt-1 text-sm text-foreground">{strengths.join(', ')}</p>
+              <dl className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+                <div>
+                  <dt className="text-xs font-semibold text-palette-neutral-600">Strongest evidence</dt>
+                  <dd className="mt-1 text-sm text-foreground">{strengths.length ? strengths.join(', ') : 'No criterion is strongly supported yet.'}</dd>
                 </div>
-              )}
-              {needsValidation.length > 0 && (
-                <div className="mt-2.5">
-                  <p className="flex items-center gap-1 text-xs font-semibold uppercase tracking-wide text-palette-warning-700">
+                <div>
+                  <dt className="flex items-center gap-1 text-xs font-semibold text-palette-warning-700">
                     <CircleHelp className="h-3 w-3" aria-hidden="true" />
                     Needs validation
+                  </dt>
+                  <dd className="mt-1 text-sm text-foreground">{needsValidation.length ? needsValidation.join(', ') : 'Nothing flagged.'}</dd>
+                </div>
+              </dl>
+
+              {!candidate.rejected && (
+                <div className="flex flex-wrap items-center gap-3 rounded-lg bg-palette-neutral-100 px-4 py-3">
+                  <p className="min-w-0 flex-1 text-sm text-palette-neutral-800">
+                    <span className="font-semibold">Next step: </span>
+                    {needsValidation.length ? `validate ${needsValidation.join(', ').toLowerCase()} in the interview.` : 'confirm the strongest evidence in the interview.'}
                   </p>
-                  <p className="mt-1 text-sm text-foreground">{needsValidation.join(', ')}</p>
+                  {!savedGuide && (
+                    <button
+                      type="button"
+                      onClick={() => launch(`Prepare interview questions for ${candidate.name}`, { candidateIds: [candidate.id] })}
+                      className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-palette-neutral-800 hover:bg-muted"
+                    >
+                      <Sparkles className="h-3.5 w-3.5 text-palette-brand-600" aria-hidden="true" />
+                      Prepare interview guide
+                    </button>
+                  )}
                 </div>
               )}
-              {candidate.summary && <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-foreground/90">{candidate.summary}</p>}
-              {!candidate.summary && candidate.notableGap && <p className="mt-3 text-sm leading-relaxed text-foreground/90">{candidate.notableGap}</p>}
+
+              {(candidate.summary || candidate.notableGap) && (
+                <details className="group border-t border-border pt-3 [&_summary::-webkit-details-marker]:hidden">
+                  <summary className="flex cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-palette-neutral-700 hover:text-palette-neutral-900">
+                    <ChevronRight className="h-4 w-4 transition-transform group-open:rotate-90" aria-hidden="true" />
+                    Read the full assessment
+                  </summary>
+                  <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground/90">{candidate.summary ?? candidate.notableGap}</p>
+                </details>
+              )}
             </div>
           ) : (
             <div className="mt-4 rounded-xl border border-border bg-muted p-5 text-sm text-muted-foreground shadow-xs">

@@ -1,65 +1,85 @@
 /*
- * Product brand layer — overrides the Fuzzy Prism starter's violet/serif
- * identity with the locked palette: primary purple #642FCD, soft lavender
- * #DCCCF7, accent plum #8D2E6E. Loaded after fuzzy-prism.css; only the
- * tokens listed here are overridden — neutral/success/warning/danger/info
- * palettes, radii and shadows are inherited unchanged.
+ * Product brand layer, loaded after fuzzy-prism.css. Overrides the neutral and brand ramps and the
+ * semantic surface tokens, and adds the pink secondary accent.
  */
 
 @layer base {
   :root {
-    /* Primary purple ramp, anchored at 500 = #642FCD (given exact value). */
-    --palette-brand-100: #f3eefb;
-    --palette-brand-150: #dcccf7; /* soft lavender — given exact value */
-    --palette-brand-200: #d4c5f2;
-    --palette-brand-250: #bea8eb;
-    --palette-brand-300: #a687e3;
-    --palette-brand-350: #8d65dc;
-    --palette-brand-400: #7848d5;
-    --palette-brand-450: #6d3ad2;
-    --palette-brand-500: #642fcd; /* primary purple — given exact value */
-    --palette-brand-550: #592ab7;
-    --palette-brand-600: #4d249e;
-    --palette-brand-650: #411e85;
-    --palette-brand-700: #371a70;
-    --palette-brand-750: #2d155b;
-    --palette-brand-800: #24114b;
-    --palette-brand-850: #1c0d3a;
-    --palette-brand-900: #140a29;
+    /*
+     * HireFlow colour system (light).
+     * - Neutral: lavender-tinted greys. Text is charcoal #252438, backgrounds white and #f8f7fc.
+     * - Brand: violet #6754b8 for primary actions and selected states; soft purple #a78bfa in the ramp.
+     * - Pink #e879c0: occasional highlights. The violet-to-pink gradient is for small marks only.
+     * - Success, warning, danger and info stay semantic and are never decorative.
+     */
+    --palette-neutral-100: #f8f7fc;
+    --palette-neutral-150: #f3f2f9;
+    --palette-neutral-200: #eeecf5;
+    --palette-neutral-250: #e7e5f0;
+    --palette-neutral-300: #e0dde9;
+    --palette-neutral-350: #cfcbdc;
+    --palette-neutral-400: #b7b2c8;
+    --palette-neutral-450: #9c97b0;
+    --palette-neutral-500: #837e99;
+    --palette-neutral-550: #6e6a85;
+    --palette-neutral-600: #5d5973;
+    --palette-neutral-650: #4d4963;
+    --palette-neutral-700: #3f3c55;
+    --palette-neutral-750: #34314a;
+    --palette-neutral-800: #2c2a41;
+    --palette-neutral-850: #28263c;
+    --palette-neutral-900: #252438;
 
-    /* Accent plum ramp, anchored at 500 = #8D2E6E (given exact value). */
-    --palette-plum-100: #f9ecf4;
-    --palette-plum-150: #f2d9ea;
-    --palette-plum-200: #eabedb;
-    --palette-plum-250: #e09fcb;
-    --palette-plum-300: #d47cb8;
-    --palette-plum-350: #c95aa5;
-    --palette-plum-400: #c03f96;
-    --palette-plum-450: #a53681;
-    --palette-plum-500: #8d2e6e; /* accent plum — given exact value */
-    --palette-plum-550: #7b2860;
-    --palette-plum-600: #682251;
-    --palette-plum-650: #581d45;
-    --palette-plum-700: #491839;
-    --palette-plum-750: #3e1430;
-    --palette-plum-800: #321027;
-    --palette-plum-850: #260d1e;
-    --palette-plum-900: #1b0915;
+    --palette-brand-100: #f6f4fd;
+    --palette-brand-150: #efecfb;
+    --palette-brand-200: #e5e0f8;
+    --palette-brand-250: #d8d0f5;
+    --palette-brand-300: #c8bcf2;
+    --palette-brand-350: #b7a6f2;
+    --palette-brand-400: #a78bfa;
+    --palette-brand-450: #937ae6;
+    --palette-brand-500: #7f66cf;
+    --palette-brand-550: #7360c3;
+    --palette-brand-600: #6754b8;
+    --palette-brand-650: #5a48a3;
+    --palette-brand-700: #4c3c8b;
+    --palette-brand-750: #3f3274;
+    --palette-brand-800: #33295e;
+    --palette-brand-850: #281f49;
+    --palette-brand-900: #1d1736;
 
-    /* Semantic remap: purple identity + Inter, neutral surfaces otherwise. */
-    --primary: var(--palette-brand-500);
+    --palette-pink-100: #fdf5fa;
+    --palette-pink-150: #fbeaf5;
+    --palette-pink-200: #f8dcef;
+    --palette-pink-250: #f5cbe7;
+    --palette-pink-300: #f2b6de;
+    --palette-pink-350: #eea0d4;
+    --palette-pink-400: #eb8dcb;
+    --palette-pink-450: #e879c0;
+    --palette-pink-500: #d866ab;
+    --palette-pink-550: #c45697;
+    --palette-pink-600: #ad4784;
+    --palette-pink-650: #963b72;
+    --palette-pink-700: #7f3161;
+    --palette-pink-750: #6a2851;
+    --palette-pink-800: #552042;
+    --palette-pink-850: #401833;
+    --palette-pink-900: #2c1023;
+
+    --background: #ffffff;
+    --foreground: var(--palette-neutral-900);
+    --card-foreground: var(--palette-neutral-900);
+    --primary: var(--palette-brand-600);
     --primary-foreground: #ffffff;
     --accent: var(--palette-brand-100);
     --accent-foreground: var(--palette-brand-700);
-    --ring: var(--palette-brand-500);
-    /* neutral-200 read as almost invisible against white cards — one step darker gives every
-       card, table and divider a visible edge instead of the flat, borderless look. */
-    --border: var(--palette-neutral-300);
-    /* Fuzzy Prism's muted-foreground (neutral-700, #3E353F) is darker than the default body
-       text (--foreground, #5D5D5D), so "muted" secondary text reads no lighter than primary
-       text — the app-wide flat-black look. neutral-550 sits meaningfully lighter than both. */
+    --ring: var(--palette-brand-300);
+    --border: var(--palette-neutral-250);
+    --input: var(--palette-neutral-300);
+    --muted: var(--palette-neutral-100);
     --muted-foreground: var(--palette-neutral-550);
-    --gradient-brand_wash: linear-gradient(135deg, var(--palette-brand-500) 0%, var(--palette-plum-500) 100%);
+    --gradient-violet-pink: linear-gradient(135deg, var(--palette-brand-600) 0%, var(--palette-pink-650) 100%);
+    --gradient-brand_wash: linear-gradient(135deg, var(--palette-brand-500) 0%, var(--palette-pink-500) 100%);
 
     --font-sans: "Inter", system-ui, sans-serif;
     --font-display: "Inter", system-ui, sans-serif;
@@ -68,21 +88,25 @@
 }
 
 @theme inline {
-  --color-palette-plum-100: var(--palette-plum-100);
-  --color-palette-plum-150: var(--palette-plum-150);
-  --color-palette-plum-200: var(--palette-plum-200);
-  --color-palette-plum-250: var(--palette-plum-250);
-  --color-palette-plum-300: var(--palette-plum-300);
-  --color-palette-plum-350: var(--palette-plum-350);
-  --color-palette-plum-400: var(--palette-plum-400);
-  --color-palette-plum-450: var(--palette-plum-450);
-  --color-palette-plum-500: var(--palette-plum-500);
-  --color-palette-plum-550: var(--palette-plum-550);
-  --color-palette-plum-600: var(--palette-plum-600);
-  --color-palette-plum-650: var(--palette-plum-650);
-  --color-palette-plum-700: var(--palette-plum-700);
-  --color-palette-plum-750: var(--palette-plum-750);
-  --color-palette-plum-800: var(--palette-plum-800);
-  --color-palette-plum-850: var(--palette-plum-850);
-  --color-palette-plum-900: var(--palette-plum-900);
+  --color-palette-pink-100: var(--palette-pink-100);
+  --color-palette-pink-150: var(--palette-pink-150);
+  --color-palette-pink-200: var(--palette-pink-200);
+  --color-palette-pink-250: var(--palette-pink-250);
+  --color-palette-pink-300: var(--palette-pink-300);
+  --color-palette-pink-350: var(--palette-pink-350);
+  --color-palette-pink-400: var(--palette-pink-400);
+  --color-palette-pink-450: var(--palette-pink-450);
+  --color-palette-pink-500: var(--palette-pink-500);
+  --color-palette-pink-550: var(--palette-pink-550);
+  --color-palette-pink-600: var(--palette-pink-600);
+  --color-palette-pink-650: var(--palette-pink-650);
+  --color-palette-pink-700: var(--palette-pink-700);
+  --color-palette-pink-750: var(--palette-pink-750);
+  --color-palette-pink-800: var(--palette-pink-800);
+  --color-palette-pink-850: var(--palette-pink-850);
+  --color-palette-pink-900: var(--palette-pink-900);
+}
+
+@utility bg-violet-pink {
+  background-image: var(--gradient-violet-pink);
 }

@@ -15,7 +15,7 @@ const STAGE_BADGE_COLOR: Record<CandidateStage, IconBadgeColor> = {
   'AI Screened': 'info',
   'HM Review': 'brand',
   Interview: 'warning',
-  Final: 'plum',
+  Final: 'pink',
   Offer: 'success',
 }
 
@@ -118,7 +118,7 @@ export function RoleWorkspaceOverviewPage() {
                           </Link>
                         </td>
                         <td className="whitespace-nowrap px-3 py-2.5">{candidate.recommendation ? <RecommendationBadge label={candidate.recommendation} /> : '—'}</td>
-                        <td className="whitespace-nowrap px-3 py-2.5 text-foreground">{candidate.prioritiesSupported !== undefined ? `${candidate.prioritiesSupported}/5` : '—'}</td>
+                        <td className="whitespace-nowrap px-3 py-2.5 text-foreground">{candidate.prioritiesSupported !== undefined ? `${candidate.prioritiesSupported}/${criteria.length}` : '—'}</td>
                         <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">{candidate.currentRole ?? '—'}</td>
                         <td className="whitespace-nowrap px-3 py-2.5 text-muted-foreground">{candidate.experienceYears !== undefined ? `${candidate.experienceYears} yrs` : '—'}</td>
                         <td className="px-3 py-2.5">
@@ -180,7 +180,7 @@ export function RoleWorkspaceOverviewPage() {
 
           <section className="rounded-xl border border-border bg-card p-4 shadow-xs">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
-              <IconBadge icon={Activity} color="plum" size="sm" />
+              <IconBadge icon={Activity} color="neutral" size="sm" />
               Recent activity
             </h2>
             {recentActivity.length === 0 ? (

@@ -95,7 +95,7 @@ export function AskAiButton() {
       <button
         type="button"
         onClick={() => setOpen((value) => !value)}
-        className="inline-flex items-center gap-2 rounded-full bg-palette-neutral-900 px-4 py-2.5 text-sm font-medium text-white shadow-lg hover:bg-palette-neutral-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="inline-flex items-center gap-2 rounded-full bg-violet-pink px-4 py-2.5 text-sm font-medium text-white shadow-lg hover:opacity-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         aria-expanded={open}
       >
         <Sparkles className="h-4 w-4" aria-hidden="true" />

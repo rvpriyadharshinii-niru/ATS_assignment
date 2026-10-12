@@ -1,5 +1,6 @@
 import { ChevronRight } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { getCriteria } from '../../data/criteria'
 import { buildStatusNote } from '../../lib/candidateStatus'
 import { cn } from '../../lib/cn'
 import type { Candidate } from '../../types/domain'
@@ -64,7 +65,7 @@ export function CandidateCard({ candidate, variant = 'row', highlighted = false,
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted-foreground">
             {candidate.recommendation && <RecommendationBadge label={candidate.recommendation} />}
-            {candidate.prioritiesSupported !== undefined && <span>{candidate.prioritiesSupported}/5</span>}
+            {candidate.prioritiesSupported !== undefined && <span>{candidate.prioritiesSupported}/{getCriteria(candidate.openingId).length}</span>}
             <StatusTags candidate={candidate} />
           </div>
           <p className="mt-1 truncate text-xs text-palette-neutral-500">
@@ -106,7 +107,7 @@ export function CandidateCard({ candidate, variant = 'row', highlighted = false,
         {(candidate.prioritiesSupported !== undefined || candidate.notableGap || candidate.screeningScore !== undefined) && (
           <p className="mt-1.5 text-sm text-foreground">
             {candidate.prioritiesSupported !== undefined ? (
-              <span className="font-medium text-palette-neutral-700">{candidate.prioritiesSupported} / 5 priorities supported</span>
+              <span className="font-medium text-palette-neutral-700">{candidate.prioritiesSupported} / {getCriteria(candidate.openingId).length} priorities supported</span>
             ) : (
               candidate.notableGap
             )}

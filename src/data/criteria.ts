@@ -33,11 +33,79 @@ const seniorProductDesignerCriteria: HiringCriterion[] = [
   },
 ]
 
+const productManagerCriteria: HiringCriterion[] = [
+  {
+    key: 'productStrategy',
+    name: 'Product strategy & prioritisation',
+    priority: 'High',
+    description: 'Setting product direction and making explicit roadmap trade-offs tied to customer and business outcomes.',
+  },
+  {
+    key: 'customerDiscovery',
+    name: 'Customer discovery',
+    priority: 'High',
+    description: 'Hands-on, recurring discovery with customers that visibly shaped what the team built.',
+  },
+  {
+    key: 'dataInformedDecisions',
+    name: 'Data-informed decisions',
+    priority: 'High',
+    description: 'Defining metrics, running experiments and using product data to decide what to build next.',
+  },
+  {
+    key: 'b2bSaasDomain',
+    name: 'B2B SaaS domain',
+    priority: 'Medium',
+    description: 'Experience managing B2B SaaS products sold to business or enterprise customers.',
+  },
+  {
+    key: 'crossFunctionalCollaboration',
+    name: 'Cross-functional collaboration',
+    priority: 'Medium',
+    description: 'Track record leading delivery with engineering, design, sales and support toward a shared outcome.',
+  },
+]
+
+const uxResearcherCriteria: HiringCriterion[] = [
+  {
+    key: 'researchMethods',
+    name: 'Research methods range',
+    priority: 'High',
+    description: 'Choosing and running a range of qualitative and quantitative methods suited to the question.',
+  },
+  {
+    key: 'researchSynthesis',
+    name: 'Synthesis into insight',
+    priority: 'High',
+    description: 'Turning raw research data into clear frameworks, themes or insights a team can act on.',
+  },
+  {
+    key: 'researchImpact',
+    name: 'Research impact on product decisions',
+    priority: 'High',
+    description: 'Evidence that research findings changed a roadmap, feature or design decision.',
+  },
+  {
+    key: 'enterpriseResearchContext',
+    name: 'Enterprise / B2B research context',
+    priority: 'Medium',
+    description: 'Research with business users, admins or buyers of B2B and enterprise software.',
+  },
+  {
+    key: 'communicationSkills',
+    name: 'Communicating findings',
+    priority: 'Medium',
+    description: 'Clear readouts, reports or artefacts that bring stakeholders along with the findings.',
+  },
+]
+
 // Live, mutable per-opening criteria lists — Edit/Add/Remove mutate these arrays in place (see the
 // functions below) rather than copying, so every reader (Copilot, evidence views, this page) that
 // calls getCriteria() again after a mutation sees the change without a separate cache to invalidate.
 const criteriaByOpening: Partial<Record<OpeningId, HiringCriterion[]>> = {
   'senior-product-designer': seniorProductDesignerCriteria,
+  'product-manager': productManagerCriteria,
+  'ux-researcher': uxResearcherCriteria,
 }
 
 /** Configurable but not yet added to any role — the pool "+ Add criterion" offers. */
@@ -87,13 +155,17 @@ export function removeCriterionFromOpening(openingId: OpeningId, criterionKey: C
   if (index >= 0) list.splice(index, 1)
 }
 
-/** A frozen copy of the original configured criteria, taken before any session mutation. */
-const DEFAULT_SPD_CRITERIA: HiringCriterion[] = seniorProductDesignerCriteria.map((criterion) => ({ ...criterion }))
+/** Frozen copies of the original configured criteria, taken before any session mutation. */
+const DEFAULT_CRITERIA: Partial<Record<OpeningId, HiringCriterion[]>> = Object.fromEntries(
+  Object.entries(criteriaByOpening).map(([openingId, list]) => [openingId, list.map((criterion) => ({ ...criterion }))]),
+)
 
 /** Restores priorities, added and removed criteria back to the original configuration — used by Settings' "Reset demo data". */
 export function resetCriteriaToSeed(): void {
-  const list = criteriaByOpening['senior-product-designer']
-  if (!list) return
-  list.length = 0
-  list.push(...DEFAULT_SPD_CRITERIA.map((criterion) => ({ ...criterion })))
+  for (const [openingId, defaults] of Object.entries(DEFAULT_CRITERIA) as [OpeningId, HiringCriterion[]][]) {
+    const list = criteriaByOpening[openingId]
+    if (!list) continue
+    list.length = 0
+    list.push(...defaults.map((criterion) => ({ ...criterion })))
+  }
 }

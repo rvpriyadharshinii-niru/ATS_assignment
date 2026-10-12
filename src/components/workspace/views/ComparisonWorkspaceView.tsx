@@ -1,7 +1,7 @@
-import { Plus, X } from 'lucide-react'
+import { ArrowUp, Plus, X } from 'lucide-react'
+import { useState } from 'react'
 import { getCriteria } from '../../../data/criteria'
 import { getEvidenceSource } from '../../../data/sources'
-import { buildComparisonSummary } from '../../../lib/comparison'
 import { cn } from '../../../lib/cn'
 import { STRENGTH_RANK } from '../../../lib/evidence'
 import { STAGE_TONE } from '../../../lib/stageTone'
@@ -12,7 +12,7 @@ import type { WorkspaceTask } from '../../../types/workspace'
 import { evidenceFor, firstName, gapCriteria, midSentence, supportedCount } from '../../../workspace/derive'
 import { RecommendationBadge } from '../../candidates/RecommendationBadge'
 import { DecisionBar } from '../DecisionBar'
-import { Avatar, CitationChip, Label, StrengthPill } from '../ui'
+import { Avatar, CitationChip, StrengthPill } from '../ui'
 import { btn } from '../styles'
 
 export function ComparisonWorkspaceView({ task, candidateIds }: { task: WorkspaceTask; candidateIds: string[] }) {
@@ -22,10 +22,14 @@ export function ComparisonWorkspaceView({ task, candidateIds }: { task: Workspac
   const focusCandidate = useWorkspaceStore((state) => state.focusCandidate)
   const send = useWorkspaceStore((state) => state.send)
   const own = useWorkspaceStore((state) => state.managerAssessments)
+  const [onlyDifferences, setOnlyDifferences] = useState(false)
+  const [expanded, setExpanded] = useState(false)
   const people = candidateIds.map((id) => all.find((candidate) => candidate.id === id)).filter((c): c is Candidate => !!c)
   if (people.length < 2) return null
   const criteria = getCriteria(people[0].openingId)
-  const summary = buildComparisonSummary(people, criteria)
+  const rankOf = (candidate: Candidate, key: (typeof criteria)[number]['key']) => STRENGTH_RANK[evidenceFor(candidate, key)?.strength ?? 'Not available']
+  const differs = (key: (typeof criteria)[number]['key']) => new Set(people.map((candidate) => rankOf(candidate, key))).size > 1
+  const rows = onlyDifferences ? criteria.filter((criterion) => differs(criterion.key)) : criteria
   const addable = all.filter((candidate) => candidate.openingId === people[0].openingId && candidate.evidence.length > 0 && !candidate.rejected && !candidateIds.includes(candidate.id))
 
   const openSource = (candidate: Candidate, key: (typeof criteria)[number]['key']) => {
@@ -36,19 +40,25 @@ export function ComparisonWorkspaceView({ task, candidateIds }: { task: Workspac
 
   return (
     <div className="space-y-4">
-      <div className="rounded-xl border border-border bg-card p-4">
-        <Label>Where they differ</Label>
-        <p className="mt-1 text-sm leading-relaxed text-palette-neutral-800">{summary}</p>
-        <p className="mt-1.5 text-xs text-palette-neutral-550">No overall winner is picked. Ratings come from cited passages; click any cell to see the source.</p>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
+        <label className="inline-flex items-center gap-2 text-palette-neutral-700">
+          <input type="checkbox" checked={onlyDifferences} onChange={(event) => setOnlyDifferences(event.target.checked)} className="h-4 w-4" />
+          Only where they differ
+        </label>
+        <label className="inline-flex items-center gap-2 text-palette-neutral-700">
+          <input type="checkbox" checked={expanded} onChange={(event) => setExpanded(event.target.checked)} className="h-4 w-4" />
+          Show full evidence
+        </label>
+        <span className="ml-auto text-xs text-palette-neutral-550">No overall winner · select a cell to open its source</span>
       </div>
 
-      <div className="overflow-x-auto rounded-xl border border-border bg-card">
+      <div className="max-h-[75vh] overflow-auto rounded-xl border border-border bg-card">
         <table className="w-full min-w-[640px] border-collapse text-left">
           <thead>
-            <tr className="border-b border-border">
-              <th className="w-44 px-4 py-3 align-bottom text-xs font-semibold text-palette-neutral-600">Criterion</th>
+            <tr>
+              <th className="sticky left-0 top-0 z-20 w-44 bg-card shadow-[inset_0_-1px_0_var(--border)] px-4 py-3 align-bottom text-xs font-semibold text-palette-neutral-600">Criterion</th>
               {people.map((candidate) => (
-                <th key={candidate.id} className={cn('px-4 py-3 align-top', task.focusCandidateId === candidate.id && 'bg-palette-brand-100/50')}>
+                <th key={candidate.id} className={cn('sticky top-0 z-10 px-4 py-3 align-top shadow-[inset_0_-1px_0_var(--border)]', task.focusCandidateId === candidate.id ? 'bg-palette-neutral-100' : 'bg-card')}>
                   <div className="flex items-start gap-2">
                     <Avatar name={candidate.name} size="sm" />
                     <button type="button" onClick={() => focusCandidate(task.id, candidate.id)} className="min-w-0 flex-1 text-left">
@@ -75,14 +85,21 @@ export function ComparisonWorkspaceView({ task, candidateIds }: { task: Workspac
             </tr>
           </thead>
           <tbody>
-            {criteria.map((criterion) => {
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={people.length + 1} className="px-4 py-6 text-center text-sm text-palette-neutral-550">
+                  Their evidence is rated the same on every criterion.
+                </td>
+              </tr>
+            )}
+            {rows.map((criterion) => {
               const top = Math.max(...people.map((candidate) => STRENGTH_RANK[evidenceFor(candidate, criterion.key)?.strength ?? 'Not available']))
               const leaders = people.filter((candidate) => STRENGTH_RANK[evidenceFor(candidate, criterion.key)?.strength ?? 'Not available'] === top)
               return (
                 <tr key={criterion.key} className="border-b border-border last:border-0">
-                  <td className="px-4 py-3 align-top">
+                  <td className="sticky left-0 z-[1] bg-card px-4 py-3 align-top">
                     <p className="text-sm font-medium text-palette-neutral-900">{criterion.name}</p>
-                    <p className="text-xs text-palette-neutral-550">{criterion.priority} priority</p>
+                    <p className="text-xs text-palette-neutral-500">{criterion.priority}</p>
                   </td>
                   {people.map((candidate) => {
                     const evidence = evidenceFor(candidate, criterion.key)
@@ -90,16 +107,23 @@ export function ComparisonWorkspaceView({ task, candidateIds }: { task: Workspac
                     const mine = own[candidate.id]?.[criterion.key]
                     const leads = leaders.length < people.length && leaders.includes(candidate) && top >= STRENGTH_RANK.Good
                     return (
-                      <td key={candidate.id} className={cn('px-4 py-3 align-top', leads && 'bg-palette-success-100/60')}>
+                      <td key={candidate.id} className="px-4 py-3 align-top">
                         <button type="button" onClick={() => openSource(candidate, criterion.key)} className="w-full text-left">
                           <span className="flex flex-wrap items-center gap-1.5">
                             <StrengthPill strength={evidence?.strength ?? 'Not available'} />
-                            {mine && <span className="rounded-md bg-palette-brand-150 px-1.5 py-0.5 text-[11px] font-semibold text-palette-brand-700">You: {mine.strength}</span>}
-                            {leads && <span className="text-[11px] font-medium text-palette-success-700">Stronger here</span>}
+                            {mine && <span className="rounded-md border border-palette-brand-250 px-1.5 py-0.5 text-[11px] font-semibold text-palette-brand-700">You: {mine.strength}</span>}
+                            {leads && (
+                              <span className="inline-flex items-center gap-0.5 text-[11px] font-medium text-palette-success-700">
+                                <ArrowUp className="h-3 w-3" aria-hidden="true" />
+                                Stronger here
+                              </span>
+                            )}
                           </span>
-                          <span className="mt-1 block text-[13px] leading-snug text-palette-neutral-700 hover:text-palette-brand-700">{evidence?.detail ?? 'No evidence recorded.'}</span>
+                          <span className={cn('mt-1.5 block text-[13px] leading-snug text-palette-neutral-600 hover:text-palette-neutral-900', !expanded && 'line-clamp-2')} title={expanded ? undefined : evidence?.detail}>
+                            {evidence?.detail ?? 'No evidence recorded.'}
+                          </span>
                         </button>
-                        <div className="mt-1.5 flex flex-wrap gap-1">
+                        <div className={cn('mt-1.5 flex flex-wrap gap-1', !expanded && !source.conflict && 'hidden @3xl:flex')}>
                           {source.passageIds.slice(0, 2).map((id) => (
                             <CitationChip key={id} passageId={id} onOpen={() => openSource(candidate, criterion.key)} />
                           ))}
@@ -112,7 +136,7 @@ export function ComparisonWorkspaceView({ task, candidateIds }: { task: Workspac
               )
             })}
             <tr className="border-t border-border bg-palette-neutral-100">
-              <td className="px-4 py-3 align-top text-xs font-semibold text-palette-neutral-600">Summary</td>
+              <td className="sticky left-0 z-[1] bg-palette-neutral-100 px-4 py-3 align-top text-xs font-semibold text-palette-neutral-600">Summary</td>
               {people.map((candidate) => {
                 const gaps = gapCriteria(candidate).filter((gap) => gap.kind !== 'partial')
                 return (

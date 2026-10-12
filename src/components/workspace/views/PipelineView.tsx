@@ -1,6 +1,7 @@
 import { AlertCircle, ArrowRight, Clock, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { getOpening } from '../../../data/openings'
 import { PENDING_SCORECARDS } from '../../../data/sources'
 import { buildStatusNote } from '../../../lib/candidateStatus'
 import { cn } from '../../../lib/cn'
@@ -70,7 +71,7 @@ export function PipelineView({ task, openingId, focus, stage }: { task: Workspac
     <div className="space-y-5">
       <section className="rounded-xl border border-border bg-card p-4">
         <div className="flex items-baseline justify-between">
-          <Label>Senior Product Designer · {total} active</Label>
+          <Label>{getOpening(openingId)?.title ?? 'Senior Product Designer'} · {total} active</Label>
           <Link to={`/openings/${openingId}/pipeline`} className="inline-flex items-center gap-1 text-xs font-medium text-palette-neutral-600 hover:text-palette-brand-700">
             Open pipeline board
             <ExternalLink className="h-3 w-3" aria-hidden="true" />
@@ -127,7 +128,7 @@ export function PipelineView({ task, openingId, focus, stage }: { task: Workspac
             <p className="text-sm font-semibold text-palette-neutral-900">
               {selected.stage} · {selected.named.length} with records
             </p>
-            {selected.count > selected.named.length && <p className="text-xs text-palette-neutral-550">{selected.count - selected.named.length} more are summary-only in this prototype</p>}
+            {selected.count > selected.named.length && <p className="text-xs text-palette-neutral-550">{selected.count - selected.named.length} more have summary figures only</p>}
           </div>
           {selected.named.length === 0 ? (
             <p className="px-4 py-4 text-sm text-muted-foreground">No candidates with records in this stage.</p>

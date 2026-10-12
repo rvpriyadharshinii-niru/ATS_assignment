@@ -50,7 +50,7 @@ export function InterviewGuideView({ guide }: { guide: InterviewGuide }) {
     <div className="space-y-4">
       <div className="rounded-xl border border-palette-brand-200 bg-palette-brand-100/30 p-5 shadow-xs">
         <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-          <span className="font-semibold uppercase tracking-wide text-primary">Interview guide</span>
+          <span className="font-semibold uppercase tracking-wide text-palette-neutral-600">Interview guide</span>
           <SimulatedTag />
         </p>
         <p className="mt-1.5 text-base font-semibold text-palette-neutral-900">

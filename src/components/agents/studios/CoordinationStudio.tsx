@@ -54,7 +54,7 @@ function MessageCard({ message }: { message: Message }) {
         ) : (
           <>
             <button type="button" className={primaryButtonClass} onClick={() => { setDecision('approved'); setEditing(false) }}>
-              {message.external ? 'Approve & send' : 'Approve'}
+              {message.external ? 'Approve & record' : 'Approve'}
             </button>
             <button type="button" className={secondaryButtonClass} onClick={() => setEditing((current) => !current)}>
               <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
@@ -104,7 +104,7 @@ export function CoordinationStudio() {
                     setScenarioId(scenario.id)
                     setOutput(null)
                   }}
-                  className="mt-0.5 accent-[var(--primary)]"
+                  className="mt-0.5 accent-palette-brand-600"
                 />
                 <span>
                   <span className="block text-sm font-medium text-palette-neutral-900">{scenario.label}</span>
@@ -118,7 +118,7 @@ export function CoordinationStudio() {
           <Play className="h-3.5 w-3.5" aria-hidden="true" />
           Run simulation
         </button>
-        <p className="text-xs text-muted-foreground">Uses configuration v{record.version} and the live pipeline. Nothing is sent while testing.</p>
+        <p className="text-xs text-muted-foreground">Uses configuration v{record.version} and the live pipeline. Nothing is sent until you approve it.</p>
       </section>
 
       <div className="min-w-0 space-y-4">
@@ -128,7 +128,7 @@ export function CoordinationStudio() {
           <>
             <section className="rounded-xl border border-palette-brand-200 bg-palette-brand-100/30 p-5 shadow-xs">
               <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <span className="font-semibold uppercase tracking-wide text-primary">What the agent detected</span>
+                <span className="font-semibold uppercase tracking-wide text-palette-neutral-600">What the agent detected</span>
                 <SimulatedTag />
               </p>
               <ul className="mt-2 space-y-1">

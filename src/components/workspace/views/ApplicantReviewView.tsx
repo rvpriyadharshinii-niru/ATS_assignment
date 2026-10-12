@@ -1,5 +1,7 @@
-import { Check, Clock, GitCompareArrows, Inbox, UserX } from 'lucide-react'
+import { Bot, Check, Clock, GitCompareArrows, Inbox, UserX, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { recommendedCandidateIds } from '../../../data/candidates'
+import { getCriteria } from '../../../data/criteria'
 import { useState } from 'react'
 import { cn } from '../../../lib/cn'
 import { useAllEffectiveCandidates } from '../../../store/candidateSelectors'
@@ -7,7 +9,7 @@ import { useWorkspaceStore } from '../../../store/useWorkspaceStore'
 import type { Candidate, OpeningId } from '../../../types/domain'
 import type { WorkspaceTask } from '../../../types/workspace'
 import { applicantReviewSet, firstName, listJoin, supportedCount } from '../../../workspace/derive'
-import { EmptyState, Label } from '../ui'
+import { Avatar, EmptyState } from '../ui'
 import { btn } from '../styles'
 import { CandidateFitView } from './CandidateFitView'
 
@@ -24,6 +26,7 @@ export function ApplicantReviewView({ task, openingId, candidateId }: { task: Wo
   const focusCandidate = useWorkspaceStore((state) => state.focusCandidate)
   const send = useWorkspaceStore((state) => state.send)
   const [selected, setSelected] = useState<string[]>([])
+  const [hideAgentHint, setHideAgentHint] = useState(false)
 
   // Candidates stay listed after a decision (so the manager can see what they did), even once their
   // stage moves past the review stages — the set is rebuilt from the task's own decisions.
@@ -36,11 +39,13 @@ export function ApplicantReviewView({ task, openingId, candidateId }: { task: Wo
     {
       label: 'Review first',
       hint: 'Strongest evidence against the criteria',
+      dot: 'bg-palette-success-500',
+      count: 'bg-palette-success-150 text-palette-success-800',
       // Keep the AI's original order even after someone has been moved on.
       items: recommendedCandidateIds.map((id) => [...set.reviewFirst, ...decidedElsewhere].find((candidate) => candidate.id === id)).filter((candidate): candidate is Candidate => !!candidate),
     },
-    { label: 'Worth a look', hint: 'Mixed evidence; useful alternatives', items: [...set.worthALook, ...decidedElsewhere.filter((candidate) => !recommendedCandidateIds.includes(candidate.id))] },
-    { label: 'Needs more information', hint: 'Too little to assess either way', items: set.needsInfo },
+    { label: 'Worth a look', hint: 'Mixed evidence; useful alternatives', dot: 'bg-palette-info-500', count: 'bg-palette-info-150 text-palette-info-800', items: [...set.worthALook, ...decidedElsewhere.filter((candidate) => !recommendedCandidateIds.includes(candidate.id))] },
+    { label: 'Needs more information', hint: 'Too little to assess either way', dot: 'bg-palette-warning-500', count: 'bg-palette-warning-150 text-palette-warning-800', items: set.needsInfo },
   ].filter((group) => group.items.length)
   const listed = groups.flatMap((group) => group.items)
   const current = listed.find((candidate) => candidate.id === candidateId) ?? listed[0]
@@ -54,13 +59,14 @@ export function ApplicantReviewView({ task, openingId, candidateId }: { task: Wo
   const toggle = (id: string) => setSelected((list) => (list.includes(id) ? list.filter((entry) => entry !== id) : list.length >= 3 ? list : [...list, id]))
 
   return (
-    <div className="grid gap-5 @xl:grid-cols-[220px_1fr] @4xl:grid-cols-[250px_1fr]">
-      <aside className="space-y-4 @xl:sticky @xl:top-0 @xl:self-start">
-        <div className="rounded-xl border border-border bg-card p-3">
-          <p className="text-sm font-semibold text-palette-neutral-900">
-            {decided} of {listed.length} decided
+    <div className="grid gap-6 @xl:grid-cols-[240px_1fr] @4xl:grid-cols-[272px_1fr]">
+      <aside className="space-y-5 @xl:sticky @xl:top-0 @xl:self-start">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-xs">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-palette-neutral-650">Your progress</p>
+          <p className="mt-1 text-sm text-palette-neutral-700">
+            <span className="text-2xl font-semibold tabular-nums text-palette-neutral-900">{decided}</span> of {listed.length} decided
           </p>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-palette-neutral-200">
+          <div className="mt-2 h-2 overflow-hidden rounded-full bg-palette-neutral-200">
             <div className="h-full rounded-full bg-palette-success-500 transition-all" style={{ width: `${(decided / listed.length) * 100}%` }} />
           </div>
           <p className="mt-2 text-xs text-palette-neutral-550">
@@ -69,17 +75,21 @@ export function ApplicantReviewView({ task, openingId, candidateId }: { task: Wo
         </div>
         {groups.map((group) => (
           <div key={group.label}>
-            <Label>{group.label}</Label>
-            <p className="mb-1.5 text-[11px] text-palette-neutral-500">{group.hint}</p>
+            <div className="flex items-center gap-2">
+              <span className={cn('h-2 w-2 rounded-full', group.dot)} aria-hidden="true" />
+              <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-palette-neutral-800">{group.label}</p>
+              <span className={cn('ml-auto rounded-full px-1.5 text-[11px] font-semibold tabular-nums', group.count)}>{group.items.length}</span>
+            </div>
+            <p className="mb-2 mt-0.5 pl-4 text-[11.5px] text-palette-neutral-550">{group.hint}</p>
             <ul className="space-y-1">
               {group.items.map((candidate) => (
-                <li key={candidate.id} className="flex items-center gap-1.5">
+                <li key={candidate.id} className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     checked={selected.includes(candidate.id)}
                     onChange={() => toggle(candidate.id)}
                     aria-label={`Select ${candidate.name} to compare`}
-                    className="h-3.5 w-3.5 shrink-0 accent-[var(--primary)]"
+                    className="h-4 w-4 shrink-0 cursor-pointer rounded accent-palette-brand-600"
                   />
                   <button
                     type="button"
@@ -88,14 +98,20 @@ export function ApplicantReviewView({ task, openingId, candidateId }: { task: Wo
                       setView(task.id, { type: 'applicant-review', openingId, candidateId: candidate.id })
                     }}
                     className={cn(
-                      'flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                      current?.id === candidate.id ? 'bg-palette-brand-100 text-palette-brand-800' : 'hover:bg-muted',
+                      'flex min-w-0 flex-1 items-center gap-2.5 rounded-lg border px-2.5 py-2 text-left transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                      current?.id === candidate.id ? 'border-palette-brand-300 bg-palette-brand-100 text-palette-brand-800 shadow-xs' : 'border-transparent hover:border-border hover:bg-card',
                     )}
                   >
+                    <Avatar name={candidate.name} size="sm" />
                     <span className="min-w-0 flex-1">
                       <span className={cn('block truncate text-sm font-medium', candidate.rejected && 'line-through opacity-60')}>{candidate.name}</span>
-                      <span className="block truncate text-[11px] text-palette-neutral-550">
-                        {supportedCount(candidate)}/5 supported · {candidate.stage}
+                      <span className="mt-1 flex items-center gap-1.5">
+                        <span className="flex gap-0.5" aria-label={`${supportedCount(candidate)} of ${getCriteria(openingId).length} criteria supported`}>
+                          {[0, 1, 2, 3, 4].map((step) => (
+                            <span key={step} className={cn('h-1.5 w-2.5 rounded-sm', step < supportedCount(candidate) ? group.dot : 'bg-palette-neutral-200')} />
+                          ))}
+                        </span>
+                        <span className="truncate text-[11px] text-palette-neutral-550">{candidate.stage}</span>
                       </span>
                     </span>
                     <DecisionIcon decision={task.decisions[candidate.id]} candidate={candidate} />
@@ -120,6 +136,21 @@ export function ApplicantReviewView({ task, openingId, candidateId }: { task: Wo
         </button>
       </aside>
       <div className="min-w-0">
+        {decided >= 3 && !hideAgentHint && (
+          // Offered only after the manager has done a few reviews themselves, never up front.
+          <div className="mb-5 flex items-start gap-3 rounded-xl border border-palette-brand-200 bg-card px-4 py-3 shadow-xs">
+            <Bot className="mt-0.5 h-4 w-4 shrink-0 text-palette-brand-600" aria-hidden="true" />
+            <p className="min-w-0 flex-1 text-sm text-palette-neutral-700">
+              You've decided on {decided} applicants. The Candidate Review agent can prepare reviews like these as new applications arrive, and it still asks you before anyone moves.{' '}
+              <Link to="/agents/candidate-review" className="font-medium text-palette-brand-700 hover:underline">
+                See how it works
+              </Link>
+            </p>
+            <button type="button" onClick={() => setHideAgentHint(true)} className="rounded p-0.5 text-palette-neutral-500 hover:text-palette-neutral-900" aria-label="Dismiss">
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
         {current && <CandidateFitView task={task} candidateId={current.id} />}
         {current && (
           <div className="mt-6 flex items-center justify-between border-t border-border pt-4">

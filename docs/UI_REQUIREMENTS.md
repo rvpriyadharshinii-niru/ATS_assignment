@@ -42,11 +42,11 @@ components. All tokens live in `src/styles/brand.css` as
 
 | Token family | Reserved meaning |
 |---|---|
-| `--palette-brand-*` (purple) | Selected/active state, primary CTA, and anything AI/Copilot-authored. This is the one color that should make something feel "AI touched." Do not use brand purple for purely decorative emphasis. |
-| `--palette-plum-*` | Secondary accent — used sparingly for a small number of icon badges/illustration accents where brand purple would over-claim "AI involvement." |
+| `--palette-brand-*` (violet, 600 = #6754b8) | Primary actions, selected navigation, tabs and filters, and AI marks. Soft purple (#a78bfa) sits in the same ramp. |
+| `--palette-pink-*` (500 = #e879c0) | Occasional highlights. The violet-to-pink gradient (`bg-violet-pink`) is used only on the logo and the Ask AI button. |
 | `--palette-info-*` | Informational status (e.g. AI Screened, neutral in-progress states). |
 | `--palette-success-*` | Positive outcomes (Offer, strong match, confirmed). |
-| `--palette-warning-*` | Needs-attention states (HM Review, waiting-too-long, blockers). |
+| `--palette-warning-*` | Needs-attention states (waiting too long, blockers, anything awaiting your approval). |
 | `--palette-danger-*` | Negative/blocking outcomes (rejected, failing criteria). |
 | `--palette-neutral-*` | Text, borders, surfaces, structure. This is the majority of the UI — the product should look neutral first, with color used only where it is meaningful. |
 

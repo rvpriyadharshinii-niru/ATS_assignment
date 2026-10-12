@@ -4,7 +4,7 @@ HireFlow V2 rethinks the prototype around one loop: **delegate → observe → i
 
 ## What changed from V1
 
-| V1 (assignment) | V2 |
+| V1 | V2 |
 | --- | --- |
 | A record-centric ATS with a Copilot panel docked beside each page | A task-centric workspace. Home asks "What would you like to get done?" and every request becomes a task with its own conversation and work surface |
 | Chat answers appeared inside the panel; structured UI lived elsewhere | Split workspace: a conversation panel (about a third of the screen, resizable and collapsible) drives an adaptive work surface. Clicking in either side updates the other |
@@ -24,6 +24,7 @@ Navigation: Home · AI Workspace · Jobs (each job still owns its pipeline, inte
 - **Interview guide editor**: questions built from the gaps, editable, with a rubric; saving attaches it to the candidate profile.
 - **Pipeline investigation**: stage strip, a delay diagnosis grounded in waiting days and pending scorecards, per-stage candidates with manual moves (confirm + undo) and issues that open prepared follow-ups.
 - **Follow-ups**: reminder drafts to named interviewers, revisable (shorter, warmer, firmer), approved one at a time, plus the manager's own feedback form.
+- **Upcoming interviews**: one prepared pack. Guides are drafted for everyone with a resume, missing information is named, and scheduling items from the coordination agent wait for approval in place.
 - **Clear my hiring tasks**: nine prepared items (shortlists, agent proposals, own feedback, reminders, a guide, an invitation, a decision) with approve, edit, skip and defer, then a summary of every change.
 - **Briefings**: "What needs my attention" and "What changed since my last review".
 
@@ -42,19 +43,19 @@ Navigation: Home · AI Workspace · Jobs (each job still owns its pipeline, inte
 
 - AI "thinking" and progress steps. A deterministic rule-based engine (`src/workspace/engine.ts`) routes requests; no language model is called.
 - Resumes and scorecards are fixed prototype documents (`src/data/sources.ts`).
-- Emails, calendar checks and reminders are **recorded, not delivered**. Toasts and logs say "recorded (simulated)".
+- Emails, calendar checks and reminders are **recorded, not delivered**. Toasts and logs say "recorded in HireFlow, nothing was delivered", and approve buttons read "Approve & record".
 - Agent runs, calendar availability and the assessment flow come from `src/agents/simulate.ts`.
 
-**Deliberately not done:** AI never rejects anyone, never writes feedback as if an interviewer wrote it, never uses protected attributes, and never cites a passage that doesn't exist. When records are missing (Ishaan, Aditya, Neha, Aarav, the Product Manager and UX Researcher roles) it says so instead of guessing.
+**Deliberately not done:** AI never rejects anyone, never writes feedback as if an interviewer wrote it, never uses protected attributes, and never cites a passage that doesn't exist. When records are missing (Ishaan, Aditya, Neha, and applicants with summary data only) it says so instead of guessing.
 
 ## Journeys covered
 
-- **A. First-time AI adoption**: Home → Prepared for you → Review applicants → inspect evidence → Defer or shortlist → Home.
+- **A. First-time AI adoption**: Home → Needs you → Review applicants → inspect evidence → Defer or shortlist → Home.
 - **B. New applicant review**: Approvals & activity → Hiring events → "Review with AI" → compare → verify citations → Advance (confirm) → the pipeline shows the move.
 - **C. Deep investigation**: "Why Ananya?" → evidence → open resume → "Compare with Rahul" → gaps → interview questions → edit → Save.
 - **D. Pipeline investigation**: "What needs attention in my hiring pipeline?" → delay diagnosis → affected candidates → Prepare follow-ups → review drafts → Approve and record → pipeline waiting state updates.
 - **E. Clear my tasks**: Home banner → work through nine items → summary.
-- **F. AI Agents**: AI Agents → configure scope and permissions → Testing studio → activate or pause → activity.
+- **F. AI Agents**: AI Agents → open an agent card → run the agent → review results and approvals → adjust settings → activate or pause.
 - **G. Manual fallback**: Jobs or Candidates → structured tables and manual actions → Ask AI with page context → back to the manual page.
 
 Edge cases handled include an unknown name ("Why Zara?"), an ambiguous surname ("Why Kapoor?"), candidates with no documents, conflicting sources (Rohan's AI experience), a challenged rating, roles with only summary data, a rejection request (refused, with Decline left to the manager), partial sessions, and unrecognised requests.

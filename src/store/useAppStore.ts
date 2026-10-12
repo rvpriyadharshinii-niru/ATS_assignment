@@ -84,6 +84,8 @@ interface AppState {
   logActivity: (candidateId: string, message: string) => void
   /** Records a change to a candidate's in-stage interview state (feedback submitted, reminder sent). */
   updateInterviewState: (candidateId: string, patch: Pick<CandidateOverride, 'interviewStatus' | 'waitingOn' | 'waitingDays'>, message: string) => void
+  /** Puts a candidate's interview status back to what it was before an undone action. */
+  restoreInterviewStatus: (candidateId: string, hadStatus: boolean, previousStatus: string | undefined, message: string) => void
   addCandidate: (input: NewCandidateInput) => Candidate
   setCriterionPriority: (openingId: OpeningId, criterionKey: CriterionKey, priority: CriterionPriority) => void
   addCriterion: (openingId: OpeningId, criterion: HiringCriterion) => void
@@ -224,6 +226,16 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   updateInterviewState: (candidateId, patch, message) => {
     set((state) => ({ candidateOverrides: { ...state.candidateOverrides, [candidateId]: { ...(state.candidateOverrides[candidateId] ?? {}), ...patch } } }))
+    get().logActivity(candidateId, message)
+  },
+
+  restoreInterviewStatus: (candidateId, hadStatus, previousStatus, message) => {
+    set((state) => {
+      const current = { ...(state.candidateOverrides[candidateId] ?? {}) }
+      if (hadStatus) current.interviewStatus = previousStatus
+      else delete current.interviewStatus
+      return { candidateOverrides: { ...state.candidateOverrides, [candidateId]: current } }
+    })
     get().logActivity(candidateId, message)
   },
 

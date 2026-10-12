@@ -53,7 +53,7 @@ export function InterviewPrepStudio() {
                       setRoundType(deriveInterviewType(entry))
                       setGuide(null)
                     }}
-                    className="accent-[var(--primary)]"
+                    className="accent-palette-brand-600"
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium text-palette-neutral-900">{entry.name}</span>
@@ -90,7 +90,7 @@ export function InterviewPrepStudio() {
           <Play className="h-3.5 w-3.5" aria-hidden="true" />
           Generate guide
         </button>
-        <p className="text-xs text-muted-foreground">Uses configuration v{record.version}. Nothing is shared while testing.</p>
+        <p className="text-xs text-muted-foreground">Uses configuration v{record.version}. Nothing is shared until you approve it.</p>
       </section>
 
       <div className="min-w-0 space-y-4">
@@ -102,16 +102,16 @@ export function InterviewPrepStudio() {
                 type="button"
                 className={secondaryButtonClass}
                 disabled={!share.enabled}
-                onClick={() => pushToast('Test mode: the guide was not shared. In live mode it would go to the interview panel’s kit.')}
+                onClick={() => pushToast('Preview: the guide was not shared. When the agent is active it goes to the interview panel’s kit after you approve.')}
               >
                 <Send className="h-3.5 w-3.5" aria-hidden="true" />
                 Share with panel
               </button>
               <p className="text-xs text-muted-foreground">
                 {!share.enabled
-                  ? 'Sharing is turned off in Configuration.'
+                  ? 'Sharing is turned off in Settings.'
                   : share.requiresApproval
-                    ? 'In live mode, sharing waits for your approval (set in Configuration).'
+                    ? 'Once active, sharing waits for your approval (set in Settings).'
                     : 'In live mode, the agent shares guides with the panel automatically.'}
               </p>
             </div>

@@ -72,7 +72,7 @@ export function ActivityPage() {
         </p>
       </div>
 
-      <nav className="-mb-px flex gap-5 overflow-x-auto border-b border-border" aria-label="Activity sections">
+      <nav className="flex gap-5 overflow-x-auto border-b border-border" aria-label="Activity sections">
         {tabs.map((entry) => (
           <button
             key={entry.key}
@@ -81,7 +81,7 @@ export function ActivityPage() {
             aria-current={tab === entry.key ? 'page' : undefined}
             className={cn(
               'flex shrink-0 items-center gap-1.5 border-b-2 px-0.5 pb-2.5 text-sm font-medium',
-              tab === entry.key ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
+              tab === entry.key ? 'border-palette-brand-600 text-palette-brand-700' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
             )}
           >
             <entry.icon className="h-4 w-4" aria-hidden="true" />
