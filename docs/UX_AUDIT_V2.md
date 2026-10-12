@@ -69,7 +69,7 @@ Nothing here has been tested with users. Where a choice rests on a source, the s
 
 ## Visual and density pass
 
-- **Colour.** Neutral controls and navigation, a muted indigo brand kept for the primary action and AI marks, and a teal secondary accent for evidence bars. Amber now means "waiting on you" everywhere, including agent approvals. Semantic colours are kept for meaning only.
+- **Colour.** A light theme: charcoal text (#252438), white and pale lavender (#f8f7fc) surfaces, violet (#6754b8) for primary actions and selected states, soft purple for secondary marks, and pink (#e879c0) for occasional highlights. A violet-to-pink gradient appears only on the logo and the Ask AI button. Amber now means "waiting on you" everywhere, including agent approvals. Semantic colours are kept for meaning only.
 - **Less text up front.** Agent cards show identity, one-line purpose, status and items waiting; scope, autonomy and version moved to the agent page. The candidate profile shows strengths, what needs validation and the next step, with the full write-up behind "Read the full assessment". Secondary actions (download, hold, email, reject) are grouped under one menu.
 - **Comparison.** Short cells with "Show full evidence", "Only where they differ", sticky headers and the criterion column, and no tinted "winner" cells. The chat reply is one or two sentences, and names anyone who isn't clearly ahead anywhere.
 - **Manager corrections.** After you record your own rating, the recommendation shows "With your assessment: X of N criteria supported (evidence alone: Y)" and lists each of your ratings next to the evidence rating. The AI recommendation itself isn't recalculated, and it says so.

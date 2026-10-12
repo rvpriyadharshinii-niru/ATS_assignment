@@ -139,7 +139,7 @@ export function AgentDetailLayout() {
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-1.5 border-b-2 pb-3 text-sm font-medium transition-colors focus-visible:outline-none',
-                  isActive ? 'border-palette-neutral-900 text-palette-neutral-900' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
+                  isActive ? 'border-palette-brand-600 text-palette-brand-700' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
                 )
               }
             >

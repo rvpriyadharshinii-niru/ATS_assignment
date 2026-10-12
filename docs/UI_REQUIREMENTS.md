@@ -42,8 +42,8 @@ components. All tokens live in `src/styles/brand.css` as
 
 | Token family | Reserved meaning |
 |---|---|
-| `--palette-brand-*` (muted indigo) | Primary CTA and small AI marks (the sparkle icon, the user's chat bubble). Navigation, tabs and selected states are neutral, not brand. Do not use brand for decorative emphasis. |
-| `--palette-teal-*` | Secondary accent: evidence-strength bars and a few icon badges, where brand would over-claim "AI involvement." |
+| `--palette-brand-*` (violet, 600 = #6754b8) | Primary actions, selected navigation, tabs and filters, and AI marks. Soft purple (#a78bfa) sits in the same ramp. |
+| `--palette-pink-*` (500 = #e879c0) | Occasional highlights. The violet-to-pink gradient (`bg-violet-pink`) is used only on the logo and the Ask AI button. |
 | `--palette-info-*` | Informational status (e.g. AI Screened, neutral in-progress states). |
 | `--palette-success-*` | Positive outcomes (Offer, strong match, confirmed). |
 | `--palette-warning-*` | Needs-attention states (waiting too long, blockers, anything awaiting your approval). |

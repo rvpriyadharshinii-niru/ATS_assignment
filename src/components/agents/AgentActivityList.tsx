@@ -294,7 +294,7 @@ export function AgentActivityList({
                 onClick={() => setStatusFilter(filter)}
                 className={cn(
                   'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  statusFilter === filter ? 'bg-palette-neutral-900 text-white' : 'bg-muted text-muted-foreground hover:text-foreground',
+                  statusFilter === filter ? 'bg-palette-brand-600 text-white' : 'bg-muted text-muted-foreground hover:text-foreground',
                 )}
               >
                 {filter === 'all' ? 'All' : ACTIVITY_STATUS_LABEL[filter]}

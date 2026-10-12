@@ -20,7 +20,7 @@ const COLUMN_TINT: Record<CandidateStage, string> = {
   'AI Screened': 'bg-palette-info-100/50',
   'HM Review': 'bg-palette-brand-100/50',
   Interview: 'bg-palette-warning-100/50',
-  Final: 'bg-palette-teal-100/40',
+  Final: 'bg-palette-pink-100/40',
   Offer: 'bg-palette-success-100/50',
 }
 
@@ -38,7 +38,7 @@ const STAGE_BADGE_COLOR: Record<CandidateStage, IconBadgeColor> = {
   'AI Screened': 'info',
   'HM Review': 'brand',
   Interview: 'warning',
-  Final: 'teal',
+  Final: 'pink',
   Offer: 'success',
 }
 

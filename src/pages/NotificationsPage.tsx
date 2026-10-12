@@ -136,7 +136,7 @@ export function NotificationsPage({ embedded = false }: { embedded?: boolean }) 
               onClick={() => setFilter(entry.key)}
               className={cn(
                 'rounded-full px-3 py-1.5 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                filter === entry.key ? 'bg-palette-neutral-900 text-white' : 'bg-muted text-muted-foreground hover:text-foreground',
+                filter === entry.key ? 'bg-palette-brand-600 text-white' : 'bg-muted text-muted-foreground hover:text-foreground',
               )}
             >
               {entry.label}

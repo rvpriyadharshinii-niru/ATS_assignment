@@ -81,7 +81,7 @@ export function ActivityPage() {
             aria-current={tab === entry.key ? 'page' : undefined}
             className={cn(
               'flex shrink-0 items-center gap-1.5 border-b-2 px-0.5 pb-2.5 text-sm font-medium',
-              tab === entry.key ? 'border-palette-neutral-900 text-palette-neutral-900' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
+              tab === entry.key ? 'border-palette-brand-600 text-palette-brand-700' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
             )}
           >
             <entry.icon className="h-4 w-4" aria-hidden="true" />

@@ -14,7 +14,7 @@ const STATUS: Record<TaskStatus, { label: string; className: string; dot: string
   preparing: { label: 'Preparing', className: 'bg-palette-neutral-150 text-palette-neutral-700', dot: 'bg-palette-neutral-500 animate-pulse' },
   'in-progress': { label: 'In progress', className: 'bg-palette-info-150 text-palette-info-700', dot: 'bg-palette-info-500' },
   'needs-clarification': { label: 'Needs your input', className: 'bg-palette-warning-150 text-palette-warning-700', dot: 'bg-palette-warning-500' },
-  ready: { label: 'Ready for review', className: 'bg-palette-neutral-150 text-palette-neutral-800', dot: 'bg-palette-teal-500' },
+  ready: { label: 'Ready for review', className: 'bg-palette-neutral-150 text-palette-neutral-800', dot: 'bg-palette-pink-500' },
   'awaiting-approval': { label: 'Awaiting approval', className: 'bg-palette-warning-150 text-palette-warning-700', dot: 'bg-palette-warning-500' },
   completed: { label: 'Completed', className: 'bg-palette-success-150 text-palette-success-700', dot: 'bg-palette-success-500' },
   partial: { label: 'Partially completed', className: 'bg-palette-warning-150 text-palette-warning-700', dot: 'bg-palette-warning-500' },

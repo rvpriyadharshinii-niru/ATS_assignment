@@ -64,5 +64,5 @@ export const AGENT_COLOR: Record<AgentId, { badge: IconBadgeColor; band: string;
   'candidate-review': { badge: 'brand', band: 'bg-palette-brand-500', ring: 'hover:border-palette-brand-300' },
   'interview-coordination': { badge: 'info', band: 'bg-palette-info-500', ring: 'hover:border-palette-info-300' },
   assessment: { badge: 'success', band: 'bg-palette-success-500', ring: 'hover:border-palette-success-300' },
-  'interview-prep': { badge: 'teal', band: 'bg-palette-teal-500', ring: 'hover:border-palette-teal-300' },
+  'interview-prep': { badge: 'pink', band: 'bg-palette-pink-500', ring: 'hover:border-palette-pink-300' },
 }

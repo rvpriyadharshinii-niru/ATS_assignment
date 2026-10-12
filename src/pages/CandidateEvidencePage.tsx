@@ -314,7 +314,7 @@ export function CandidateEvidencePage() {
               onClick={() => setActiveTab(tab.key)}
               className={cn(
                 'flex items-center gap-1.5 border-b-2 pb-3 text-sm font-medium transition-colors focus-visible:outline-none',
-                activeTab === tab.key ? 'border-palette-neutral-900 text-palette-neutral-900' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
+                activeTab === tab.key ? 'border-palette-brand-600 text-palette-brand-700' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
               )}
             >
               <tab.icon className="h-4 w-4" aria-hidden="true" />

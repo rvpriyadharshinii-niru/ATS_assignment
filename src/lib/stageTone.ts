@@ -6,7 +6,7 @@ export const STAGE_TONE: Record<CandidateStage, string> = {
   'AI Screened': 'bg-palette-info-150 text-palette-info-700',
   'HM Review': 'bg-palette-brand-100 text-palette-brand-700',
   Interview: 'bg-palette-warning-150 text-palette-warning-700',
-  Final: 'bg-palette-teal-150 text-palette-teal-700',
+  Final: 'bg-palette-pink-150 text-palette-pink-700',
   Offer: 'bg-palette-success-150 text-palette-success-700',
 }
 
@@ -16,6 +16,6 @@ export const STAGE_BAR_FILL: Record<CandidateStage, string> = {
   'AI Screened': 'bg-palette-info-450',
   'HM Review': 'bg-palette-brand-400',
   Interview: 'bg-palette-warning-450',
-  Final: 'bg-palette-teal-350',
+  Final: 'bg-palette-pink-350',
   Offer: 'bg-palette-success-450',
 }

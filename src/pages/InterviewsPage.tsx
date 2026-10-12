@@ -200,7 +200,7 @@ export function InterviewsPage() {
             onClick={() => setTab(entry.key)}
             className={cn(
               'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-              tab === entry.key ? 'bg-palette-neutral-900 text-white' : 'bg-muted text-muted-foreground hover:text-foreground',
+              tab === entry.key ? 'bg-palette-brand-600 text-white' : 'bg-muted text-muted-foreground hover:text-foreground',
             )}
           >
             {entry.label}

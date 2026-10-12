@@ -1,84 +1,85 @@
 /*
  * Product brand layer, loaded after fuzzy-prism.css. Overrides the neutral and brand ramps and the
- * semantic surface tokens, and adds the teal secondary accent.
+ * semantic surface tokens, and adds the pink secondary accent.
  */
 
 @layer base {
   :root {
     /*
-     * HireFlow colour system.
-     * - Neutral (cool slate) carries surfaces, text, borders and ordinary controls.
-     * - Brand (muted indigo) marks AI identity, primary actions and focus. It is used sparingly.
-     * - Teal is the restrained secondary accent (late pipeline stages, one agent identity).
+     * HireFlow colour system (light).
+     * - Neutral: lavender-tinted greys. Text is charcoal #252438, backgrounds white and #f8f7fc.
+     * - Brand: violet #6754b8 for primary actions and selected states; soft purple #a78bfa in the ramp.
+     * - Pink #e879c0: occasional highlights. The violet-to-pink gradient is for small marks only.
      * - Success, warning, danger and info stay semantic and are never decorative.
      */
-    --palette-neutral-100: #f8f9fb;
-    --palette-neutral-150: #f3f5f8;
-    --palette-neutral-200: #edf0f4;
-    --palette-neutral-250: #e5e9ef;
-    --palette-neutral-300: #dce1e8;
-    --palette-neutral-350: #cbd2db;
-    --palette-neutral-400: #b4bcc7;
-    --palette-neutral-450: #9aa3af;
-    --palette-neutral-500: #7f8895;
-    --palette-neutral-550: #67707d;
-    --palette-neutral-600: #545c69;
-    --palette-neutral-650: #444b57;
-    --palette-neutral-700: #363c47;
-    --palette-neutral-750: #2b3039;
-    --palette-neutral-800: #21252d;
-    --palette-neutral-850: #1a1d23;
-    --palette-neutral-900: #15181d;
+    --palette-neutral-100: #f8f7fc;
+    --palette-neutral-150: #f3f2f9;
+    --palette-neutral-200: #eeecf5;
+    --palette-neutral-250: #e7e5f0;
+    --palette-neutral-300: #e0dde9;
+    --palette-neutral-350: #cfcbdc;
+    --palette-neutral-400: #b7b2c8;
+    --palette-neutral-450: #9c97b0;
+    --palette-neutral-500: #837e99;
+    --palette-neutral-550: #6e6a85;
+    --palette-neutral-600: #5d5973;
+    --palette-neutral-650: #4d4963;
+    --palette-neutral-700: #3f3c55;
+    --palette-neutral-750: #34314a;
+    --palette-neutral-800: #2c2a41;
+    --palette-neutral-850: #28263c;
+    --palette-neutral-900: #252438;
 
-    --palette-brand-100: #f4f4fb;
-    --palette-brand-150: #eaeaf7;
-    --palette-brand-200: #dddcf1;
-    --palette-brand-250: #cccbea;
-    --palette-brand-300: #b6b4df;
-    --palette-brand-350: #9e9bd3;
-    --palette-brand-400: #8683c6;
-    --palette-brand-450: #726fbb;
-    --palette-brand-500: #5f5bb0;
-    --palette-brand-550: #534fa1;
-    --palette-brand-600: #48448f;
-    --palette-brand-650: #3e3b7d;
-    --palette-brand-700: #35326b;
-    --palette-brand-750: #2c2a59;
-    --palette-brand-800: #242248;
-    --palette-brand-850: #1c1b38;
-    --palette-brand-900: #151429;
+    --palette-brand-100: #f6f4fd;
+    --palette-brand-150: #efecfb;
+    --palette-brand-200: #e5e0f8;
+    --palette-brand-250: #d8d0f5;
+    --palette-brand-300: #c8bcf2;
+    --palette-brand-350: #b7a6f2;
+    --palette-brand-400: #a78bfa;
+    --palette-brand-450: #937ae6;
+    --palette-brand-500: #7f66cf;
+    --palette-brand-550: #7360c3;
+    --palette-brand-600: #6754b8;
+    --palette-brand-650: #5a48a3;
+    --palette-brand-700: #4c3c8b;
+    --palette-brand-750: #3f3274;
+    --palette-brand-800: #33295e;
+    --palette-brand-850: #281f49;
+    --palette-brand-900: #1d1736;
 
-    --palette-teal-100: #eff8f7;
-    --palette-teal-150: #dff1ef;
-    --palette-teal-200: #c9e7e3;
-    --palette-teal-250: #aedad5;
-    --palette-teal-300: #8ecbc4;
-    --palette-teal-350: #6cbab2;
-    --palette-teal-400: #4ea79e;
-    --palette-teal-450: #3a958c;
-    --palette-teal-500: #2b837b;
-    --palette-teal-550: #24736c;
-    --palette-teal-600: #1f645e;
-    --palette-teal-650: #1b5651;
-    --palette-teal-700: #174843;
-    --palette-teal-750: #133b37;
-    --palette-teal-800: #10302d;
-    --palette-teal-850: #0c2522;
-    --palette-teal-900: #091a18;
+    --palette-pink-100: #fdf5fa;
+    --palette-pink-150: #fbeaf5;
+    --palette-pink-200: #f8dcef;
+    --palette-pink-250: #f5cbe7;
+    --palette-pink-300: #f2b6de;
+    --palette-pink-350: #eea0d4;
+    --palette-pink-400: #eb8dcb;
+    --palette-pink-450: #e879c0;
+    --palette-pink-500: #d866ab;
+    --palette-pink-550: #c45697;
+    --palette-pink-600: #ad4784;
+    --palette-pink-650: #963b72;
+    --palette-pink-700: #7f3161;
+    --palette-pink-750: #6a2851;
+    --palette-pink-800: #552042;
+    --palette-pink-850: #401833;
+    --palette-pink-900: #2c1023;
 
     --background: #ffffff;
-    --foreground: var(--palette-neutral-800);
-    --card-foreground: var(--palette-neutral-800);
+    --foreground: var(--palette-neutral-900);
+    --card-foreground: var(--palette-neutral-900);
     --primary: var(--palette-brand-600);
     --primary-foreground: #ffffff;
-    --accent: var(--palette-neutral-150);
-    --accent-foreground: var(--palette-neutral-800);
-    --ring: var(--palette-brand-400);
-    --border: var(--palette-neutral-300);
+    --accent: var(--palette-brand-100);
+    --accent-foreground: var(--palette-brand-700);
+    --ring: var(--palette-brand-300);
+    --border: var(--palette-neutral-250);
     --input: var(--palette-neutral-300);
-    --muted: var(--palette-neutral-150);
+    --muted: var(--palette-neutral-100);
     --muted-foreground: var(--palette-neutral-550);
-    --gradient-brand_wash: linear-gradient(135deg, var(--palette-brand-500) 0%, var(--palette-teal-500) 100%);
+    --gradient-violet-pink: linear-gradient(135deg, var(--palette-brand-600) 0%, var(--palette-pink-650) 100%);
+    --gradient-brand_wash: linear-gradient(135deg, var(--palette-brand-500) 0%, var(--palette-pink-500) 100%);
 
     --font-sans: "Inter", system-ui, sans-serif;
     --font-display: "Inter", system-ui, sans-serif;
@@ -87,21 +88,25 @@
 }
 
 @theme inline {
-  --color-palette-teal-100: var(--palette-teal-100);
-  --color-palette-teal-150: var(--palette-teal-150);
-  --color-palette-teal-200: var(--palette-teal-200);
-  --color-palette-teal-250: var(--palette-teal-250);
-  --color-palette-teal-300: var(--palette-teal-300);
-  --color-palette-teal-350: var(--palette-teal-350);
-  --color-palette-teal-400: var(--palette-teal-400);
-  --color-palette-teal-450: var(--palette-teal-450);
-  --color-palette-teal-500: var(--palette-teal-500);
-  --color-palette-teal-550: var(--palette-teal-550);
-  --color-palette-teal-600: var(--palette-teal-600);
-  --color-palette-teal-650: var(--palette-teal-650);
-  --color-palette-teal-700: var(--palette-teal-700);
-  --color-palette-teal-750: var(--palette-teal-750);
-  --color-palette-teal-800: var(--palette-teal-800);
-  --color-palette-teal-850: var(--palette-teal-850);
-  --color-palette-teal-900: var(--palette-teal-900);
+  --color-palette-pink-100: var(--palette-pink-100);
+  --color-palette-pink-150: var(--palette-pink-150);
+  --color-palette-pink-200: var(--palette-pink-200);
+  --color-palette-pink-250: var(--palette-pink-250);
+  --color-palette-pink-300: var(--palette-pink-300);
+  --color-palette-pink-350: var(--palette-pink-350);
+  --color-palette-pink-400: var(--palette-pink-400);
+  --color-palette-pink-450: var(--palette-pink-450);
+  --color-palette-pink-500: var(--palette-pink-500);
+  --color-palette-pink-550: var(--palette-pink-550);
+  --color-palette-pink-600: var(--palette-pink-600);
+  --color-palette-pink-650: var(--palette-pink-650);
+  --color-palette-pink-700: var(--palette-pink-700);
+  --color-palette-pink-750: var(--palette-pink-750);
+  --color-palette-pink-800: var(--palette-pink-800);
+  --color-palette-pink-850: var(--palette-pink-850);
+  --color-palette-pink-900: var(--palette-pink-900);
+}
+
+@utility bg-violet-pink {
+  background-image: var(--gradient-violet-pink);
 }

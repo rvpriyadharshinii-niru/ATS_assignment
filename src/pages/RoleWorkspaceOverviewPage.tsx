@@ -15,7 +15,7 @@ const STAGE_BADGE_COLOR: Record<CandidateStage, IconBadgeColor> = {
   'AI Screened': 'info',
   'HM Review': 'brand',
   Interview: 'warning',
-  Final: 'teal',
+  Final: 'pink',
   Offer: 'success',
 }
 
