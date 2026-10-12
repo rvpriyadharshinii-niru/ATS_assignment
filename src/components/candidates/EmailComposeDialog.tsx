@@ -51,7 +51,9 @@ function EmailComposeForm({ candidate, onOpenChange }: { candidate: Candidate; o
         </label>
       </div>
 
-      <div className="mt-5 flex justify-end gap-2">
+      <p className="mt-3 text-xs text-muted-foreground">Email isn’t connected to HireFlow yet, so this is saved to {candidate.name.split(' ')[0]}’s activity and not delivered.</p>
+
+      <div className="mt-4 flex justify-end gap-2">
         <Dialog.Close asChild>
           <button
             type="button"
@@ -65,11 +67,11 @@ function EmailComposeForm({ candidate, onOpenChange }: { candidate: Candidate; o
           onClick={() => {
             sendEmail(candidate.id, subject, body)
             onOpenChange(false)
-            pushToast(`Email sent to ${candidate.name}.`)
+            pushToast(`Email to ${candidate.name} recorded in HireFlow. Nothing was delivered: email isn’t connected yet.`)
           }}
           className="rounded-lg bg-primary px-3.5 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          Send email
+          Record email
         </button>
       </div>
     </Dialog.Content>

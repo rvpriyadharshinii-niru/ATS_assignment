@@ -19,7 +19,7 @@ export function AgentStatusPill({ status }: { status: AgentStatus }) {
 }
 
 const ACTIVITY_TONE: Record<AgentActivityStatus, { label: string; className: string }> = {
-  pending: { label: 'Awaiting approval', className: 'bg-palette-brand-100 text-palette-brand-700' },
+  pending: { label: 'Awaiting approval', className: 'bg-palette-warning-150 text-palette-warning-800' },
   'needs-review': { label: 'Needs review', className: 'bg-palette-warning-150 text-palette-warning-700' },
   completed: { label: 'Completed', className: 'bg-palette-success-150 text-palette-success-700' },
   failed: { label: 'Failed', className: 'bg-palette-danger-150 text-palette-danger-700' },

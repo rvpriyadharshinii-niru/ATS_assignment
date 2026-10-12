@@ -18,7 +18,7 @@ Nothing here has been tested with users. Where a choice rests on a source, the s
 
 | Area | Status | Notes |
 | --- | --- | --- |
-| Home: goal-first start | Working | One prompt, 6 outcome tasks, 4 example chips and "Prepared for you". Nothing has to be typed |
+| Home: goal-first start | Working | One prompt, 4 starter tasks, then "Needs you", Resume work and one AI Agents link. Nothing has to be typed |
 | Moment 1: notification to review | Working | Approvals & activity → Hiring events → Review with AI → evidence → Advance (with confirmation) → the pipeline shows the move |
 | Moment 2: deep review | Working | Why Ananya → citation opens the highlighted resume passage (real passage ids in `src/data/sources.ts`) → compare with Rahul → gaps → challenge → guide → save. The saved guide appears on the profile |
 | Moment 3: pipeline | Working | Diagnosis → affected candidates → prepare follow-ups → approve and record → the pipeline's waiting state updates |
@@ -67,6 +67,14 @@ Nothing here has been tested with users. Where a choice rests on a source, the s
 
   Applicant review, evidence review, comparison, gaps, challenge, interview guides, pipeline checks and keyword search work for both roles. Aarav Sethi, the Product Manager finalist, has a scorecard that conflicts with his resume on customer discovery, so both sources stay visible. Interview prep now covers interviews in every role.
 
+## Visual and density pass
+
+- **Colour.** Neutral controls and navigation, a muted indigo brand kept for the primary action and AI marks, and a teal secondary accent for evidence bars. Amber now means "waiting on you" everywhere, including agent approvals. Semantic colours are kept for meaning only.
+- **Less text up front.** Agent cards show identity, one-line purpose, status and items waiting; scope, autonomy and version moved to the agent page. The candidate profile shows strengths, what needs validation and the next step, with the full write-up behind "Read the full assessment". Secondary actions (download, hold, email, reject) are grouped under one menu.
+- **Comparison.** Short cells with "Show full evidence", "Only where they differ", sticky headers and the criterion column, and no tinted "winner" cells. The chat reply is one or two sentences, and names anyone who isn't clearly ahead anywhere.
+- **Manager corrections.** After you record your own rating, the recommendation shows "With your assessment: X of N criteria supported (evidence alone: Y)" and lists each of your ratings next to the evidence rating. The AI recommendation itself isn't recalculated, and it says so.
+- **Receipts.** "Approve & send" became "Approve & record". The manual email dialog says the email is saved to the activity and not delivered.
+
 ## Still limited
 
 - Assessment drafting covers Senior Product Designer only.
@@ -81,7 +89,7 @@ Nothing here has been tested with users. Where a choice rests on a source, the s
 ## Final check
 
 1. **Why would a reluctant manager try it?** The first click produces finished work, such as a ranked review with sources, and changes nothing.
-2. **Can they start without typing?** Yes: task tiles, "Prepared for you", example chips, and Ask AI on manual pages.
+2. **Can they start without typing?** Yes: starter tasks, "Needs you" rows, and Ask AI on manual pages.
 3. **Does it reduce preparation work?** Yes. Reviews, guides, reminders and assessments are drafted from the record.
 4. **Can they see progress?** Yes. Steps play out, and statuses and summary counts update.
 5. **Can they inspect the original evidence?** Yes. Every rating opens its passage.

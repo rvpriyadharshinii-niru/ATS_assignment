@@ -32,7 +32,7 @@ export function SettingsPage() {
 
         <div className="max-w-md rounded-xl border border-border bg-card p-6 shadow-xs">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
-            <IconBadge icon={RotateCcw} color="plum" size="sm" />
+            <IconBadge icon={RotateCcw} color="neutral" size="sm" />
             Demo data
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">

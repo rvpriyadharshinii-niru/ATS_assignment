@@ -43,14 +43,14 @@ Navigation: Home · AI Workspace · Jobs (each job still owns its pipeline, inte
 
 - AI "thinking" and progress steps. A deterministic rule-based engine (`src/workspace/engine.ts`) routes requests; no language model is called.
 - Resumes and scorecards are fixed prototype documents (`src/data/sources.ts`).
-- Emails, calendar checks and reminders are **recorded, not delivered**. Toasts and logs say "recorded (simulated)".
+- Emails, calendar checks and reminders are **recorded, not delivered**. Toasts and logs say "recorded in HireFlow, nothing was delivered", and approve buttons read "Approve & record".
 - Agent runs, calendar availability and the assessment flow come from `src/agents/simulate.ts`.
 
 **Deliberately not done:** AI never rejects anyone, never writes feedback as if an interviewer wrote it, never uses protected attributes, and never cites a passage that doesn't exist. When records are missing (Ishaan, Aditya, Neha, and applicants with summary data only) it says so instead of guessing.
 
 ## Journeys covered
 
-- **A. First-time AI adoption**: Home → Prepared for you → Review applicants → inspect evidence → Defer or shortlist → Home.
+- **A. First-time AI adoption**: Home → Needs you → Review applicants → inspect evidence → Defer or shortlist → Home.
 - **B. New applicant review**: Approvals & activity → Hiring events → "Review with AI" → compare → verify citations → Advance (confirm) → the pipeline shows the move.
 - **C. Deep investigation**: "Why Ananya?" → evidence → open resume → "Compare with Rahul" → gaps → interview questions → edit → Save.
 - **D. Pipeline investigation**: "What needs attention in my hiring pipeline?" → delay diagnosis → affected candidates → Prepare follow-ups → review drafts → Approve and record → pipeline waiting state updates.

@@ -19,8 +19,8 @@ const FILTER_ORDER: StatusFilter[] = ['all', 'pending', 'needs-review', 'complet
 
 function approveLabel(approval: AgentApproval): string {
   if (approval.kind === 'advance') return `Approve & move to ${approval.toStage}`
-  if (approval.kind === 'publish-assessment') return 'Approve & send assessment'
-  return 'Approve & send'
+  if (approval.kind === 'publish-assessment') return 'Approve & record assessment'
+  return 'Approve & record'
 }
 
 function MessagePreview({
@@ -244,7 +244,7 @@ export function ActivityCard({ item, showAgent }: { item: AgentActivity; showAge
           title={draft.kind === 'advance' ? 'Approve this shortlist move?' : 'Send this assessment?'}
           lines={[`Proposed by the ${definition.name}`]}
           consequences={consequences}
-          confirmLabel={draft.kind === 'advance' ? 'Approve & move' : 'Approve & send'}
+          confirmLabel={draft.kind === 'advance' ? 'Approve & move' : 'Approve & record'}
           onConfirm={approve}
         />
       )}

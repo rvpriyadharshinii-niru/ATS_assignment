@@ -202,7 +202,7 @@ function initialState() {
 
 export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
   ...initialState(),
-  panelWidth: 400,
+  panelWidth: 360,
   panelCollapsed: false,
   setPanel: (patch) => set((state) => ({ panelWidth: patch.width ?? state.panelWidth, panelCollapsed: patch.collapsed ?? state.panelCollapsed })),
 

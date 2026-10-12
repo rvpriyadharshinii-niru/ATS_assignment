@@ -117,7 +117,7 @@ function SplitWorkspace({ task }: { task: WorkspaceTask }) {
         {/* One conversation panel: a full-width tab on narrow screens, a resizable column on desktop. */}
         <div
           // Keeps the conversation near a third of the screen on smaller laptops, whatever width was dragged.
-          style={{ '--panel-w': `min(${panelWidth}px, max(300px, 34vw))` } as CSSProperties}
+          style={{ '--panel-w': `min(${panelWidth}px, max(300px, 30vw))` } as CSSProperties}
           className={cn(
             'min-h-0 min-w-0 flex-1 lg:w-[var(--panel-w)] lg:flex-none lg:shrink-0 lg:border-r lg:border-border',
             mobileTab === 'chat' ? 'block' : 'hidden',

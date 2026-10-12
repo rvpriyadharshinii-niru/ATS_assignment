@@ -26,9 +26,9 @@ export function displayStrength(strength: EvidenceStrength): string {
 
 /** Shared strength → fill-bar color, used by both the evidence list's left-edge bar and the criteria-match visual. */
 export const STRENGTH_BAR_TONE: Record<EvidenceStrength, string> = {
-  Strong: 'bg-palette-success-450',
-  Good: 'bg-palette-info-450',
-  Moderate: 'bg-palette-neutral-300',
+  Strong: 'bg-palette-teal-500',
+  Good: 'bg-palette-teal-300',
+  Moderate: 'bg-palette-neutral-400',
   Limited: 'bg-palette-neutral-300',
   Possible: 'bg-palette-warning-450',
   Unclear: 'bg-palette-warning-450',

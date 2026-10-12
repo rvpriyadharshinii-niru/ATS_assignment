@@ -38,7 +38,7 @@ function ReviewResult({ run }: { run: ReviewRun }) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <span className="font-semibold uppercase tracking-wide text-primary">Run #{run.runNumber}</span>
+              <span className="font-semibold uppercase tracking-wide text-palette-neutral-600">Run #{run.runNumber}</span>
               <span>Configuration v{run.configVersion}</span>
               <span>{formatRelative(run.timestamp)}</span>
               <SimulatedTag />

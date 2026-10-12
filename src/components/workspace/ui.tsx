@@ -11,10 +11,10 @@ export function Label({ children, className }: { children: ReactNode; className?
 }
 
 const STATUS: Record<TaskStatus, { label: string; className: string; dot: string }> = {
-  preparing: { label: 'Preparing', className: 'bg-palette-brand-100 text-palette-brand-700', dot: 'bg-palette-brand-500 animate-pulse' },
+  preparing: { label: 'Preparing', className: 'bg-palette-neutral-150 text-palette-neutral-700', dot: 'bg-palette-neutral-500 animate-pulse' },
   'in-progress': { label: 'In progress', className: 'bg-palette-info-150 text-palette-info-700', dot: 'bg-palette-info-500' },
   'needs-clarification': { label: 'Needs your input', className: 'bg-palette-warning-150 text-palette-warning-700', dot: 'bg-palette-warning-500' },
-  ready: { label: 'Ready for review', className: 'bg-palette-brand-100 text-palette-brand-700', dot: 'bg-palette-brand-500' },
+  ready: { label: 'Ready for review', className: 'bg-palette-neutral-150 text-palette-neutral-800', dot: 'bg-palette-teal-500' },
   'awaiting-approval': { label: 'Awaiting approval', className: 'bg-palette-warning-150 text-palette-warning-700', dot: 'bg-palette-warning-500' },
   completed: { label: 'Completed', className: 'bg-palette-success-150 text-palette-success-700', dot: 'bg-palette-success-500' },
   partial: { label: 'Partially completed', className: 'bg-palette-warning-150 text-palette-warning-700', dot: 'bg-palette-warning-500' },
@@ -32,29 +32,20 @@ export function TaskStatusPill({ status, className }: { status: TaskStatus; clas
 }
 
 const STRENGTH_TONE: Record<EvidenceStrength, string> = {
-  Strong: 'bg-palette-success-150 text-palette-success-800 ring-1 ring-inset ring-palette-success-300',
-  Good: 'bg-palette-info-150 text-palette-info-800 ring-1 ring-inset ring-palette-info-300',
-  Moderate: 'bg-palette-accent-100 text-palette-accent-800 ring-1 ring-inset ring-palette-accent-250',
-  Limited: 'bg-palette-neutral-150 text-palette-neutral-700 ring-1 ring-inset ring-palette-neutral-300',
-  Possible: 'bg-palette-warning-100 text-palette-warning-800 ring-1 ring-inset ring-palette-warning-300',
-  Unclear: 'bg-palette-warning-100 text-palette-warning-800 ring-1 ring-inset ring-palette-warning-300',
-  'Not available': 'bg-palette-warning-100 text-palette-warning-800 ring-1 ring-inset ring-palette-warning-300',
+  Strong: 'bg-palette-success-150 text-palette-success-800',
+  Good: 'bg-palette-info-150 text-palette-info-800',
+  Moderate: 'bg-palette-neutral-200 text-palette-neutral-700',
+  Limited: 'bg-palette-neutral-200 text-palette-neutral-700',
+  Possible: 'bg-palette-warning-150 text-palette-warning-800',
+  Unclear: 'bg-palette-warning-150 text-palette-warning-800',
+  'Not available': 'bg-palette-warning-150 text-palette-warning-800',
 }
 
 export function StrengthPill({ strength, className }: { strength: EvidenceStrength; className?: string }) {
   return <span className={cn('inline-flex shrink-0 items-center whitespace-nowrap rounded-md px-1.5 py-0.5 text-[11px] font-semibold', STRENGTH_TONE[strength], className)}>{displayStrength(strength)}</span>
 }
 
-const AVATAR_TONES = [
-  'bg-palette-brand-150 text-palette-brand-800',
-  'bg-palette-info-150 text-palette-info-800',
-  'bg-palette-success-150 text-palette-success-800',
-  'bg-palette-accent-150 text-palette-accent-800',
-  'bg-palette-warning-150 text-palette-warning-800',
-]
-
 export function Avatar({ name, size = 'md', className }: { name: string; size?: 'sm' | 'md' | 'lg'; className?: string }) {
-  const tone = AVATAR_TONES[[...name].reduce((sum, char) => sum + char.charCodeAt(0), 0) % AVATAR_TONES.length]
   const initials = name
     .split(' ')
     .map((part) => part[0])
@@ -64,8 +55,7 @@ export function Avatar({ name, size = 'md', className }: { name: string; size?: 
   return (
     <span
       className={cn(
-        'flex shrink-0 items-center justify-center rounded-full font-semibold',
-        tone,
+        'flex shrink-0 items-center justify-center rounded-full bg-palette-neutral-200 font-semibold text-palette-neutral-700',
         size === 'sm' ? 'h-6 w-6 text-[10px]' : size === 'lg' ? 'h-11 w-11 text-sm' : 'h-8 w-8 text-xs',
         className,
       )}

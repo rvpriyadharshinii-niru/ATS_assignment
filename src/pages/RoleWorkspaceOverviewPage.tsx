@@ -15,7 +15,7 @@ const STAGE_BADGE_COLOR: Record<CandidateStage, IconBadgeColor> = {
   'AI Screened': 'info',
   'HM Review': 'brand',
   Interview: 'warning',
-  Final: 'plum',
+  Final: 'teal',
   Offer: 'success',
 }
 
@@ -180,7 +180,7 @@ export function RoleWorkspaceOverviewPage() {
 
           <section className="rounded-xl border border-border bg-card p-4 shadow-xs">
             <h2 className="flex items-center gap-2 text-sm font-semibold text-palette-neutral-900">
-              <IconBadge icon={Activity} color="plum" size="sm" />
+              <IconBadge icon={Activity} color="neutral" size="sm" />
               Recent activity
             </h2>
             {recentActivity.length === 0 ? (

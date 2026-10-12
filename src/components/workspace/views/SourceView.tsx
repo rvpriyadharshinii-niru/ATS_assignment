@@ -137,7 +137,7 @@ export function SourceView({ task, candidateId, passageIds, criterionKey }: { ta
                         className={cn(
                           'w-full rounded-md px-2 py-1 text-left text-[13.5px] leading-relaxed transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                           isConflict
-                            ? 'bg-palette-plum-100 text-palette-neutral-900 ring-1 ring-inset ring-palette-plum-300'
+                            ? 'bg-palette-teal-100 text-palette-neutral-900 ring-1 ring-inset ring-palette-teal-300'
                             : isHighlighted
                               ? 'bg-palette-warning-200 text-palette-neutral-900'
                               : 'text-palette-neutral-700 hover:bg-palette-neutral-150',

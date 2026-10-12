@@ -2,11 +2,11 @@ import type { ComponentType } from 'react'
 import { cn } from '../../lib/cn'
 
 /** The small, deliberate accent-color set the whole product draws from — never an arbitrary hex. */
-export type IconBadgeColor = 'brand' | 'plum' | 'info' | 'success' | 'warning' | 'danger' | 'neutral'
+export type IconBadgeColor = 'brand' | 'teal' | 'info' | 'success' | 'warning' | 'danger' | 'neutral'
 
 const COLOR_CLASSES: Record<IconBadgeColor, string> = {
   brand: 'bg-palette-brand-100 text-palette-brand-600',
-  plum: 'bg-palette-plum-100 text-palette-plum-600',
+  teal: 'bg-palette-teal-100 text-palette-teal-600',
   info: 'bg-palette-info-150 text-palette-info-600',
   success: 'bg-palette-success-150 text-palette-success-700',
   warning: 'bg-palette-warning-150 text-palette-warning-700',
@@ -47,7 +47,7 @@ export function IconBadge({
 
 const PILL_CLASSES: Record<IconBadgeColor, string> = {
   brand: 'bg-palette-brand-100 text-palette-brand-700',
-  plum: 'bg-palette-plum-100 text-palette-plum-700',
+  teal: 'bg-palette-teal-100 text-palette-teal-700',
   info: 'bg-palette-info-150 text-palette-info-700',
   success: 'bg-palette-success-150 text-palette-success-700',
   warning: 'bg-palette-warning-150 text-palette-warning-700',

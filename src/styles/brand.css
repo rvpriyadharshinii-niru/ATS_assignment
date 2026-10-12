@@ -1,65 +1,84 @@
 /*
- * Product brand layer — overrides the Fuzzy Prism starter's violet/serif
- * identity with the locked palette: primary purple #642FCD, soft lavender
- * #DCCCF7, accent plum #8D2E6E. Loaded after fuzzy-prism.css; only the
- * tokens listed here are overridden — neutral/success/warning/danger/info
- * palettes, radii and shadows are inherited unchanged.
+ * Product brand layer, loaded after fuzzy-prism.css. Overrides the neutral and brand ramps and the
+ * semantic surface tokens, and adds the teal secondary accent.
  */
 
 @layer base {
   :root {
-    /* Primary purple ramp, anchored at 500 = #642FCD (given exact value). */
-    --palette-brand-100: #f3eefb;
-    --palette-brand-150: #dcccf7; /* soft lavender — given exact value */
-    --palette-brand-200: #d4c5f2;
-    --palette-brand-250: #bea8eb;
-    --palette-brand-300: #a687e3;
-    --palette-brand-350: #8d65dc;
-    --palette-brand-400: #7848d5;
-    --palette-brand-450: #6d3ad2;
-    --palette-brand-500: #642fcd; /* primary purple — given exact value */
-    --palette-brand-550: #592ab7;
-    --palette-brand-600: #4d249e;
-    --palette-brand-650: #411e85;
-    --palette-brand-700: #371a70;
-    --palette-brand-750: #2d155b;
-    --palette-brand-800: #24114b;
-    --palette-brand-850: #1c0d3a;
-    --palette-brand-900: #140a29;
+    /*
+     * HireFlow colour system.
+     * - Neutral (cool slate) carries surfaces, text, borders and ordinary controls.
+     * - Brand (muted indigo) marks AI identity, primary actions and focus. It is used sparingly.
+     * - Teal is the restrained secondary accent (late pipeline stages, one agent identity).
+     * - Success, warning, danger and info stay semantic and are never decorative.
+     */
+    --palette-neutral-100: #f8f9fb;
+    --palette-neutral-150: #f3f5f8;
+    --palette-neutral-200: #edf0f4;
+    --palette-neutral-250: #e5e9ef;
+    --palette-neutral-300: #dce1e8;
+    --palette-neutral-350: #cbd2db;
+    --palette-neutral-400: #b4bcc7;
+    --palette-neutral-450: #9aa3af;
+    --palette-neutral-500: #7f8895;
+    --palette-neutral-550: #67707d;
+    --palette-neutral-600: #545c69;
+    --palette-neutral-650: #444b57;
+    --palette-neutral-700: #363c47;
+    --palette-neutral-750: #2b3039;
+    --palette-neutral-800: #21252d;
+    --palette-neutral-850: #1a1d23;
+    --palette-neutral-900: #15181d;
 
-    /* Accent plum ramp, anchored at 500 = #8D2E6E (given exact value). */
-    --palette-plum-100: #f9ecf4;
-    --palette-plum-150: #f2d9ea;
-    --palette-plum-200: #eabedb;
-    --palette-plum-250: #e09fcb;
-    --palette-plum-300: #d47cb8;
-    --palette-plum-350: #c95aa5;
-    --palette-plum-400: #c03f96;
-    --palette-plum-450: #a53681;
-    --palette-plum-500: #8d2e6e; /* accent plum — given exact value */
-    --palette-plum-550: #7b2860;
-    --palette-plum-600: #682251;
-    --palette-plum-650: #581d45;
-    --palette-plum-700: #491839;
-    --palette-plum-750: #3e1430;
-    --palette-plum-800: #321027;
-    --palette-plum-850: #260d1e;
-    --palette-plum-900: #1b0915;
+    --palette-brand-100: #f4f4fb;
+    --palette-brand-150: #eaeaf7;
+    --palette-brand-200: #dddcf1;
+    --palette-brand-250: #cccbea;
+    --palette-brand-300: #b6b4df;
+    --palette-brand-350: #9e9bd3;
+    --palette-brand-400: #8683c6;
+    --palette-brand-450: #726fbb;
+    --palette-brand-500: #5f5bb0;
+    --palette-brand-550: #534fa1;
+    --palette-brand-600: #48448f;
+    --palette-brand-650: #3e3b7d;
+    --palette-brand-700: #35326b;
+    --palette-brand-750: #2c2a59;
+    --palette-brand-800: #242248;
+    --palette-brand-850: #1c1b38;
+    --palette-brand-900: #151429;
 
-    /* Semantic remap: purple identity + Inter, neutral surfaces otherwise. */
-    --primary: var(--palette-brand-500);
+    --palette-teal-100: #eff8f7;
+    --palette-teal-150: #dff1ef;
+    --palette-teal-200: #c9e7e3;
+    --palette-teal-250: #aedad5;
+    --palette-teal-300: #8ecbc4;
+    --palette-teal-350: #6cbab2;
+    --palette-teal-400: #4ea79e;
+    --palette-teal-450: #3a958c;
+    --palette-teal-500: #2b837b;
+    --palette-teal-550: #24736c;
+    --palette-teal-600: #1f645e;
+    --palette-teal-650: #1b5651;
+    --palette-teal-700: #174843;
+    --palette-teal-750: #133b37;
+    --palette-teal-800: #10302d;
+    --palette-teal-850: #0c2522;
+    --palette-teal-900: #091a18;
+
+    --background: #ffffff;
+    --foreground: var(--palette-neutral-800);
+    --card-foreground: var(--palette-neutral-800);
+    --primary: var(--palette-brand-600);
     --primary-foreground: #ffffff;
-    --accent: var(--palette-brand-100);
-    --accent-foreground: var(--palette-brand-700);
-    --ring: var(--palette-brand-500);
-    /* neutral-200 read as almost invisible against white cards — one step darker gives every
-       card, table and divider a visible edge instead of the flat, borderless look. */
+    --accent: var(--palette-neutral-150);
+    --accent-foreground: var(--palette-neutral-800);
+    --ring: var(--palette-brand-400);
     --border: var(--palette-neutral-300);
-    /* Fuzzy Prism's muted-foreground (neutral-700, #3E353F) is darker than the default body
-       text (--foreground, #5D5D5D), so "muted" secondary text reads no lighter than primary
-       text — the app-wide flat-black look. neutral-550 sits meaningfully lighter than both. */
+    --input: var(--palette-neutral-300);
+    --muted: var(--palette-neutral-150);
     --muted-foreground: var(--palette-neutral-550);
-    --gradient-brand_wash: linear-gradient(135deg, var(--palette-brand-500) 0%, var(--palette-plum-500) 100%);
+    --gradient-brand_wash: linear-gradient(135deg, var(--palette-brand-500) 0%, var(--palette-teal-500) 100%);
 
     --font-sans: "Inter", system-ui, sans-serif;
     --font-display: "Inter", system-ui, sans-serif;
@@ -68,21 +87,21 @@
 }
 
 @theme inline {
-  --color-palette-plum-100: var(--palette-plum-100);
-  --color-palette-plum-150: var(--palette-plum-150);
-  --color-palette-plum-200: var(--palette-plum-200);
-  --color-palette-plum-250: var(--palette-plum-250);
-  --color-palette-plum-300: var(--palette-plum-300);
-  --color-palette-plum-350: var(--palette-plum-350);
-  --color-palette-plum-400: var(--palette-plum-400);
-  --color-palette-plum-450: var(--palette-plum-450);
-  --color-palette-plum-500: var(--palette-plum-500);
-  --color-palette-plum-550: var(--palette-plum-550);
-  --color-palette-plum-600: var(--palette-plum-600);
-  --color-palette-plum-650: var(--palette-plum-650);
-  --color-palette-plum-700: var(--palette-plum-700);
-  --color-palette-plum-750: var(--palette-plum-750);
-  --color-palette-plum-800: var(--palette-plum-800);
-  --color-palette-plum-850: var(--palette-plum-850);
-  --color-palette-plum-900: var(--palette-plum-900);
+  --color-palette-teal-100: var(--palette-teal-100);
+  --color-palette-teal-150: var(--palette-teal-150);
+  --color-palette-teal-200: var(--palette-teal-200);
+  --color-palette-teal-250: var(--palette-teal-250);
+  --color-palette-teal-300: var(--palette-teal-300);
+  --color-palette-teal-350: var(--palette-teal-350);
+  --color-palette-teal-400: var(--palette-teal-400);
+  --color-palette-teal-450: var(--palette-teal-450);
+  --color-palette-teal-500: var(--palette-teal-500);
+  --color-palette-teal-550: var(--palette-teal-550);
+  --color-palette-teal-600: var(--palette-teal-600);
+  --color-palette-teal-650: var(--palette-teal-650);
+  --color-palette-teal-700: var(--palette-teal-700);
+  --color-palette-teal-750: var(--palette-teal-750);
+  --color-palette-teal-800: var(--palette-teal-800);
+  --color-palette-teal-850: var(--palette-teal-850);
+  --color-palette-teal-900: var(--palette-teal-900);
 }

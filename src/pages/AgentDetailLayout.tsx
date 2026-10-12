@@ -62,7 +62,7 @@ export function AgentDetailLayout() {
 
   return (
     <div>
-      <div className="border-b border-border bg-card px-8 pt-5">
+      <div className="border-b border-border bg-card px-4 pt-5 sm:px-8">
         <nav aria-label="Breadcrumb" className="flex items-center gap-1.5 text-sm text-muted-foreground">
           <Link to="/" aria-label="Home" className="hover:text-palette-neutral-900">
             <Home className="h-3.5 w-3.5" aria-hidden="true" />
@@ -83,14 +83,19 @@ export function AgentDetailLayout() {
                 <h1 className="text-xl font-semibold tracking-tight text-palette-neutral-900">{definition.name}</h1>
                 <AgentStatusPill status={record.status} />
               </div>
-              <p className="mt-0.5 max-w-3xl text-sm text-muted-foreground">{definition.shortDescription}</p>
-              <p className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-palette-neutral-500">
-                <span>Scope: {config.openingIds.map((id) => getOpening(id)?.title ?? id).join(', ') || 'none'}</span>
-                <span>Autonomy: {autonomy?.label}</span>
-                <span>
-                  Configuration v{record.version} · updated {formatRelative(record.updatedAt)}
-                </span>
-                {record.lastRunAt && <span>Last run {formatRelative(record.lastRunAt)}</span>}
+              <p
+                className="mt-1 flex flex-wrap items-center gap-x-1.5 text-sm text-palette-neutral-550"
+                title={`Configuration v${record.version} · updated ${formatRelative(record.updatedAt)}`}
+              >
+                <span>{config.openingIds.map((id) => getOpening(id)?.title ?? id).join(', ') || 'No jobs yet'}</span>
+                <span aria-hidden="true">·</span>
+                <span>{autonomy?.label}</span>
+                {record.lastRunAt && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span>Last run {formatRelative(record.lastRunAt)}</span>
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -134,7 +139,7 @@ export function AgentDetailLayout() {
               className={({ isActive }) =>
                 cn(
                   'flex items-center gap-1.5 border-b-2 pb-3 text-sm font-medium transition-colors focus-visible:outline-none',
-                  isActive ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
+                  isActive ? 'border-palette-neutral-900 text-palette-neutral-900' : 'border-transparent text-muted-foreground hover:text-palette-neutral-900',
                 )
               }
             >

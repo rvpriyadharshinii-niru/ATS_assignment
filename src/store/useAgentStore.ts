@@ -368,22 +368,22 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
     } else if (approval.kind === 'email') {
       app.sendEmail(approval.candidateId, approval.subject, approval.body)
       resolution = `Approved by Priya · email to ${approval.recipient} recorded${edited ? ' (edited before sending)' : ''}. Email isn’t connected yet, so nothing was delivered.`
-      app.pushToast(`Email to ${approval.recipient} recorded (simulated, not delivered).`)
+      app.pushToast(`Email to ${approval.recipient} recorded in HireFlow. Nothing was delivered.`)
     } else if (approval.kind === 'internal-message') {
-      if (approval.candidateId) app.logActivity(approval.candidateId, `${name}: message sent to ${approval.recipient} — “${approval.subject}”`)
+      if (approval.candidateId) app.logActivity(approval.candidateId, `${name}: message to ${approval.recipient} recorded — “${approval.subject}”`)
       resolution = `Approved by Priya · message to ${approval.recipient} recorded (simulated delivery).`
-      app.pushToast(`Message to ${approval.recipient} recorded (simulated).`)
+      app.pushToast(`Message to ${approval.recipient} recorded in HireFlow. Nothing was delivered.`)
     } else {
-      app.logActivity(approval.candidateId, `Assessment sent: “${approval.assessmentTitle}”`)
+      app.logActivity(approval.candidateId, `Assessment recorded as sent: “${approval.assessmentTitle}” (not delivered)`)
       const candidate = getCandidate(approval.candidateId)
       set((state) => ({
         assessmentResults: {
           ...state.assessmentResults,
-          [approval.candidateId]: { candidateId: approval.candidateId, title: approval.assessmentTitle, status: 'Awaiting submission', items: [], summary: 'Sent to the candidate. The agent will summarise the submission when it arrives.' },
+          [approval.candidateId]: { candidateId: approval.candidateId, title: approval.assessmentTitle, status: 'Awaiting submission', items: [], summary: 'Recorded as sent. Email isn’t connected yet, so the candidate hasn’t received it. The agent summarises a submission when one arrives.' },
         },
       }))
-      resolution = `Approved by Priya · assessment sent to ${candidate?.name ?? 'the candidate'}.`
-      app.pushToast(`Assessment for ${candidate?.name ?? 'the candidate'} recorded as sent (simulated).`)
+      resolution = `Approved by Priya · assessment for ${candidate?.name ?? 'the candidate'} recorded. Email isn’t connected yet, so nothing was delivered.`
+      app.pushToast(`Assessment for ${candidate?.name ?? 'the candidate'} recorded in HireFlow. Nothing was delivered.`)
     }
 
     set((state) => ({

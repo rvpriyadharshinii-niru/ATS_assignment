@@ -11,25 +11,23 @@ import { useAllEffectiveCandidates } from '../../../store/candidateSelectors'
 import { useWorkspaceStore } from '../../../store/useWorkspaceStore'
 import type { Candidate, CriterionKey, EvidenceStrength } from '../../../types/domain'
 import type { WorkspaceTask } from '../../../types/workspace'
-import { applicantReviewSet, evidenceFor, firstName, gapCriteria, midSentence, peerPosition, recommendationSentence } from '../../../workspace/derive'
+import { applicantReviewSet, criterionName, effectiveStrengthRank, evidenceFor, firstName, gapCriteria, midSentence, peerPosition, recommendationSentence, supportedCount } from '../../../workspace/derive'
 import { RecommendationBadge } from '../../candidates/RecommendationBadge'
 import { DecisionBar } from '../DecisionBar'
 import { Avatar, CitationChip, EmptyState, Label, StrengthPill } from '../ui'
 import { btn, inputBase } from '../styles'
 
 const REC_SURFACE: Record<string, string> = {
-  'Strong match': 'border-palette-success-300 bg-palette-success-100/70 border-l-palette-success-500',
-  'Good match': 'border-palette-info-300 bg-palette-info-100/70 border-l-palette-info-500',
-  Promising: 'border-palette-info-300 bg-palette-info-100/70 border-l-palette-info-500',
-  'Potential match': 'border-border bg-card border-l-palette-neutral-400',
-  'Needs more information': 'border-palette-warning-300 bg-palette-warning-100/70 border-l-palette-warning-500',
+  'Strong match': 'border-l-palette-success-500',
+  'Good match': 'border-l-palette-info-500',
+  Promising: 'border-l-palette-info-500',
+  'Potential match': 'border-l-palette-neutral-400',
+  'Needs more information': 'border-l-palette-warning-500',
 }
 
 const PRIORITY_TONE: Record<string, string> = {
-  Critical: 'bg-palette-danger-100 text-palette-danger-700',
-  High: 'bg-palette-brand-100 text-palette-brand-700',
-  Medium: 'bg-palette-info-100 text-palette-info-700',
-  Low: 'bg-palette-neutral-150 text-palette-neutral-600',
+  High: 'bg-palette-neutral-200 text-palette-neutral-800',
+  Medium: 'bg-palette-neutral-150 text-palette-neutral-600',
 }
 
 const STRENGTH_OPTIONS: EvidenceStrength[] = ['Strong', 'Good', 'Moderate', 'Limited', 'Unclear']
@@ -169,7 +167,7 @@ export function CandidateFitView({ task, candidateId, focus, embedded = false }:
         />
       ) : (
         <>
-          <section className={cn('rounded-xl border border-l-4 p-5 shadow-xs', REC_SURFACE[candidate.recommendation ?? ''] ?? 'border-border bg-card')}>
+          <section className={cn('rounded-xl border border-l-4 border-border bg-card p-5', REC_SURFACE[candidate.recommendation ?? ''] ?? 'border-l-palette-neutral-400')}>
             <div className="flex flex-wrap items-center gap-2">
               {candidate.recommendation && <RecommendationBadge label={candidate.recommendation} />}
               <span className="text-xs text-palette-neutral-550">AI recommendation · for your review</span>
@@ -180,7 +178,21 @@ export function CandidateFitView({ task, candidateId, focus, embedded = false }:
             </div>
             <p className="mt-3 text-[15px] leading-relaxed text-palette-neutral-850">{recommendationSentence(candidate)}</p>
             {own && Object.keys(own).length > 0 && (
-              <p className="mt-2 rounded-md bg-palette-brand-100 px-2.5 py-1.5 text-xs text-palette-brand-700">Includes your own assessment on {Object.keys(own).length} criterion. See “You” in the table.</p>
+              <div className="mt-3 border-t border-border pt-3 text-sm text-palette-neutral-800">
+                <p>
+                  <span className="font-semibold">With your assessment: </span>
+                  {criteria.filter((criterion) => effectiveStrengthRank(candidate, criterion.key, own) >= STRENGTH_RANK.Good).length} of {criteria.length} criteria supported
+                  <span className="text-palette-neutral-550"> (evidence alone: {supportedCount(candidate)})</span>
+                </p>
+                <ul className="mt-1 space-y-0.5 text-xs text-palette-neutral-600">
+                  {Object.entries(own).map(([key, mine]) => (
+                    <li key={key}>
+                      {criterionName(candidate, key as CriterionKey)}: you rated {mine.strength}, the evidence shows {evidenceFor(candidate, key as CriterionKey)?.strength ?? 'Not available'}
+                    </li>
+                  ))}
+                </ul>
+                <p className="mt-1 text-xs text-palette-neutral-550">The AI recommendation above still reflects the evidence only. Your ratings are kept separate and labelled as yours.</p>
+              </div>
             )}
             {showMethod && (
               <div className="mt-3 rounded-lg bg-palette-neutral-100 p-3 text-xs leading-relaxed text-palette-neutral-700">
@@ -200,7 +212,7 @@ export function CandidateFitView({ task, candidateId, focus, embedded = false }:
           </section>
 
           {gaps.length > 0 && (
-            <section className={cn('rounded-xl border border-l-4 border-l-palette-warning-500 bg-palette-warning-100/60 p-5', focus === 'gaps' ? 'border-palette-warning-400 ring-2 ring-palette-warning-200' : 'border-palette-warning-250')}>
+            <section className={cn('rounded-xl border border-l-4 border-l-palette-warning-500 bg-card p-5', focus === 'gaps' ? 'border-palette-warning-300 ring-2 ring-palette-warning-150' : 'border-border')}>
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-palette-warning-600" aria-hidden="true" />
                 <p className="text-sm font-semibold text-palette-neutral-900">Not yet demonstrated</p>
@@ -229,7 +241,7 @@ export function CandidateFitView({ task, candidateId, focus, embedded = false }:
 
           <section>
             <div className="mb-2.5 flex items-center justify-between">
-              <Label className="flex items-center gap-2"><span className="h-3 w-1 rounded-full bg-palette-brand-500" aria-hidden="true" />Job criteria and evidence</Label>
+              <Label>Job criteria and evidence</Label>
               <span className="text-xs text-palette-neutral-550">Click a row to open the source passage</span>
             </div>
             <div className="overflow-hidden rounded-xl border border-border bg-card shadow-xs">
@@ -251,7 +263,7 @@ export function CandidateFitView({ task, candidateId, focus, embedded = false }:
                   >
                     <div>
                       <p className="text-sm font-semibold text-palette-neutral-900">{criterion.name}</p>
-                      <span className={cn('mt-1 inline-block rounded px-1.5 py-px text-[10.5px] font-semibold uppercase tracking-wide', PRIORITY_TONE[criterion.priority] ?? PRIORITY_TONE.Low)}>{criterion.priority} priority</span>
+                      <span className={cn('mt-1 inline-block rounded px-1.5 py-px text-[10.5px] font-semibold uppercase tracking-wide', PRIORITY_TONE[criterion.priority] ?? PRIORITY_TONE.Medium)}>{criterion.priority} priority</span>
                       <div className="mt-2 flex flex-wrap items-center gap-1.5">
                         {evidence ? <StrengthPill strength={evidence.strength} /> : <StrengthPill strength="Not available" />}
                         {mine && (
@@ -324,8 +336,8 @@ export function CandidateFitView({ task, candidateId, focus, embedded = false }:
             </section>
           )}
 
-          <section className="rounded-xl border border-palette-brand-200 bg-palette-brand-100/60 p-5">
-            <Label className="text-palette-brand-700">Suggested next step</Label>
+          <section className="rounded-xl border border-border bg-palette-neutral-100 p-5">
+            <Label>Suggested next step</Label>
             <p className="mt-1.5 text-sm leading-relaxed text-palette-neutral-850">
               {candidate.recommendation === 'Needs more information'
                 ? `Ask ${firstName(candidate)} for a portfolio or fuller resume before deciding. Nothing here is a reason to reject.`

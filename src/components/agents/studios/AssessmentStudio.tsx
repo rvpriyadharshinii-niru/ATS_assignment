@@ -249,7 +249,7 @@ export function AssessmentStudio() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                <span className="font-semibold uppercase tracking-wide text-primary">Draft assessment</span>
+                <span className="font-semibold uppercase tracking-wide text-palette-neutral-600">Draft assessment</span>
                 <SimulatedTag />
               </p>
               <h3 className="mt-1 text-base font-semibold text-palette-neutral-900">{assessmentTitle(draft)}</h3>

@@ -394,11 +394,25 @@ function compare(targets: Candidate[], context: EngineContext): EngineResult {
     }
   }
   const criteria = getCriteria(withEvidence[0].openingId)
-  const summary = buildComparisonSummary(withEvidence, criteria)
   const names = withEvidence.map(firstName)
+  // One short line per person on where their evidence is clearly stronger; the table carries the rest.
+  const leads = new Map<string, string[]>()
+  let even = 0
+  for (const criterion of criteria) {
+    const ranks = withEvidence.map((candidate) => STRENGTH_RANK[evidenceFor(candidate, criterion.key)?.strength ?? 'Not available'])
+    const top = Math.max(...ranks)
+    const leaders = withEvidence.filter((_, index) => ranks[index] === top)
+    if (leaders.length === 1 && top >= STRENGTH_RANK.Good) leads.set(firstName(leaders[0]), [...(leads.get(firstName(leaders[0])) ?? []), midSentence(criterion.name)])
+    else even += 1
+  }
+  const summary = leads.size
+    ? `${[...leads].map(([name, keys]) => `${name} is stronger on ${listJoin(keys)}`).join('; ')}.${even ? ` No single leader on the other ${even}.` : ''}${
+        names.filter((name) => !leads.has(name)).length ? ` ${listJoin(names.filter((name) => !leads.has(name)))} ${names.filter((name) => !leads.has(name)).length === 1 ? "isn't" : "aren't"} clearly ahead on any criterion.` : ''
+      }`
+    : buildComparisonSummary(withEvidence, criteria)
   return {
     reply: {
-      text: `${summary} I'm not ranking them overall: the table shows where each one's evidence is stronger, with sources.${withoutEvidence.length ? ` ${listJoin(withoutEvidence.map(firstName))} left out: no evidence on file.` : ''}`,
+      text: `${summary} No overall ranking; sources are in the table.${withoutEvidence.length ? ` ${listJoin(withoutEvidence.map(firstName))} left out: no evidence on file.` : ''}`,
       steps: STEPS.compare,
       suggestions: [
         ...withEvidence.slice(0, 2).map((candidate) => ({ label: `${firstName(candidate)}'s gaps`, query: `What are the gaps for ${firstName(candidate)}?` })),

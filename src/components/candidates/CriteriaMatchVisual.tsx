@@ -25,7 +25,7 @@ export function CriteriaMatchVisual({ criteria, evidence }: { criteria: HiringCr
 
         return (
           <div key={criterion.key} className="flex items-center gap-3">
-            <span className="w-56 shrink-0 truncate text-xs font-medium text-foreground" title={criterion.name}>
+            <span className="w-28 shrink-0 truncate text-xs font-medium text-foreground sm:w-56" title={criterion.name}>
               {criterion.name}
             </span>
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-palette-neutral-150">
@@ -37,7 +37,7 @@ export function CriteriaMatchVisual({ criteria, evidence }: { criteria: HiringCr
             </div>
             <span
               className={cn(
-                'w-28 shrink-0 text-right text-xs font-medium',
+                'w-20 shrink-0 text-right text-xs font-medium sm:w-28',
                 uncertain ? 'text-palette-warning-700' : 'text-palette-neutral-600',
               )}
             >
