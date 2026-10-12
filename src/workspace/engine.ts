@@ -101,7 +101,12 @@ const STEPS = {
     { label: 'Ordering by urgency' },
   ],
   briefing: [{ label: 'Reading activity since your last visit' }, { label: 'Grouping what changed' }],
-  prep: [{ label: 'Finding upcoming interviews' }, { label: 'Checking which candidates have documents' }],
+  prep: [
+    { label: 'Finding your upcoming interviews' },
+    { label: 'Reading resumes, scorecards and the job criteria' },
+    { label: 'Drafting a guide for each candidate' },
+    { label: 'Checking schedules and anything waiting on you' },
+  ],
   assessment: [{ label: 'Reading the role criteria' }, { label: 'Drafting role-specific questions' }, { label: 'Proposing evaluation criteria' }],
 }
 
@@ -491,7 +496,7 @@ function pipeline(text: string, context: EngineContext): EngineResult {
     const opening = getOpening(openingId)
     return {
       reply: {
-        text: `${opening?.title} has ${opening?.totalCandidates} candidates, but this prototype only holds summary figures for it: ${opening?.situationSummary.toLowerCase()}. I can't investigate stage-by-stage without candidate records.`,
+        text: `${opening?.title} has ${opening?.totalCandidates} candidates, but HireFlow only holds summary figures for it: ${opening?.situationSummary.toLowerCase()}. I can't investigate stage-by-stage without candidate records.`,
         tone: 'limitation',
         suggestions: [{ label: 'Senior Product Designer pipeline', query: 'What needs attention in the Product Designer pipeline?' }],
       },
@@ -661,15 +666,26 @@ function interviewPrep(context: EngineContext): EngineResult {
   if (!upcoming.length) return { reply: { text: 'There are no upcoming interviews in your openings.', tone: 'limitation' } }
   const withDocs = upcoming.filter((candidate) => getSourceDocuments(candidate.id).length)
   const without = upcoming.filter((candidate) => !getSourceDocuments(candidate.id).length)
+  // Draft every guide that can be tailored up front, so the result is one prepared pack rather than a to-do list.
+  const guides = Object.fromEntries(withDocs.filter((candidate) => !context.task.guides[candidate.id]).map((candidate) => [candidate.id, buildGuideDraft(candidate, { gapsOnly: true })]))
+  const openItems = context.agentActivity.filter(
+    (item) => upcoming.some((candidate) => candidate.id === item.candidateId) && (item.status === 'pending' || item.status === 'needs-review' || item.status === 'failed'),
+  )
+  const parts = [
+    withDocs.length ? `Guides are drafted for ${listJoin(withDocs.map(firstName))}, built from ${withDocs.length === 1 ? 'their' : 'each'} resume and the gaps to validate` : '',
+    without.length ? `${listJoin(without.map(firstName))} ${without.length === 1 ? 'has' : 'have'} no resume on file, so only the standard questions are possible` : '',
+    openItems.length ? `${plural(openItems.length, 'scheduling item')} ${openItems.length === 1 ? 'needs' : 'need'} you before the interviews` : '',
+  ].filter(Boolean)
   return {
     reply: {
-      text: `${plural(upcoming.length, 'interview')} coming up: ${listJoin(upcoming.map((candidate) => candidate.name))}. I can prepare a tailored guide for ${listJoin(withDocs.map(firstName)) || 'nobody yet'}${without.length ? `; ${listJoin(without.map(firstName))} ${without.length === 1 ? 'has' : 'have'} no resume on file, so only standard questions are possible` : ''}.`,
+      text: `${plural(upcoming.length, 'interview')} coming up: ${listJoin(upcoming.map((candidate) => candidate.name))}. ${parts.join('. ')}. Nothing is shared with the panel or sent to candidates until you approve it.`,
       steps: STEPS.prep,
-      suggestions: withDocs.map((candidate) => ({ label: `Guide for ${firstName(candidate)}`, query: `Prepare interview questions for ${candidate.name}` })),
+      suggestions: withDocs.map((candidate) => ({ label: `Review ${firstName(candidate)}'s guide`, query: `Prepare interview questions for ${candidate.name}` })),
     },
     view: { type: 'interview-prep', candidateIds: upcoming.map((candidate) => candidate.id) },
+    guides,
     recentCandidateIds: upcoming.map((candidate) => candidate.id),
-    status: 'ready',
+    status: openItems.length ? 'awaiting-approval' : 'ready',
     kind: context.task.kind === 'general' ? 'interview-prep' : undefined,
     title: context.task.kind === 'general' ? 'Prepare upcoming interviews' : undefined,
   }
@@ -732,6 +748,30 @@ function method(): EngineResult {
         'I don’t produce one match score. For each of the role’s 5 criteria I look for passages in the candidate’s resume, portfolio notes and scorecards, then rate the evidence from Strong to Insufficient. “Strong match” means Good or Strong evidence on most High-priority criteria. Missing evidence is shown as missing, never scored as negative. The screening score from earlier AI screening is shown for reference only. Names, photos, age, gender, location and employment gaps are never used.',
     },
   }
+}
+
+function outOfScope(targets: Candidate[], lower: string): EngineResult {
+  const person = targets[0]
+  const review = person ? [{ label: `Review ${firstName(person)}'s evidence`, query: `Why ${firstName(person)}?` }] : []
+  if (/\b(hire|offer)\b/.test(lower)) {
+    return {
+      reply: {
+        text: `Hiring decisions and offers are yours to make, so I don't make them${person ? ` for ${person.name}` : ''}. I can lay out the evidence and what's still unproven first.`,
+        tone: 'limitation',
+        suggestions: [...review, ...(person ? [{ label: `What are the gaps for ${firstName(person)}?`, query: `What are the gaps for ${firstName(person)}?` }] : [])],
+      },
+    }
+  }
+  if (/\b(email|e-mail|message|text|schedule|reschedule|invite)\b/.test(lower)) {
+    return {
+      reply: {
+        text: `I don't contact candidates from here. The Interview Coordination agent drafts invitations and scheduling emails, and each one waits for your approval before it's sent.`,
+        tone: 'limitation',
+        suggestions: [{ label: 'Open Interview Coordination', href: '/agents/interview-coordination' }, ...review],
+      },
+    }
+  }
+  return fallback(person)
 }
 
 function rejectGuard(targets: Candidate[]): EngineResult {
@@ -825,12 +865,13 @@ function criterionSearch(key: CriterionKey, context: EngineContext): EngineResul
   }
 }
 
-function fallback(): EngineResult {
+function fallback(candidate?: Candidate): EngineResult {
   return {
     reply: {
-      text: "I can't do that in this prototype yet, and I'd rather say so than guess. Here's what I can take on:",
+      text: "I can't do that yet, and I'd rather say so than guess. Here's what I can take on:",
       tone: 'limitation',
       suggestions: [
+        ...(candidate ? [{ label: `Review ${firstName(candidate)}'s evidence`, query: `Why ${firstName(candidate)}?` }] : []),
         { label: 'Review new applicants', query: "Review today's new applicants" },
         { label: 'What needs attention in my pipeline?', query: 'What needs attention in my hiring pipeline?' },
         { label: 'Clear my hiring tasks', query: 'Help me clear my pending hiring tasks' },
@@ -858,13 +899,14 @@ export function respond(text: string, context: EngineContext): EngineResult {
   if (clarify) return clarify
 
   if (/\b(reject|decline|turn down)\b/.test(lower)) return rejectGuard(targets)
+  if (/\b(book|hire|offer|pay|call|phone|email|e-mail|text|message|schedule|reschedule|invite)\b/.test(lower) && !/remind|follow[- ]?ups?|feedback|reviewers?|interviewers?/.test(lower)) return outOfScope(targets, lower)
   if (/disagree|that'?s (wrong|not right)|you'?re wrong|challenge|override|underrat|overrat|i think .*(strong|weak|better|good)/.test(lower)) {
     return targets[0] ? challenge(targets[0], t) : needCandidate('reassess')
   }
   if (/\bsave\b/.test(lower)) return save(context)
   if (/follow[- ]?ups?|remind|nudge|chase|waiting on feedback|pending feedback/.test(lower)) return followUps(context)
   if (/assessment|take[- ]home|work sample|exercise/.test(lower)) return assessment(context)
-  if (/interviews? (for )?(tomorrow|this week|coming up)|prepare (for )?(my |the )?(upcoming )?interviews\b|upcoming interviews/.test(lower) && !targets.length) return interviewPrep(context)
+  if (/\binterviews?\b.*\b(tomorrow|today|this week|next week|coming up)\b|\b(tomorrow|today)'?s? interviews|prepare\b.*\binterviews\b|upcoming interviews|interview prep/.test(lower) && !targets.length) return interviewPrep(context)
   if (/questions?\b|interview guide|\bguide\b/.test(lower) && !/^(what|which|who) /.test(lower)) {
     return targets[0] ? guide(targets[0], t, context) : interviewPrep(context)
   }
@@ -879,7 +921,12 @@ export function respond(text: string, context: EngineContext): EngineResult {
   }
   if (/\bgaps?\b|missing|concerns?|weakness|risks?|uncertain|not demonstrated|red flags?/.test(lower)) return targets[0] ? gaps(targets[0]) : needCandidate('check for gaps for')
   if (/\bwhere\b|mentioned|original|resume|\bcv\b|source|evidence|citation|prove/.test(lower)) return targets[0] ? showSource(targets[0], t, context) : needCandidate('show the evidence for')
-  if (/shortlist|advance|move .* to|progress|forward|next (stage|round)/.test(lower)) return targets.length ? proposeAdvance(targets, t) : needCandidate('shortlist')
+  if (/shortlist|advance|move .* to|progress|forward|next (stage|round)/.test(lower)) {
+    if (!targets.length) return needCandidate('shortlist')
+    const result = proposeAdvance(targets, t)
+    // Show the person being moved next to the approval, so the decision is made with their evidence in view.
+    return context.task.view.type === 'launcher' && result.focusCandidateId ? { ...result, view: { type: 'candidate', candidateId: result.focusCandidateId } } : result
+  }
   if (/\bdefer\b|later|not now|park|come back to/.test(lower) && targets.length) {
     return {
       reply: { text: `Deferred ${listJoin(targets.map(firstName))}. Nothing changes in the pipeline; this review keeps them so you can come back.`, tone: 'done' },
@@ -891,7 +938,12 @@ export function respond(text: string, context: EngineContext): EngineResult {
   if (/\bapplicants?\b|\bapplications\b|new candidates/.test(lower)) return applicantReview(t, context)
   if (targets.length === 1 && /review|why|recommend|tell me|investigate|look at|about|explain|profile|\?|^[a-z]+$/i.test(lower)) return whyCandidate(targets[0], context)
   if (/review|applicants?|applications|who should i (review|look at)|new candidates|first\b/.test(lower)) return applicantReview(t, context)
-  if (explicit && targets.length === 1) return whyCandidate(targets[0], context)
+  if (explicit && targets.length === 1) {
+    // A bare name ("Ananya", "tell Rahul") opens their review; an unrelated request about them ("book a flight for Ananya") is not guessed at.
+    const nameWords = targets[0].name.toLowerCase().split(' ')
+    const rest = lower.replace(/[^a-z\s]/g, ' ').split(/\s+/).filter((word) => word && !nameWords.includes(word) && !['a', 'an', 'the', 'for', 'to', 'with', 'on', 'of', 'me', 'please', 'and'].includes(word))
+    return rest.length <= 2 ? whyCandidate(targets[0], context) : fallback(targets[0])
+  }
   if (explicit && targets.length > 1) return compare(targets, context)
   if (/\bwhy\b|explain|recommend/.test(lower)) return needCandidate('explain')
   return fallback()

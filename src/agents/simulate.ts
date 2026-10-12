@@ -729,7 +729,7 @@ export function runCoordinationScenario(scenarioId: CoordinationScenarioId, cand
   }
 
   const original = `${businessDayLabel(1)} · 11:00 AM`
-  const alternatives = [`${businessDayLabel(1)} · 3:30 PM`, `${businessDayLabel(2)} · 10:30 AM`]
+  const alternatives = [`${businessDayLabel(1)} · 11:00 AM`, `${businessDayLabel(2)} · 10:30 AM`]
   const roundType = deriveInterviewType(candidate)
   return {
     scenarioId,

@@ -1,4 +1,5 @@
-import { Check, Clock, GitCompareArrows, Inbox, UserX } from 'lucide-react'
+import { Bot, Check, Clock, GitCompareArrows, Inbox, UserX, X } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { recommendedCandidateIds } from '../../../data/candidates'
 import { useState } from 'react'
 import { cn } from '../../../lib/cn'
@@ -24,6 +25,7 @@ export function ApplicantReviewView({ task, openingId, candidateId }: { task: Wo
   const focusCandidate = useWorkspaceStore((state) => state.focusCandidate)
   const send = useWorkspaceStore((state) => state.send)
   const [selected, setSelected] = useState<string[]>([])
+  const [hideAgentHint, setHideAgentHint] = useState(false)
 
   // Candidates stay listed after a decision (so the manager can see what they did), even once their
   // stage moves past the review stages — the set is rebuilt from the task's own decisions.
@@ -133,6 +135,21 @@ export function ApplicantReviewView({ task, openingId, candidateId }: { task: Wo
         </button>
       </aside>
       <div className="min-w-0">
+        {decided >= 3 && !hideAgentHint && (
+          // Offered only after the manager has done a few reviews themselves, never up front.
+          <div className="mb-5 flex items-start gap-3 rounded-xl border border-palette-brand-200 bg-card px-4 py-3 shadow-xs">
+            <Bot className="mt-0.5 h-4 w-4 shrink-0 text-palette-brand-600" aria-hidden="true" />
+            <p className="min-w-0 flex-1 text-sm text-palette-neutral-700">
+              You've decided on {decided} applicants. The Candidate Review agent can prepare reviews like these as new applications arrive, and it still asks you before anyone moves.{' '}
+              <Link to="/agents/candidate-review" className="font-medium text-palette-brand-700 hover:underline">
+                See how it works
+              </Link>
+            </p>
+            <button type="button" onClick={() => setHideAgentHint(true)} className="rounded p-0.5 text-palette-neutral-500 hover:text-palette-neutral-900" aria-label="Dismiss">
+              <X className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </div>
+        )}
         {current && <CandidateFitView task={task} candidateId={current.id} />}
         {current && (
           <div className="mt-6 flex items-center justify-between border-t border-border pt-4">

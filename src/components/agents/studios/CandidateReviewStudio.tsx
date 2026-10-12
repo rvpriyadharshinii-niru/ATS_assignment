@@ -324,7 +324,7 @@ export function CandidateReviewStudio() {
             Select a candidate
           </StepLabel>
           {pool.length === 0 ? (
-            <p className="mt-2 text-sm text-muted-foreground">This opening has no candidates with recorded evidence in the prototype.</p>
+            <p className="mt-2 text-sm text-muted-foreground">This opening has no candidates with recorded evidence yet.</p>
           ) : (
             <ul className="mt-2 max-h-72 space-y-1 overflow-y-auto pr-1">
               {pool.map((entry) => (

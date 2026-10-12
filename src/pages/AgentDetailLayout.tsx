@@ -99,7 +99,7 @@ export function AgentDetailLayout() {
               type="button"
               onClick={runNow}
               disabled={record.status !== 'active'}
-              title={record.status !== 'active' ? 'Only active agents can run' : 'Run a simulated check of the current hiring data now'}
+              title={record.status !== 'active' ? 'Only active agents can run' : 'Check the current hiring data now'}
               className={secondaryButtonClass}
             >
               <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />

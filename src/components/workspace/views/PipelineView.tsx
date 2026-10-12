@@ -127,7 +127,7 @@ export function PipelineView({ task, openingId, focus, stage }: { task: Workspac
             <p className="text-sm font-semibold text-palette-neutral-900">
               {selected.stage} · {selected.named.length} with records
             </p>
-            {selected.count > selected.named.length && <p className="text-xs text-palette-neutral-550">{selected.count - selected.named.length} more are summary-only in this prototype</p>}
+            {selected.count > selected.named.length && <p className="text-xs text-palette-neutral-550">{selected.count - selected.named.length} more have summary figures only</p>}
           </div>
           {selected.named.length === 0 ? (
             <p className="px-4 py-4 text-sm text-muted-foreground">No candidates with records in this stage.</p>

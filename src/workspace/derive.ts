@@ -116,7 +116,7 @@ export function recommendationSentence(candidate: Candidate): string {
       ? `${name} needs more information before I can recommend either way. Only ${plural(supported, 'criterion', 'criteria')} of ${criteriaCount} can be assessed from the application.`
       : !candidate.recommendation
         ? `${name} has no overall recommendation yet: evidence supports ${supported} of ${criteriaCount} criteria${strong.length ? `, strongest in ${listJoin(strong)}` : ''}.`
-        : `${name} is a ${label.toLowerCase()}: evidence supports ${supported} of ${criteriaCount} criteria${strong.length ? `, strongest in ${listJoin(strong)}` : ''}.`
+        : `${name} is ${label === 'Promising' ? 'a promising candidate' : `a ${label.toLowerCase()}`}: evidence supports ${supported} of ${criteriaCount} criteria${strong.length ? `, strongest in ${listJoin(strong)}` : ''}.`
   if (label === 'Needs more information' || gaps.length === 0) return lead
   return `${lead} Not yet demonstrated: ${listJoin(gaps.map((gap) => midSentence(criterionName(candidate, gap.key))))}.`
 }

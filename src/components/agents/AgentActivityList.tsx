@@ -65,7 +65,7 @@ function MessagePreview({
   )
 }
 
-function ActivityCard({ item, showAgent }: { item: AgentActivity; showAgent: boolean }) {
+export function ActivityCard({ item, showAgent }: { item: AgentActivity; showAgent: boolean }) {
   const approveActivity = useAgentStore((state) => state.approveActivity)
   const declineActivity = useAgentStore((state) => state.declineActivity)
   const markReviewed = useAgentStore((state) => state.markReviewed)

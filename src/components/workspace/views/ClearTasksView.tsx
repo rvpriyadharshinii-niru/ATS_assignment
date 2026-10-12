@@ -124,7 +124,7 @@ function ItemBody({ task, item }: { task: WorkspaceTask; item: SessionItem }) {
               To {approval.recipient} · <span className="font-medium">{approval.subject}</span>
             </p>
             <pre className="mt-2 whitespace-pre-wrap font-sans text-xs leading-relaxed text-palette-neutral-800">{approval.body}</pre>
-            <p className="mt-2 text-[11px] text-palette-neutral-500">Approving records this email in HireFlow. No email is delivered: the prototype has no email integration.</p>
+            <p className="mt-2 text-[11px] text-palette-neutral-500">Approving records this email in HireFlow. No email is delivered, because email isn’t connected to HireFlow yet.</p>
           </div>
         )}
         {approval?.kind === 'advance' && (

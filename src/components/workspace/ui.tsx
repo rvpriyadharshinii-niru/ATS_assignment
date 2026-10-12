@@ -80,7 +80,7 @@ export function Avatar({ name, size = 'md', className }: { name: string; size?: 
 export function SimulatedNote({ className, children = 'Simulated AI preparation' }: { className?: string; children?: ReactNode }) {
   return (
     <span
-      title="Prepared by HireFlow's deterministic simulation over the prototype data. No live AI model was called."
+      title="Prepared by HireFlow's rule-based simulation of AI over this workspace's sample data. No live AI model was called."
       className={cn('inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-dashed border-palette-neutral-400 px-1.5 py-0.5 text-[11px] font-medium text-palette-neutral-600', className)}
     >
       <FlaskConical className="h-3 w-3" aria-hidden="true" />

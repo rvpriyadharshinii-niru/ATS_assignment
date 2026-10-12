@@ -367,7 +367,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
       app.pushToast(`${movable.map((candidate) => candidate.name).join(', ')} moved to ${approval.toStage}.`)
     } else if (approval.kind === 'email') {
       app.sendEmail(approval.candidateId, approval.subject, approval.body)
-      resolution = `Approved by Priya · email to ${approval.recipient} recorded${edited ? ' (edited before sending)' : ''}. Delivery is simulated in this prototype.`
+      resolution = `Approved by Priya · email to ${approval.recipient} recorded${edited ? ' (edited before sending)' : ''}. Email isn’t connected yet, so nothing was delivered.`
       app.pushToast(`Email to ${approval.recipient} recorded (simulated, not delivered).`)
     } else if (approval.kind === 'internal-message') {
       if (approval.candidateId) app.logActivity(approval.candidateId, `${name}: message sent to ${approval.recipient} — “${approval.subject}”`)
@@ -423,7 +423,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
         openingId: 'senior-product-designer',
         candidateId: 'ishaan-kapoor',
         reason: 'The Design Lead has a conflict at the booked time. Two alternatives work for the whole panel.',
-        evidence: ['Design Lead: conflict at the current slot (simulated calendar)', `Panel free: ${businessDayLabel(1)} · 3:30 PM and ${businessDayLabel(2)} · 10:30 AM`],
+        evidence: ['Design Lead: conflict at the current slot (simulated calendar)', `Panel free: ${businessDayLabel(1)} · 11:00 AM and ${businessDayLabel(2)} · 10:30 AM`],
         status: 'pending',
         approvalReason: 'External communication — this email goes to the candidate.',
         approval: {
@@ -431,7 +431,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
           candidateId: 'ishaan-kapoor',
           recipient: 'Ishaan Kapoor',
           subject: 'Rescheduling your interview',
-          body: `Hi Ishaan,\n\nWe're sorry — a panel member is no longer available at the time we booked. Would either of these work instead?\n\n• ${businessDayLabel(1)} · 3:30 PM\n• ${businessDayLabel(2)} · 10:30 AM\n\nThank you for your flexibility.\n\nBest regards,\nPriya Sharma\nHiring Manager`,
+          body: `Hi Ishaan,\n\nWe're sorry — a panel member is no longer available at the time we booked. Would either of these work instead?\n\n• ${businessDayLabel(1)} · 11:00 AM\n• ${businessDayLabel(2)} · 10:30 AM\n\nThank you for your flexibility.\n\nBest regards,\nPriya Sharma\nHiring Manager`,
         },
         dedupeKey: 'ic-reschedule-ishaan-kapoor',
       })

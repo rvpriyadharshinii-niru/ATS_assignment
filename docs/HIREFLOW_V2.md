@@ -24,6 +24,7 @@ Navigation: Home · AI Workspace · Jobs (each job still owns its pipeline, inte
 - **Interview guide editor**: questions built from the gaps, editable, with a rubric; saving attaches it to the candidate profile.
 - **Pipeline investigation**: stage strip, a delay diagnosis grounded in waiting days and pending scorecards, per-stage candidates with manual moves (confirm + undo) and issues that open prepared follow-ups.
 - **Follow-ups**: reminder drafts to named interviewers, revisable (shorter, warmer, firmer), approved one at a time, plus the manager's own feedback form.
+- **Upcoming interviews**: one prepared pack. Guides are drafted for everyone with a resume, missing information is named, and scheduling items from the coordination agent wait for approval in place.
 - **Clear my hiring tasks**: nine prepared items (shortlists, agent proposals, own feedback, reminders, a guide, an invitation, a decision) with approve, edit, skip and defer, then a summary of every change.
 - **Briefings**: "What needs my attention" and "What changed since my last review".
 

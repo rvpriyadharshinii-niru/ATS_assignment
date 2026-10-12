@@ -37,7 +37,7 @@ export function SettingsPage() {
           </h2>
           <p className="mt-1 text-sm text-muted-foreground">
             Undo every change made during this session — candidate moves, added candidates, criteria edits, AI Workspace tasks and approvals —
-            and restore the prototype to its original state.
+            and restore HireFlow to its original sample data.
           </p>
           <button
             type="button"

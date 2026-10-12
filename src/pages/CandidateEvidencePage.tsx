@@ -150,7 +150,7 @@ export function CandidateEvidencePage() {
     return (
       <div className="p-8">
         <div className="rounded-xl border border-border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">This candidate record is not available in the prototype.</p>
+          <p className="text-sm text-muted-foreground">This candidate record is not available.</p>
         </div>
       </div>
     )

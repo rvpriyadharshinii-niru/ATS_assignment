@@ -86,7 +86,7 @@ function ConfigForm({ agentId }: { agentId: AgentId }) {
                       <span className="block text-sm font-medium text-palette-neutral-900">{opening.title}</span>
                       <span className="block text-xs text-muted-foreground">
                         {opening.totalCandidates} candidates
-                        {!opening.hasDetailedData && ' · Limited sample data in this prototype — runs will find little to act on'}
+                        {!opening.hasDetailedData && ' · Limited sample data for this job, so runs will find little to act on'}
                       </span>
                     </span>
                   </label>

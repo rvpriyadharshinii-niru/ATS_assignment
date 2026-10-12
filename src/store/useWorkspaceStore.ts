@@ -468,7 +468,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
             : {
                 messages: [
                   ...task.messages,
-                  aiMessage(`Approved. The reminder to the ${draft.recipient} about ${candidate?.name} is recorded in HireFlow and on the pipeline. No email was sent: this prototype has no email integration.`, {
+                  aiMessage(`Approved. The reminder to the ${draft.recipient} about ${candidate?.name} is recorded in HireFlow and on the pipeline. No email was sent, because email isn’t connected to HireFlow yet.`, {
                     tone: 'done',
                     changes: [`${candidate?.name}: reminder to ${draft.recipient} recorded`],
                   }),

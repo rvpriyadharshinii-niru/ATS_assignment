@@ -65,7 +65,7 @@ export function DraftCard({ task, draft, onApprove, onSkip }: { task: WorkspaceT
           ))}
         </div>
       )}
-      {!locked && <p className="mt-2 text-[11px] text-palette-neutral-500">Approving records the message in HireFlow and on the pipeline. No email or chat message is actually delivered in this prototype.</p>}
+      {!locked && <p className="mt-2 text-[11px] text-palette-neutral-500">Approving records the message in HireFlow and on the pipeline. No email or chat message is delivered, because neither is connected to HireFlow yet.</p>}
     </div>
   )
 }
