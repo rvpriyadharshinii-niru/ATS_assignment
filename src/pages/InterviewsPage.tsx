@@ -200,14 +200,14 @@ export function InterviewsPage() {
             onClick={() => setTab(entry.key)}
             className={cn(
               'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-              tab === entry.key ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground',
+              tab === entry.key ? 'bg-palette-neutral-900 text-white' : 'bg-muted text-muted-foreground hover:text-foreground',
             )}
           >
             {entry.label}
             <span
               className={cn(
                 'rounded-full px-1.5 py-0.5 text-[11px] font-semibold',
-                tab === entry.key ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-palette-neutral-200 text-palette-neutral-600',
+                tab === entry.key ? 'bg-white/20 text-white' : 'bg-palette-neutral-200 text-palette-neutral-600',
               )}
             >
               {entry.count}

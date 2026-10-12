@@ -281,7 +281,7 @@ export function AgentActivityList({
   const countFor = (filter: StatusFilter) => (filter === 'all' ? scoped.length : scoped.filter((item) => item.status === filter).length)
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {showFilters && !onlyStatus && (
         <div className="flex flex-wrap items-center gap-2">
           {FILTER_ORDER.map((filter) => {
@@ -294,14 +294,14 @@ export function AgentActivityList({
                 onClick={() => setStatusFilter(filter)}
                 className={cn(
                   'flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-                  statusFilter === filter ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:text-foreground',
+                  statusFilter === filter ? 'bg-palette-neutral-900 text-white' : 'bg-muted text-muted-foreground hover:text-foreground',
                 )}
               >
                 {filter === 'all' ? 'All' : ACTIVITY_STATUS_LABEL[filter]}
                 <span
                   className={cn(
                     'rounded-full px-1.5 py-0.5 text-[11px] font-semibold',
-                    statusFilter === filter ? 'bg-primary-foreground/20 text-primary-foreground' : 'bg-palette-neutral-200 text-palette-neutral-600',
+                    statusFilter === filter ? 'bg-white/20 text-white' : 'bg-palette-neutral-200 text-palette-neutral-600',
                   )}
                 >
                   {count}

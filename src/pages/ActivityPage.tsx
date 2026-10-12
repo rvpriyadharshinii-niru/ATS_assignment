@@ -72,7 +72,7 @@ export function ActivityPage() {
         </p>
       </div>
 
-      <nav className="-mb-px flex gap-5 overflow-x-auto border-b border-border" aria-label="Activity sections">
+      <nav className="flex gap-5 overflow-x-auto border-b border-border" aria-label="Activity sections">
         {tabs.map((entry) => (
           <button
             key={entry.key}
