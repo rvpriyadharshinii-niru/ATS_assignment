@@ -116,20 +116,20 @@ export function WorkSurface({ task }: { task: WorkspaceTask }) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       {task.view.type !== 'launcher' && (
-        <div className="flex items-center gap-3 border-b border-border bg-card px-5 py-3">
+        <div className="flex items-center gap-3 border-b border-border bg-card px-5 py-3.5 sm:px-7">
           {previous && (
             <button type="button" className={btn.ghost} onClick={() => back(task.id)} aria-label={`Back to ${viewTitle(previous).title}`} title={`Back to ${viewTitle(previous).title}`}>
               <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             </button>
           )}
           <div className="min-w-0 flex-1">
-            <h2 className="truncate text-sm font-semibold text-palette-neutral-900">{title}</h2>
+            <h2 className="truncate text-[15px] font-semibold text-palette-neutral-900">{title}</h2>
             {subtitle && <p className="truncate text-xs text-palette-neutral-550">{subtitle}</p>}
           </div>
           <SimulatedNote className="hidden sm:inline-flex" />
         </div>
       )}
-      <div className="@container min-h-0 flex-1 overflow-y-auto bg-background px-5 py-5">{preparing ? <Preparing task={task} now={now} /> : <ViewBody task={task} />}</div>
+      <div className="@container min-h-0 flex-1 overflow-y-auto bg-palette-neutral-100 px-5 py-6 sm:px-7">{preparing ? <Preparing task={task} now={now} /> : <ViewBody task={task} />}</div>
     </div>
   )
 }

@@ -37,11 +37,11 @@ npm run preview   # preview production build
 - **Candidates** (`/candidates`) and **Approvals & activity** (`/activity`) are new; **Ask AI** (⌘K) starts a task from any page with its context.
 - The AI is a deterministic rule-based simulation. Emails, reminders and calendar checks are recorded, not delivered. See [`docs/HIREFLOW_V2.md`](docs/HIREFLOW_V2.md).
 
-## Post-assignment exploration: AI Agents
+## AI Agents
 
-Not part of the original submission. **Sidebar → Agents** (`/agents`) explores the step from delegated tasks to supervised AI Agents: Traditional ATS → AI Workspace → Supervised AI Agents.
+**AI Agents** (`/agents`) shows four supervised agents as cards. Opening one lets you run it on real HireFlow data, review its results and approvals, and change its settings.
 
-- Four agents: Candidate Review, Interview Coordination, Assessment and Interview Preparation, each with Configuration, a Testing Studio and an Activity log.
+- Four agents: Candidate Review, Interview Coordination, Assessment and Interview Preparation, each with Run the agent, Results & approvals, and Settings.
 - Agent runs are deterministic simulations over the prototype data (`src/agents/simulate.ts`); every output is labelled "Simulated".
 - Agents act only through the existing store mutations, so an approved proposal moves the same candidate, sends the same email and logs the same activity as the manual UI or the AI Workspace.
 - Advancing candidates, messages to candidates and publishing assessments always require approval; agents never reject, and missing evidence is never scored as negative.

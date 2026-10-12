@@ -115,7 +115,7 @@ export function AssessmentView({ openingId }: { openingId: OpeningId }) {
       <p className="text-xs text-palette-neutral-550">
         This is the Assessment agent's working draft. Sending it to a candidate always needs your approval, from{' '}
         <Link to="/agents/assessment/test" className="font-medium text-palette-brand-700 hover:underline">
-          the agent's testing studio
+          the Assessment agent
         </Link>
         .
       </p>

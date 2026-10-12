@@ -1,7 +1,7 @@
-import { Activity, ChevronRight, FlaskConical, Home, Pause, Play, RefreshCw, SlidersHorizontal } from 'lucide-react'
+import { Activity, ChevronRight, Home, Pause, Play, RefreshCw, SlidersHorizontal } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useNavigate, useParams } from 'react-router-dom'
-import { AGENT_ICON, formatRelative, isAgentId, primaryButtonClass, secondaryButtonClass } from '../agents/display'
+import { AGENT_COLOR, AGENT_ICON, formatRelative, isAgentId, primaryButtonClass, secondaryButtonClass } from '../agents/display'
 import { actionGate } from '../agents/simulate'
 import { AgentStatusPill } from '../components/agents/agentUi'
 import { ConfirmDialog } from '../components/ui/ConfirmDialog'
@@ -55,9 +55,9 @@ export function AgentDetailLayout() {
   }
 
   const TABS = [
-    { to: 'configure', label: 'Configuration', icon: SlidersHorizontal },
-    { to: 'test', label: 'Testing', icon: FlaskConical },
-    { to: 'activity', label: 'Activity', icon: Activity, count: attention },
+    { to: 'test', label: 'Run the agent', icon: Play },
+    { to: 'activity', label: 'Results & approvals', icon: Activity, count: attention },
+    { to: 'configure', label: 'Settings', icon: SlidersHorizontal },
   ]
 
   return (
@@ -77,7 +77,7 @@ export function AgentDetailLayout() {
 
         <div className="mt-2 flex items-start justify-between gap-4">
           <div className="flex min-w-0 items-start gap-3">
-            <IconBadge icon={AGENT_ICON[agentId]} color="brand" size="md" />
+            <IconBadge icon={AGENT_ICON[agentId]} color={AGENT_COLOR[agentId].badge} size="md" />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-xl font-semibold tracking-tight text-palette-neutral-900">{definition.name}</h1>
@@ -157,7 +157,7 @@ export function AgentDetailLayout() {
           consequences={[
             ownActions.length ? `Let it ${ownActions.map((action) => action.label.charAt(0).toLowerCase() + action.label.slice(1)).join('; ')} on its own` : 'Let it prepare work, but complete nothing on its own',
             approvalActions.length ? `Ask for your approval before it can ${approvalActions.map((action) => action.label.charAt(0).toLowerCase() + action.label.slice(1)).join('; ')}` : 'Ask for your approval on anything consequential',
-            'Log everything it does in Activity',
+            'Log everything it does in Results & approvals',
           ]}
           confirmLabel={record.status === 'draft' ? 'Activate agent' : 'Resume agent'}
           onConfirm={() => {
@@ -170,10 +170,10 @@ export function AgentDetailLayout() {
         <ConfirmDialog
           open={activateOpen}
           onOpenChange={setActivateOpen}
-          title="Test before activating"
-          lines={[needsApprovedDraft ? 'Review, edit and approve the draft assessment in Testing first.' : 'Run at least one test so you can see how the agent behaves with your settings.']}
-          consequences={['Open the Testing tab', 'Nothing is changed or sent while testing']}
-          confirmLabel="Go to Testing"
+          title="Try it before activating"
+          lines={[needsApprovedDraft ? 'Review, edit and approve the draft assessment under Run the agent first.' : 'Run the agent once so you can see how it behaves with your settings.']}
+          consequences={['Open Run the agent', 'Nothing is changed or sent until you approve it']}
+          confirmLabel="Run the agent"
           onConfirm={() => {
             setActivateOpen(false)
             navigate(`/agents/${agentId}/test`)

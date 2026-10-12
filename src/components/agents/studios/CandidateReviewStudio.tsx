@@ -116,7 +116,7 @@ function ReviewResult({ run }: { run: ReviewRun }) {
       <section className="rounded-xl border border-border bg-card p-5 shadow-xs">
         <p className={sectionLabelClass}>Proposed actions</p>
         <ul className="mt-2 space-y-2">
-          {output.proposedActions.length === 0 && <li className="text-sm text-muted-foreground">No actions — the relevant actions are turned off in Configuration.</li>}
+          {output.proposedActions.length === 0 && <li className="text-sm text-muted-foreground">No actions — the relevant actions are turned off in Settings.</li>}
           {output.proposedActions.map((action) => (
             <li key={action.label} className="flex items-start justify-between gap-3 rounded-lg border border-border px-3 py-2">
               <div>
@@ -135,7 +135,7 @@ function ReviewResult({ run }: { run: ReviewRun }) {
             </li>
           ))}
         </ul>
-        <p className="mt-2.5 text-xs text-muted-foreground">Test mode: nothing is changed or sent. In live mode these appear in Approvals.</p>
+        <p className="mt-2.5 text-xs text-muted-foreground">Preview: nothing is changed or sent. When the agent is active, these wait for you in Approvals.</p>
       </section>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -321,7 +321,7 @@ export function CandidateReviewStudio() {
           </select>
 
           <StepLabel step={2} className="mt-4">
-            Select a sample candidate
+            Select a candidate
           </StepLabel>
           {pool.length === 0 ? (
             <p className="mt-2 text-sm text-muted-foreground">This opening has no candidates with recorded evidence in the prototype.</p>
@@ -335,7 +335,7 @@ export function CandidateReviewStudio() {
                       candidateId === entry.id ? 'border-primary bg-palette-brand-100/50' : 'border-transparent hover:bg-muted/60',
                     )}
                   >
-                    <input type="radio" name="sample-candidate" checked={candidateId === entry.id} onChange={() => setCandidateId(entry.id)} className="accent-[var(--primary)]" />
+                    <input type="radio" name="sample-candidate" checked={candidateId === entry.id} onChange={() => setCandidateId(entry.id)} className="accent-palette-brand-600" />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate font-medium text-palette-neutral-900">{entry.name}</span>
                       <span className="block truncate text-xs text-muted-foreground">
@@ -354,7 +354,7 @@ export function CandidateReviewStudio() {
           </StepLabel>
           <button type="button" className={cn(primaryButtonClass, 'mt-2 w-full')} onClick={run} disabled={!candidate}>
             <Play className="h-3.5 w-3.5" aria-hidden="true" />
-            {candidateRuns.length ? 'Run again' : 'Run test'}
+            {candidateRuns.length ? 'Run again' : 'Run the agent'}
           </button>
           <p className="mt-2 text-xs text-muted-foreground">Uses configuration v{record.version}. Nothing is changed or sent.</p>
         </section>
@@ -446,7 +446,7 @@ export function CandidateReviewStudio() {
                   </button>
                 )}
                 <Link to="/agents/candidate-review/configure" className="ml-auto inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-palette-brand-600">
-                  View in Configuration
+                  View in Settings
                   <ArrowRight className="h-3 w-3" aria-hidden="true" />
                 </Link>
               </div>

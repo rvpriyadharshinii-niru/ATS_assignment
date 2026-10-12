@@ -104,7 +104,7 @@ export function CoordinationStudio() {
                     setScenarioId(scenario.id)
                     setOutput(null)
                   }}
-                  className="mt-0.5 accent-[var(--primary)]"
+                  className="mt-0.5 accent-palette-brand-600"
                 />
                 <span>
                   <span className="block text-sm font-medium text-palette-neutral-900">{scenario.label}</span>
@@ -118,7 +118,7 @@ export function CoordinationStudio() {
           <Play className="h-3.5 w-3.5" aria-hidden="true" />
           Run simulation
         </button>
-        <p className="text-xs text-muted-foreground">Uses configuration v{record.version} and the live pipeline. Nothing is sent while testing.</p>
+        <p className="text-xs text-muted-foreground">Uses configuration v{record.version} and the live pipeline. Nothing is sent until you approve it.</p>
       </section>
 
       <div className="min-w-0 space-y-4">

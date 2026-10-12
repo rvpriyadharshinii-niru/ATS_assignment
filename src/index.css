@@ -8,3 +8,13 @@
     font-family: var(--font-display);
   }
 }
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  input[type='checkbox'],
+  input[type='radio'] {
+    accent-color: var(--palette-brand-600);
+  }
+}

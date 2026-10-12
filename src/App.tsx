@@ -40,7 +40,7 @@ function App() {
         <Route path="/pipeline" element={<Navigate to="/openings/senior-product-designer/pipeline" replace />} />
         <Route path="/agents" element={<AgentsWorkspacePage />} />
         <Route path="/agents/:agentId" element={<AgentDetailLayout />}>
-          <Route index element={<Navigate to="configure" replace />} />
+          <Route index element={<Navigate to="test" replace />} />
           <Route path="configure" element={<AgentConfigurePage />} />
           <Route path="test" element={<AgentTestPage />} />
           <Route path="activity" element={<AgentActivityPage />} />

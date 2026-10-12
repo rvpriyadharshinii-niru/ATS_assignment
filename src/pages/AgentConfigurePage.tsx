@@ -80,7 +80,7 @@ function ConfigForm({ agentId }: { agentId: AgentId }) {
                       type="checkbox"
                       checked={checked}
                       onChange={(event) => update({ openingIds: toggleIn(form.openingIds, opening.id, event.target.checked) as OpeningId[] })}
-                      className="h-4 w-4 accent-[var(--primary)]"
+                      className="h-4 w-4 accent-palette-brand-600"
                     />
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-medium text-palette-neutral-900">{opening.title}</span>
@@ -206,7 +206,7 @@ function ConfigForm({ agentId }: { agentId: AgentId }) {
                     aria-label={`Enable: ${action.label}`}
                     checked={enabled}
                     onChange={(event) => update({ enabledActions: toggleIn(form.enabledActions, action.key, event.target.checked) })}
-                    className="mt-0.5 h-4 w-4 accent-[var(--primary)]"
+                    className="mt-0.5 h-4 w-4 accent-palette-brand-600"
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">

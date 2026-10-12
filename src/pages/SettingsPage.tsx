@@ -59,7 +59,7 @@ export function SettingsPage() {
           'Remove candidates added during this session',
           'Restore hiring criteria to their original configuration',
           'Clear filters, activity history and AI Workspace tasks',
-          'Restore AI Agents settings, test runs and activity',
+          'Restore AI Agents settings, runs and activity',
         ]}
         confirmLabel="Reset"
         tone="destructive"

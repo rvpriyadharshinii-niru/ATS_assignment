@@ -222,7 +222,7 @@ function seedActivity(now: number): AgentActivity[] {
       timestamp: now - 2 * DAY,
       title: 'Draft practical assessment prepared for Senior Product Designer',
       openingId: 'senior-product-designer',
-      reason: 'Generated from the role’s criteria at Senior level. Waiting for your review in Testing before the agent can be activated.',
+      reason: 'Generated from the role’s criteria at Senior level. Waiting for your review in Run the agent before the agent can be activated.',
       status: 'completed',
       resolution: 'Draft ready for review.',
       resolvedAt: now - 2 * DAY,
@@ -328,7 +328,7 @@ export const useAgentStore = create<AgentStoreState>((set, get) => ({
       agentId: 'assessment',
       title: `Assessment approved: ${assessmentTitle(draft)} (v${draft.approvedVersion})`,
       openingId: draft.openingId,
-      reason: `${draft.questions.length} questions reviewed and approved by Priya in Testing.`,
+      reason: `${draft.questions.length} questions reviewed and approved by Priya.`,
       status: 'completed',
       resolution: 'Approved as the template. Sending it to any candidate still needs your approval each time.',
     })

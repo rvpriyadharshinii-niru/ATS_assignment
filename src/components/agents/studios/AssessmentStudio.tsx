@@ -197,7 +197,7 @@ export function AssessmentStudio() {
                 key={entry.key}
                 className={cn('flex cursor-pointer items-start gap-2.5 rounded-lg border px-2.5 py-2', type === entry.key ? 'border-primary bg-palette-brand-100/50' : 'border-transparent hover:bg-muted/60')}
               >
-                <input type="radio" name="assessment-type" checked={type === entry.key} onChange={() => setType(entry.key)} className="mt-0.5 accent-[var(--primary)]" />
+                <input type="radio" name="assessment-type" checked={type === entry.key} onChange={() => setType(entry.key)} className="mt-0.5 accent-palette-brand-600" />
                 <span>
                   <span className="block text-sm font-medium text-palette-neutral-900">{entry.key}</span>
                   <span className="block text-xs text-muted-foreground">{entry.description}</span>
@@ -227,7 +227,7 @@ export function AssessmentStudio() {
                       type="checkbox"
                       checked={skills.includes(criterion.key)}
                       onChange={(event) => setSkills((current) => (event.target.checked ? [...current, criterion.key] : current.filter((key) => key !== criterion.key)))}
-                      className="accent-[var(--primary)]"
+                      className="accent-palette-brand-600"
                     />
                     <span className="min-w-0 flex-1 truncate text-palette-neutral-900">{criterion.name}</span>
                     <span className="text-xs text-muted-foreground">{criterion.priority}</span>

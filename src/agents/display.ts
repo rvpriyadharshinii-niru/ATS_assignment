@@ -1,5 +1,6 @@
 import { BookOpenCheck, CalendarClock, ClipboardCheck, UserCheck } from 'lucide-react'
 import type { ComponentType } from 'react'
+import type { IconBadgeColor } from '../components/ui/IconBadge'
 import { AGENT_DEFINITIONS } from '../data/agents'
 import type { AgentActivityStatus, AgentId, CandidateReviewVerdict, CriterionFinding } from '../types/agents'
 
@@ -56,4 +57,12 @@ export const sectionLabelClass = 'text-xs font-semibold uppercase tracking-wide 
 
 export function isAgentId(value: string | undefined): value is AgentId {
   return !!value && value in AGENT_DEFINITIONS
+}
+
+/** Each agent gets its own colour so it is recognisable across cards, approvals and activity. */
+export const AGENT_COLOR: Record<AgentId, { badge: IconBadgeColor; band: string; ring: string }> = {
+  'candidate-review': { badge: 'brand', band: 'bg-palette-brand-500', ring: 'hover:border-palette-brand-300' },
+  'interview-coordination': { badge: 'info', band: 'bg-palette-info-500', ring: 'hover:border-palette-info-300' },
+  assessment: { badge: 'success', band: 'bg-palette-success-500', ring: 'hover:border-palette-success-300' },
+  'interview-prep': { badge: 'plum', band: 'bg-palette-plum-500', ring: 'hover:border-palette-plum-300' },
 }

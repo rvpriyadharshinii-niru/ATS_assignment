@@ -1,7 +1,7 @@
 import type { CandidateStage, CriterionKey, CriterionPriority, EvidenceStrength, OpeningId } from './domain'
 
 /**
- * Post-assignment exploration: supervised AI Agents that work proactively on top of the same
+ * Supervised AI Agents that work proactively on top of the same
  * HireFlow state Copilot and the manual UI use. Every agent run in this prototype is a
  * deterministic simulation over the fictional dataset — no live model is called.
  */

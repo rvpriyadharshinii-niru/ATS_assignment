@@ -4,7 +4,7 @@ HireFlow V2 rethinks the prototype around one loop: **delegate → observe → i
 
 ## What changed from V1
 
-| V1 (assignment) | V2 |
+| V1 | V2 |
 | --- | --- |
 | A record-centric ATS with a Copilot panel docked beside each page | A task-centric workspace. Home asks "What would you like to get done?" and every request becomes a task with its own conversation and work surface |
 | Chat answers appeared inside the panel; structured UI lived elsewhere | Split workspace: a conversation panel (about a third of the screen, resizable and collapsible) drives an adaptive work surface. Clicking in either side updates the other |
@@ -54,7 +54,7 @@ Navigation: Home · AI Workspace · Jobs (each job still owns its pipeline, inte
 - **C. Deep investigation**: "Why Ananya?" → evidence → open resume → "Compare with Rahul" → gaps → interview questions → edit → Save.
 - **D. Pipeline investigation**: "What needs attention in my hiring pipeline?" → delay diagnosis → affected candidates → Prepare follow-ups → review drafts → Approve and record → pipeline waiting state updates.
 - **E. Clear my tasks**: Home banner → work through nine items → summary.
-- **F. AI Agents**: AI Agents → configure scope and permissions → Testing studio → activate or pause → activity.
+- **F. AI Agents**: AI Agents → open an agent card → run the agent → review results and approvals → adjust settings → activate or pause.
 - **G. Manual fallback**: Jobs or Candidates → structured tables and manual actions → Ask AI with page context → back to the manual page.
 
 Edge cases handled include an unknown name ("Why Zara?"), an ambiguous surname ("Why Kapoor?"), candidates with no documents, conflicting sources (Rohan's AI experience), a challenged rating, roles with only summary data, a rejection request (refused, with Decline left to the manager), partial sessions, and unrecognised requests.
