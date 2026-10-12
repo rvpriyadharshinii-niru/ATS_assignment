@@ -14,6 +14,7 @@ export function DraftCard({ task, draft, onApprove, onSkip }: { task: WorkspaceT
   const updateDraft = useWorkspaceStore((state) => state.updateDraft)
   const reviseDraft = useWorkspaceStore((state) => state.reviseDraft)
   const approveDraft = useWorkspaceStore((state) => state.approveDraft)
+  const undoDraft = useWorkspaceStore((state) => state.undoDraft)
   const skipDraft = useWorkspaceStore((state) => state.skipDraft)
   const candidate = getCandidate(draft.candidateId)
   const locked = draft.status !== 'draft'
@@ -33,6 +34,11 @@ export function DraftCard({ task, draft, onApprove, onSkip }: { task: WorkspaceT
           <span className="inline-flex items-center gap-1 text-xs font-semibold text-palette-success-700">
             <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
             Approved · recorded
+            {!onApprove && (
+              <button type="button" onClick={() => undoDraft(task.id, draft.id)} className="ml-1 rounded px-1 font-medium text-palette-neutral-600 underline-offset-2 hover:text-palette-neutral-900 hover:underline">
+                Undo
+              </button>
+            )}
           </span>
         )}
         {draft.status === 'skipped' && <span className="text-xs font-semibold text-palette-neutral-500">Skipped</span>}

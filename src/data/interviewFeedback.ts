@@ -22,6 +22,10 @@ const interviewFeedbackByCandidateId: Record<string, InterviewFeedbackEntry[]> =
     },
     { reviewer: 'Design Lead', sentiment: 'mixed', quote: 'Solid craft. Hasn’t shown much AI-specific product work yet.' },
   ],
+  'aarav-sethi': [
+    { reviewer: 'Engineering Manager', sentiment: 'positive', quote: 'Strong partner to engineering; ran a crisp scoping discussion during the case exercise.' },
+    { reviewer: 'Engineering Manager', sentiment: 'mixed', quote: 'Would like to see more depth on qualitative discovery beyond structured interviews.' },
+  ],
 }
 
 export function getInterviewFeedback(candidateId: string): InterviewFeedbackEntry[] {

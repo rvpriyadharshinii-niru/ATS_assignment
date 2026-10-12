@@ -283,7 +283,7 @@ export function CandidateEvidencePage() {
             <span className="rounded-full bg-palette-success-150 px-2.5 py-1 text-xs font-medium text-palette-success-700">Selected</span>
           )}
           {candidate.prioritiesSupported !== undefined && (
-            <span className="text-sm font-medium text-palette-neutral-700">{candidate.prioritiesSupported} / 5 priorities supported</span>
+            <span className="text-sm font-medium text-palette-neutral-700">{candidate.prioritiesSupported} / {getCriteria(candidate.openingId).length} priorities supported</span>
           )}
           {candidate.screeningScore !== undefined && (
             <span className="text-sm text-palette-neutral-500">AI screening score {candidate.screeningScore}</span>
@@ -363,7 +363,7 @@ export function CandidateEvidencePage() {
                 <p className="mt-2 text-sm font-semibold text-palette-neutral-900">
                   {candidate.recommendation}
                   {candidate.recommendation && candidate.prioritiesSupported !== undefined && ' · '}
-                  {candidate.prioritiesSupported !== undefined && `${candidate.prioritiesSupported} of 5 priorities supported`}
+                  {candidate.prioritiesSupported !== undefined && `${candidate.prioritiesSupported} of ${getCriteria(candidate.openingId).length} priorities supported`}
                 </p>
               )}
 

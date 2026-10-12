@@ -22,19 +22,21 @@ export const openings: Opening[] = [
     id: 'product-manager',
     title: 'Product Manager',
     totalCandidates: 31,
+    newSinceLastReview: 6,
     needsAttention: 2,
     priority: 'Medium',
     situationSummary: '1 candidate awaiting your decision · 1 interview this week',
-    hasDetailedData: false,
+    hasDetailedData: true,
   },
   {
     id: 'ux-researcher',
     title: 'UX Researcher',
     totalCandidates: 18,
+    newSinceLastReview: 6,
     needsAttention: 0,
     priority: 'Normal',
     situationSummary: 'Screening in progress · no immediate action required',
-    hasDetailedData: false,
+    hasDetailedData: true,
   },
 ]
 

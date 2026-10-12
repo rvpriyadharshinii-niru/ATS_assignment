@@ -96,7 +96,7 @@ export function RoleWorkspaceLayout() {
               <>
                 <button
                   type="button"
-                  onClick={() => launch("Review today's new applicants")}
+                  onClick={() => launch(opening.id === 'senior-product-designer' ? "Review today's new applicants" : `Review ${opening.title} applicants`)}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-palette-neutral-700 hover:bg-muted"
                 >
                   <Sparkles className="h-3.5 w-3.5 text-palette-brand-600" aria-hidden="true" />
@@ -104,7 +104,7 @@ export function RoleWorkspaceLayout() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => launch('What needs attention in my hiring pipeline?')}
+                  onClick={() => launch(opening.id === 'senior-product-designer' ? 'What needs attention in my hiring pipeline?' : `What needs attention in the ${opening.title} pipeline?`)}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-palette-neutral-700 hover:bg-muted"
                 >
                   <Sparkles className="h-3.5 w-3.5 text-palette-brand-600" aria-hidden="true" />

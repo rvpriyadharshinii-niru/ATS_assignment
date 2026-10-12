@@ -18,8 +18,9 @@ export type CandidateStage = 'Applied' | 'AI Screened' | 'HM Review' | 'Intervie
 
 /**
  * Every criterion this prototype can score evidence against. The first five are the default
- * Senior Product Designer set; the rest are the catalog "+ Add criterion" can add to a role —
- * configurable, but with no candidate evidence recorded against them until that happens.
+ * Senior Product Designer set; the next eight are the Product Manager and UX Researcher sets
+ * (which also reuse `crossFunctionalCollaboration` and `communicationSkills`); the rest are the
+ * catalog "+ Add criterion" can add to a role.
  */
 export type CriterionKey =
   | 'enterpriseSaas'
@@ -27,6 +28,14 @@ export type CriterionKey =
   | 'aiProductExperience'
   | 'designSystems'
   | 'leadership'
+  | 'productStrategy'
+  | 'customerDiscovery'
+  | 'dataInformedDecisions'
+  | 'b2bSaasDomain'
+  | 'researchMethods'
+  | 'researchSynthesis'
+  | 'researchImpact'
+  | 'enterpriseResearchContext'
   | 'communicationSkills'
   | 'crossFunctionalCollaboration'
   | 'mentorship'

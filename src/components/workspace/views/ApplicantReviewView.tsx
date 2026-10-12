@@ -1,6 +1,7 @@
 import { Bot, Check, Clock, GitCompareArrows, Inbox, UserX, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { recommendedCandidateIds } from '../../../data/candidates'
+import { getCriteria } from '../../../data/criteria'
 import { useState } from 'react'
 import { cn } from '../../../lib/cn'
 import { useAllEffectiveCandidates } from '../../../store/candidateSelectors'
@@ -105,7 +106,7 @@ export function ApplicantReviewView({ task, openingId, candidateId }: { task: Wo
                     <span className="min-w-0 flex-1">
                       <span className={cn('block truncate text-sm font-medium', candidate.rejected && 'line-through opacity-60')}>{candidate.name}</span>
                       <span className="mt-1 flex items-center gap-1.5">
-                        <span className="flex gap-0.5" aria-label={`${supportedCount(candidate)} of 5 criteria supported`}>
+                        <span className="flex gap-0.5" aria-label={`${supportedCount(candidate)} of ${getCriteria(openingId).length} criteria supported`}>
                           {[0, 1, 2, 3, 4].map((step) => (
                             <span key={step} className={cn('h-1.5 w-2.5 rounded-sm', step < supportedCount(candidate) ? group.dot : 'bg-palette-neutral-200')} />
                           ))}

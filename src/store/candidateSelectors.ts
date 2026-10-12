@@ -1,10 +1,8 @@
 import { applyCandidateOverride, candidates, getCandidate, getCandidatesForOpening } from '../data/candidates'
+import { getOpening } from '../data/openings'
 import { computeLiveStageCounts, type PipelineStageCount } from '../data/pipeline'
 import type { Candidate, OpeningId } from '../types/domain'
 import { useAppStore } from './useAppStore'
-
-/** The one opening with a modeled, override-driven pipeline in this prototype. */
-const MODELED_PIPELINE_OPENING: OpeningId = 'senior-product-designer'
 
 export function useEffectiveCandidate(id: string | undefined): Candidate | undefined {
   const override = useAppStore((state) => (id ? state.candidateOverrides[id] : undefined))
@@ -26,7 +24,8 @@ export function useAllEffectiveCandidates(): Candidate[] {
 
 /** Live stage counts (baseline "other" + currently-tracked named candidates). Empty for roles without a modeled pipeline. */
 export function usePipelineStages(openingId: OpeningId | undefined): PipelineStageCount[] {
-  const effective = useEffectiveCandidatesForOpening(openingId === MODELED_PIPELINE_OPENING ? openingId : undefined)
-  if (openingId !== MODELED_PIPELINE_OPENING) return []
-  return computeLiveStageCounts(effective)
+  const modeled = openingId && getOpening(openingId)?.hasDetailedData ? openingId : undefined
+  const effective = useEffectiveCandidatesForOpening(modeled)
+  if (!modeled) return []
+  return computeLiveStageCounts(effective, modeled)
 }

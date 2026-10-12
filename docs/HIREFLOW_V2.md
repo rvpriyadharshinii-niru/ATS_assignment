@@ -46,7 +46,7 @@ Navigation: Home · AI Workspace · Jobs (each job still owns its pipeline, inte
 - Emails, calendar checks and reminders are **recorded, not delivered**. Toasts and logs say "recorded (simulated)".
 - Agent runs, calendar availability and the assessment flow come from `src/agents/simulate.ts`.
 
-**Deliberately not done:** AI never rejects anyone, never writes feedback as if an interviewer wrote it, never uses protected attributes, and never cites a passage that doesn't exist. When records are missing (Ishaan, Aditya, Neha, Aarav, the Product Manager and UX Researcher roles) it says so instead of guessing.
+**Deliberately not done:** AI never rejects anyone, never writes feedback as if an interviewer wrote it, never uses protected attributes, and never cites a passage that doesn't exist. When records are missing (Ishaan, Aditya, Neha, and applicants with summary data only) it says so instead of guessing.
 
 ## Journeys covered
 

@@ -2,6 +2,7 @@ import { CalendarClock, CheckCircle2, CircleAlert, FileText, FileX, Hourglass, L
 import type { ComponentType, ReactNode } from 'react'
 import { ActivityCard } from '../../agents/AgentActivityList'
 import { getInterviewFeedback } from '../../../data/interviewFeedback'
+import { getOpening } from '../../../data/openings'
 import { getSourceDocuments } from '../../../data/sources'
 import { cn } from '../../../lib/cn'
 import { deriveInterviewDayLabel, deriveInterviewType } from '../../../lib/candidateStatus'
@@ -92,7 +93,7 @@ export function InterviewPrepView({ task, candidateIds }: { task: WorkspaceTask;
                   <p className="text-[15px] font-semibold text-palette-neutral-900">{candidate.name}</p>
                   <p className="flex items-center gap-1.5 text-xs text-palette-neutral-600">
                     <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />
-                    {deriveInterviewType(candidate)} · {dayLabel}, {time}
+                    {getOpening(candidate.openingId)?.title} · {deriveInterviewType(candidate)} · {dayLabel}, {time}
                   </p>
                 </div>
                 {saved ? (

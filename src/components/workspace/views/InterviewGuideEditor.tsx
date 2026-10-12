@@ -15,6 +15,7 @@ export function InterviewGuideEditor({ task, candidateId, compact = false }: { t
   const candidate = getCandidate(candidateId)
   const updateGuide = useWorkspaceStore((state) => state.updateGuide)
   const saveGuide = useWorkspaceStore((state) => state.saveGuide)
+  const unsaveGuide = useWorkspaceStore((state) => state.unsaveGuide)
   const setView = useWorkspaceStore((state) => state.setView)
   const focusCriterion = useWorkspaceStore((state) => state.focusCriterion)
   const guide = task.guides[candidateId] ?? (candidate ? buildGuideDraft(candidate, { gapsOnly: true }) : undefined)
@@ -39,6 +40,11 @@ export function InterviewGuideEditor({ task, candidateId, compact = false }: { t
           <span className="inline-flex items-center gap-1.5 text-sm font-medium text-palette-success-700">
             <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
             Saved {relativeTime(guide.savedAt)}
+            {!compact && (
+              <button type="button" onClick={() => unsaveGuide(task.id, candidateId)} className="ml-1 rounded px-1 text-xs font-medium text-palette-neutral-600 underline-offset-2 hover:text-palette-neutral-900 hover:underline">
+                Remove from profile
+              </button>
+            )}
           </span>
         ) : (
           !compact && (

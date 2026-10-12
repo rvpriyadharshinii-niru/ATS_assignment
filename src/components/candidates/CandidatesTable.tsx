@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { getCriteria } from '../../data/criteria'
 import { buildStatusNote } from '../../lib/candidateStatus'
 import { cn } from '../../lib/cn'
 import { STAGE_TONE } from '../../lib/stageTone'
@@ -172,7 +173,7 @@ export function CandidatesTable({
                 <td className="px-3 py-2.5 align-top">
                   {candidate.prioritiesSupported !== undefined ? (
                     <span className="inline-flex whitespace-nowrap rounded-md bg-palette-neutral-150 px-2 py-0.5 text-xs font-semibold text-palette-neutral-700">
-                      {candidate.prioritiesSupported}/5
+                      {candidate.prioritiesSupported}/{getCriteria(candidate.openingId).length}
                     </span>
                   ) : (
                     <span className="inline-flex whitespace-nowrap rounded-md bg-palette-neutral-100 px-2 py-0.5 text-xs font-medium text-muted-foreground">

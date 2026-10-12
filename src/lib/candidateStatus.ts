@@ -1,3 +1,4 @@
+import { getCriteria } from '../data/criteria'
 import { getResume } from '../data/sources'
 import type { Candidate, CriterionKey } from '../types/domain'
 
@@ -101,6 +102,14 @@ const SKILL_LABEL_BY_CRITERION: Partial<Record<CriterionKey, string>> = {
   communicationSkills: 'Communication',
   crossFunctionalCollaboration: 'Cross-functional Collaboration',
   mentorship: 'Mentorship',
+  productStrategy: 'Product Strategy',
+  customerDiscovery: 'Customer Discovery',
+  dataInformedDecisions: 'Data-informed Decisions',
+  b2bSaasDomain: 'B2B SaaS',
+  researchMethods: 'Research Methods',
+  researchSynthesis: 'Research Synthesis',
+  researchImpact: 'Research Impact',
+  enterpriseResearchContext: 'Enterprise Research',
 }
 
 /** Rounds out every candidate's chip list to a consistent, plausible Senior Product Designer skill set. */
@@ -241,7 +250,7 @@ export function deriveSeedActivity(candidate: Candidate): ActivityFeedItem[] {
       id: `${candidate.id}-seed-screened`,
       timestamp: appliedAt + 1000 * 60 * 60 * 52,
       label: 'AI screening completed',
-      detail: `${candidate.prioritiesSupported} of 5 configured priorities supported`,
+      detail: `${candidate.prioritiesSupported} of ${getCriteria(candidate.openingId).length} configured priorities supported`,
     })
   }
 

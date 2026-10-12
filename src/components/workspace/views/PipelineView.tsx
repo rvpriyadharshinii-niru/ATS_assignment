@@ -1,6 +1,7 @@
 import { AlertCircle, ArrowRight, Clock, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { getOpening } from '../../../data/openings'
 import { PENDING_SCORECARDS } from '../../../data/sources'
 import { buildStatusNote } from '../../../lib/candidateStatus'
 import { cn } from '../../../lib/cn'
@@ -70,7 +71,7 @@ export function PipelineView({ task, openingId, focus, stage }: { task: Workspac
     <div className="space-y-5">
       <section className="rounded-xl border border-border bg-card p-4">
         <div className="flex items-baseline justify-between">
-          <Label>Senior Product Designer · {total} active</Label>
+          <Label>{getOpening(openingId)?.title ?? 'Senior Product Designer'} · {total} active</Label>
           <Link to={`/openings/${openingId}/pipeline`} className="inline-flex items-center gap-1 text-xs font-medium text-palette-neutral-600 hover:text-palette-brand-700">
             Open pipeline board
             <ExternalLink className="h-3 w-3" aria-hidden="true" />

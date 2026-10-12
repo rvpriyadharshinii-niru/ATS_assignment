@@ -506,14 +506,78 @@ const GUIDE_QUESTIONS: Partial<Record<CriterionKey, { validate: string[]; explor
     listenFor: 'Scale of responsibility, formal vs. informal leadership, and outcomes they drove.',
   },
   communicationSkills: {
-    validate: ['How do you present design rationale to stakeholders who disagree?', 'Share an example where your communication changed a decision.'],
-    explore: 'How do you adapt a design story for executives versus engineers?',
+    validate: ['How do you present your rationale or findings to stakeholders who disagree?', 'Share an example where your communication changed a decision.'],
+    explore: 'How do you adapt the same story for executives versus engineers?',
     listenFor: 'Clarity, structure and audience awareness.',
   },
   crossFunctionalCollaboration: {
-    validate: ['Describe how you work with product and engineering from discovery to release.', 'Tell me about a disagreement with engineering and how it was resolved.'],
-    explore: 'What does a healthy design–engineering partnership look like to you?',
+    validate: ['Describe how you work with engineering, design and go-to-market teams from discovery to release.', 'Tell me about a disagreement with engineering and how it was resolved.'],
+    explore: 'What does a healthy partnership with engineering look like to you?',
     listenFor: 'Concrete collaboration habits and shared ownership.',
+  },
+  productStrategy: {
+    validate: [
+      'Tell me about a roadmap you owned. What did you decide not to build, and why?',
+      'How did you connect your priorities to customer and business outcomes?',
+    ],
+    explore: 'Which strategic bet you made would you make differently today, and why?',
+    listenFor: 'Explicit trade-offs, the outcomes behind them, and who made the final call.',
+  },
+  customerDiscovery: {
+    validate: [
+      'Walk me through your discovery routine. Who do you talk to, how often, and what do you do with it?',
+      'Tell me about something you learned in discovery that changed what the team built.',
+    ],
+    explore: 'How do you tell a real customer need apart from a feature request?',
+    listenFor: 'Hands-on, recurring discovery, and a concrete decision it changed.',
+  },
+  dataInformedDecisions: {
+    validate: [
+      'Which metrics did you own, and how did they change a decision you made?',
+      'Walk me through an experiment you ran. What did you expect, what happened, and what did you do next?',
+    ],
+    explore: 'When did the data point one way and your judgement another? What did you do?',
+    listenFor: 'Metrics they defined themselves, sound experiment design, and decisions that followed.',
+  },
+  b2bSaasDomain: {
+    validate: [
+      'Who bought your product, who used it, and how did that difference shape your roadmap?',
+      'How did enterprise needs like permissions, procurement or admin controls affect what you prioritised?',
+    ],
+    explore: 'What was the hardest part of selling to and building for business customers?',
+    listenFor: 'Buyer versus user, sales-led constraints, and specific B2B accounts or segments.',
+  },
+  researchMethods: {
+    validate: [
+      'Walk me through how you chose the method for a recent study. What else did you consider?',
+      'Tell me about a time you combined qualitative and quantitative methods.',
+    ],
+    explore: 'Which method do you reach for least, and when would it have been the right call?',
+    listenFor: 'Method chosen to fit the question, range beyond interviews and usability tests, and rigour.',
+  },
+  researchSynthesis: {
+    validate: [
+      'Take me from raw notes to the final insight on one study. What did synthesis look like?',
+      'How do you make sure a theme is real and not just the loudest participant?',
+    ],
+    explore: 'Which framework or model you created is still in use, and why did it stick?',
+    listenFor: 'A clear synthesis process, frameworks the team reused, and checks against bias.',
+  },
+  researchImpact: {
+    validate: [
+      'Tell me about a product decision that changed because of your research.',
+      'When research didn’t change a decision, what happened and what did you do next?',
+    ],
+    explore: 'How do you track whether your findings were acted on?',
+    listenFor: 'A specific decision that changed, and how they got the findings in front of decision makers.',
+  },
+  enterpriseResearchContext: {
+    validate: [
+      'How did you recruit and research with business users or admins at enterprise customers?',
+      'How did buyer, admin and end-user needs differ in your research, and how did you handle it?',
+    ],
+    explore: 'What is hardest about research with enterprise customers compared with consumers?',
+    listenFor: 'Real access to B2B users, multiple stakeholder roles, and the constraints of enterprise accounts.',
   },
   mentorship: {
     validate: ['Tell me about a designer you helped grow.', 'How do you give feedback on work that is not ready?'],

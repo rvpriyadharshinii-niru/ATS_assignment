@@ -24,7 +24,7 @@ Nothing here has been tested with users. Where a choice rests on a source, the s
 | Moment 3: pipeline | Working | Diagnosis → affected candidates → prepare follow-ups → approve and record → the pipeline's waiting state updates |
 | Match friction to risk | Working | Summaries, comparisons, briefings and Defer run with no dialog. Guides, drafts and assessments are editable. Stage moves, Decline and outbound messages need confirmation and show the exact action |
 | Chat plus structured views | Working | Comparison table, source viewer, interactive pipeline, guide editor, follow-up drafts, approval cards. Chat collapses, and on mobile it is a tab |
-| Interview preparation for several candidates | **Was partial, now improved** | It used to list interviews and leave each guide as a separate step |
+| Interview preparation for several candidates | **Was partial, now improved** | It used to list interviews and leave each guide as a separate step. It now covers all three jobs |
 | Requests outside scope | **Was misleading, now fixed** | "Book a flight for Ananya", "Hire Ananya" and "Email Rahul" opened Ananya's or Rahul's review as if understood |
 | Progressive adoption (manual → agents) | **Was partial, now improved** | Manual pages offer Ask AI and "Investigate with AI", but nothing bridged from doing reviews to delegating them |
 | AI Agents | Working | Cards only. Opening one lands on Run the agent, then Results & approvals and Settings. Pause and resume, failed-item retry, and approvals with full email previews |
@@ -53,18 +53,30 @@ Nothing here has been tested with users. Where a choice rests on a source, the s
 - "Meera is a promising:" now reads "Meera is a promising candidate".
 - "in this prototype" was replaced with plain statements, such as "email isn't connected to HireFlow yet".
 
-## Still incomplete
+## Previously incomplete, now done
 
-- Agent proposals and workspace proposals sit in one queue. Each agent's own Results & approvals tab shows only that agent's items.
-- Undo exists for stage moves. Recorded reminders and saved guides cannot be undone, though a guide can be edited and saved again.
-- The Product Manager and UX Researcher roles hold summary figures only, and the AI says so.
+- **Agent approvals in one place.** Each agent's Results & approvals tab shows that agent's items, the count waiting on you, and a link to everything else waiting (other agents and AI Workspace tasks) in Approvals & activity.
+- **Undo.**
+  - Recorded reminders can be undone from the toast or the draft card. The candidate's pipeline status goes back to exactly what it was, and the draft is editable again.
+  - Saved guides can be removed from the profile from the toast or the guide editor. The draft stays in the task.
+  - Both are logged in the candidate's activity.
+- **Product Manager and UX Researcher are now real.** Each role has:
+  - 5 criteria, with its own job description;
+  - named candidates with resumes and cited evidence (6 for Product Manager, 4 for UX Researcher);
+  - live pipelines whose totals match each job's candidate count.
+
+  Applicant review, evidence review, comparison, gaps, challenge, interview guides, pipeline checks and keyword search work for both roles. Aarav Sethi, the Product Manager finalist, has a scorecard that conflicts with his resume on customer discovery, so both sources stay visible. Interview prep now covers interviews in every role.
+
+## Still limited
+
+- Assessment drafting covers Senior Product Designer only.
 
 ## What is simulated
 
 - **The AI.** A rule-based engine (`src/workspace/engine.ts`) routes requests and composes replies. No language model is called.
 - **Agent runs, calendar checks and assessment results** come from `src/agents/simulate.ts`.
 - **Emails and reminders** are recorded in HireFlow but not delivered.
-- **Resumes, scorecards and interview times** are fixed sample data. Interview times are derived deterministically from the candidate id.
+- **Resumes, scorecards and interview times** are fixed sample data for all three jobs. Interview times are derived deterministically from the candidate id.
 
 ## Final check
 

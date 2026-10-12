@@ -9,8 +9,14 @@ import { useAppStore } from '../store/useAppStore'
 import { useCriteria } from '../store/criteriaSelectors'
 import type { CriterionKey, CriterionPriority, OpeningId } from '../types/domain'
 
-const SPD_DESCRIPTION =
-  'Senior product designer responsible for complex enterprise product experiences, working across product strategy, interaction design, systems thinking and cross-functional collaboration. Experience with AI products and scalable design systems is valuable.'
+const JOB_DESCRIPTIONS: Record<OpeningId, string> = {
+  'senior-product-designer':
+    'Senior product designer responsible for complex enterprise product experiences, working across product strategy, interaction design, systems thinking and cross-functional collaboration. Experience with AI products and scalable design systems is valuable.',
+  'product-manager':
+    'Product manager owning a B2B SaaS product area end to end: setting strategy and priorities, running continuous customer discovery, and using data and experiments to decide what to build, in close partnership with engineering, design and go-to-market teams.',
+  'ux-researcher':
+    'UX researcher leading studies across a range of qualitative and quantitative methods, synthesising findings into insight that shapes product decisions, and communicating clearly with stakeholders. Experience researching with enterprise and B2B users is valuable.',
+}
 
 function AddCriterionDialog({
   open,
@@ -151,7 +157,7 @@ export function HiringCriteriaPage() {
             <IconBadge icon={FileText} color="neutral" size="sm" />
             Job description
           </h2>
-          <p className="mt-2 text-sm leading-relaxed text-foreground">{SPD_DESCRIPTION}</p>
+          <p className="mt-2 text-sm leading-relaxed text-foreground">{JOB_DESCRIPTIONS[id]}</p>
         </section>
 
         <section className="rounded-xl border border-border bg-card p-5 shadow-xs">

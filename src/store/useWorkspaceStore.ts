@@ -103,10 +103,12 @@ interface WorkspaceState {
   clearAssessment: (taskId: string, candidateId: string, criterionKey: CriterionKey) => void
   updateGuide: (taskId: string, candidateId: string, guide: GuideDraft) => void
   saveGuide: (taskId: string, candidateId: string, options?: { silent?: boolean }) => void
+  unsaveGuide: (taskId: string, candidateId: string) => void
   updateDraft: (taskId: string, draftId: string, patch: Partial<Pick<FollowUpDraft, 'subject' | 'body'>>) => void
   reviseDraft: (taskId: string, draftId: string, style: ReviseStyle) => void
   approveDraft: (taskId: string, draftId: string, options?: { silent?: boolean }) => void
   skipDraft: (taskId: string, draftId: string) => void
+  undoDraft: (taskId: string, draftId: string) => void
   submitOwnFeedback: (taskId: string, candidateId: string, recommendation: string, notes: string, options?: { silent?: boolean }) => void
   sessionGo: (taskId: string, index: number) => void
   sessionResolve: (taskId: string, itemId: string, action: 'approve' | 'skip' | 'defer' | 'decline', payload?: { recommendation?: string; notes?: string }) => void
@@ -433,6 +435,24 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       })),
     }))
     useAppStore.getState().logActivity(candidateId, `Interview guide saved (${saved.roundType}, ${saved.sections.reduce((sum, section) => sum + section.questions.length, 0)} questions)${guide.edited ? ' · edited by you' : ''}`)
+    if (!options?.silent) useAppStore.getState().pushToast(`Saved ${firstName(candidate)}'s interview guide.`, { actionLabel: 'Undo', onAction: () => get().unsaveGuide(taskId, candidateId) })
+  },
+
+  unsaveGuide: (taskId, candidateId) => {
+    const candidate = getCandidate(candidateId)
+    if (!candidate || !get().savedGuides[candidateId]) return
+    set((state) => {
+      const savedGuides = { ...state.savedGuides }
+      delete savedGuides[candidateId]
+      return {
+        savedGuides,
+        ...patchTask(state, taskId, (current) => ({
+          guides: current.guides[candidateId] ? { ...current.guides, [candidateId]: { ...current.guides[candidateId], savedAt: undefined } } : current.guides,
+          messages: [...current.messages, aiMessage(`Removed ${firstName(candidate)}'s guide from the profile. The draft is still here to edit or save again.`, { tone: 'done', changes: [`Interview guide removed from ${candidate.name}'s profile`] })],
+        })),
+      }
+    })
+    useAppStore.getState().logActivity(candidateId, 'Interview guide removed from profile (undone)')
   },
 
   updateDraft: (taskId, draftId, patch) =>
@@ -455,10 +475,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     if (!draft || draft.status !== 'draft') return
     const candidate = getCandidate(draft.candidateId)
     const app = useAppStore.getState()
+    const before = app.candidateOverrides[draft.candidateId]
+    const undo = { hadStatus: !!before && 'interviewStatus' in before, previousStatus: before?.interviewStatus }
     app.updateInterviewState(draft.candidateId, { interviewStatus: `Reminder sent to ${draft.recipient} today` }, `Feedback reminder recorded for ${draft.recipient}: “${draft.subject}” (HireFlow message, simulated delivery)`)
     set((state) =>
       patchTask(state, taskId, (task) => {
-        const drafts = task.drafts.map((entry) => (entry.id === draftId ? { ...entry, status: 'approved' as const } : entry))
+        const drafts = task.drafts.map((entry) => (entry.id === draftId ? { ...entry, status: 'approved' as const, undo } : entry))
         const open = drafts.filter((entry) => entry.status === 'draft').length
         return {
           drafts,
@@ -476,6 +498,23 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
               }),
         }
       }),
+    )
+    if (!options?.silent) app.pushToast(`Reminder to ${draft.recipient} recorded.`, { actionLabel: 'Undo', onAction: () => get().undoDraft(taskId, draftId) })
+  },
+
+  undoDraft: (taskId, draftId) => {
+    const draft = get().tasks[taskId]?.drafts.find((entry) => entry.id === draftId)
+    if (!draft || draft.status !== 'approved') return
+    const candidate = getCandidate(draft.candidateId)
+    useAppStore
+      .getState()
+      .restoreInterviewStatus(draft.candidateId, draft.undo?.hadStatus ?? false, draft.undo?.previousStatus, `Feedback reminder to ${draft.recipient} undone · back to a draft`)
+    set((state) =>
+      patchTask(state, taskId, (task) => ({
+        drafts: task.drafts.map((entry) => (entry.id === draftId ? { ...entry, status: 'draft' as const, undo: undefined } : entry)),
+        status: 'awaiting-approval',
+        messages: [...task.messages, aiMessage(`Undone. The reminder to the ${draft.recipient} about ${candidate?.name} is a draft again and the pipeline no longer shows it.`, { tone: 'done', changes: [`${candidate?.name}: reminder to ${draft.recipient} undone`] })],
+      })),
     )
   },
 

@@ -1,6 +1,7 @@
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { getCandidate } from '../../data/candidates'
 import { getCriterionName } from '../../data/criteria'
+import { getOpening } from '../../data/openings'
 import { STEP_DURATION_MS } from '../../store/useWorkspaceStore'
 import { useWorkspaceStore } from '../../store/useWorkspaceStore'
 import type { WorkspaceTask, WorkspaceView } from '../../types/workspace'
@@ -26,7 +27,7 @@ function viewTitle(view: WorkspaceView): { title: string; subtitle?: string } {
     case 'launcher':
       return { title: 'Start a task' }
     case 'applicant-review':
-      return { title: 'Applicant review', subtitle: 'Senior Product Designer · prepared for you' }
+      return { title: 'Applicant review', subtitle: `${getOpening(view.openingId)?.title ?? 'Senior Product Designer'} · prepared for you` }
     case 'candidate':
       return { title: view.focus === 'gaps' ? `Gaps · ${name(view.candidateId)}` : `Evidence-backed review · ${name(view.candidateId)}`, subtitle: 'Each rating links to its source passage' }
     case 'source': {
@@ -41,9 +42,9 @@ function viewTitle(view: WorkspaceView): { title: string; subtitle?: string } {
     case 'interview-guide':
       return { title: `Interview guide · ${name(view.candidateId)}`, subtitle: view.gapsOnly ? 'Focused on what the evidence does not show yet' : 'Editable before you save' }
     case 'interview-prep':
-      return { title: 'Upcoming interviews', subtitle: 'Senior Product Designer' }
+      return { title: 'Upcoming interviews', subtitle: 'Across your open jobs' }
     case 'pipeline':
-      return { title: view.focus === 'delay' ? 'Why the role is delayed' : 'Pipeline investigation', subtitle: 'Senior Product Designer · live from HireFlow' }
+      return { title: view.focus === 'delay' ? 'Why the role is delayed' : 'Pipeline investigation', subtitle: `${getOpening(view.openingId)?.title ?? 'Senior Product Designer'} · live from HireFlow` }
     case 'follow-ups':
       return { title: 'Follow-ups awaiting approval', subtitle: 'Nothing is sent until you approve' }
     case 'clear-tasks':
